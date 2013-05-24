@@ -21,13 +21,7 @@
 #from gui import start
 from argparse import ArgumentParser
 
-import logging, os  , os.path, sys
-
-try:
-    import serial_grabber
-except ImportError, e:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "")))
-
+import logging, os, sys
 
 def main():
     argParse = ArgumentParser(description="Serial Grabber will read the configured serial port and process the data received.")
