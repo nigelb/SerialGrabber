@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import signal
+import time
 
 from serial_grabber.watchdog import running, counter, Watchdog
 
@@ -26,14 +28,25 @@ class status:
     def set_tooltip(self, tooltip):
         self.logger.info(tooltip)
 
-def start(logger, run_reader, run_poster):
+def register_handler(running, watchdog, reader, processor):
+    def signal_handler(signal, frame):
+        print 'You pressed Ctrl+C!'
+        running.running = False
+        watchdog.join()
+        reader.close()
+
+
+        exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+
+def start(logger, reader, processor):
     si = status(logger)
     isRunning = running(True)
     c = counter(si)
-    #    reader = Thread(target=run_reader, args=(isRunning, c))
-    #    poster = Thread(target=run_poster, args=(isRunning, c))
-    #    reader.start()
-    #    poster.start()
+
     watchdog = Watchdog(isRunning)
-    watchdog.start_thread(run_reader, (isRunning, c), "Runner")
-    watchdog.start_thread(run_poster, (isRunning, c), "Uploader")
+    register_handler(isRunning, watchdog, reader, processor)
+    watchdog.start_thread(reader, (isRunning, c), "Runner")
+    watchdog.start_thread(processor, (isRunning, c), "Uploader")
+    while isRunning.running:
+        time.sleep(1)
