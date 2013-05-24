@@ -22,14 +22,14 @@ requires=[
     "pyserial",
 ]
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='SerialGrabber',
     version='0.0.1',
     description='SerialGrabber reads data from a serial port and processes it with the configured processor.',
     author='NigelB',
     author_email='nigel.blair@gmail.com',
-    packages=['serial_grabber'],
+    packages=find_packages(),
     zip_safe=False,
     install_requires=requires,
     entry_points={
