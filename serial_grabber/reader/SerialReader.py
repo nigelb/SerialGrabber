@@ -59,3 +59,5 @@ class SerialReader(Reader):
     def setup(self):
         self.stream = self.try_connect()
 
+    def close(self):
+        return self.stream.close()
