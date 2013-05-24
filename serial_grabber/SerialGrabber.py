@@ -29,9 +29,7 @@ except ImportError, e:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "")))
 
 
-
-
-if __name__ == "__main__":
+def main():
     argParse = ArgumentParser(description="Serial Grabber will read the configured serial port and process the data received.")
     argParse.add_argument("--config-dir",metavar="<config_dir>", dest="config_dir", default="/etc/SerialGrabber", action="store", help="The location of the config directory, default: /etc/SerialGrabber")
     args = argParse.parse_args()
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     except ImportError, e:
         print "Could not find configuration in %s, specify with --config-dir option."%(args.config_dir)
         exit(1)
-    #Ensure the directories exist.
+        #Ensure the directories exist.
     if SerialGrabber_Paths.data_logger_dir is not None and not os.path.exists(SerialGrabber_Paths.data_logger_dir):
         os.makedirs(SerialGrabber_Paths.data_logger_dir)
         if not os.path.exists(SerialGrabber_Paths.cache_dir):
@@ -66,5 +64,9 @@ if __name__ == "__main__":
     logger = logging.getLogger("Main")
 
     SerialGrabber_UI.ui.start(logger, SerialGrabber_Settings.reader, SerialGrabber_Settings.processor)
+
+if __name__ == "__main__":
+    main()
+
 
 
