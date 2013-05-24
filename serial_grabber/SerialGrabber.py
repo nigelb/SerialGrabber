@@ -23,6 +23,12 @@ from argparse import ArgumentParser
 
 import logging, os  , os.path, sys
 
+try:
+    import serial_grabber
+except ImportError, e:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "")))
+
+
 
 
 if __name__ == "__main__":
@@ -33,8 +39,11 @@ if __name__ == "__main__":
     args.config_dir = os.path.abspath(args.config_dir)
     sys.path.append(args.config_dir)
 
-    from cli import start
-    import SerialGrabber_Paths, SerialGrabber_Settings, SerialGrabber_UI
+    try:
+        import SerialGrabber_Paths, SerialGrabber_Settings, SerialGrabber_UI
+    except ImportError, e:
+        print "Could not find configuration in %s, specify with --config-dir option."%(args.config_dir)
+        exit(1)
     #Ensure the directories exist.
     if SerialGrabber_Paths.data_logger_dir is not None and not os.path.exists(SerialGrabber_Paths.data_logger_dir):
         os.makedirs(SerialGrabber_Paths.data_logger_dir)
