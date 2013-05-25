@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import glob
 
 import shutil, os, os.path, constants, datetime, time, logging, json
 import SerialGrabber_Paths
@@ -43,8 +44,9 @@ def cache_cmp(a,b):
 
 def list_cache():
     toRet = {}
-    for entry in os.listdir(SerialGrabber_Paths.cache_dir):
-        entry_path = os.path.join(SerialGrabber_Paths.cache_dir, entry)
+    for _entry in glob.glob(os.path.join(SerialGrabber_Paths.cache_dir, "*.data")):
+        entry_path = _entry
+        entry = os.path.basename(_entry)
         toRet[entry] = entry_path
     order = toRet.keys()
     order.sort(cache_cmp)
@@ -68,12 +70,16 @@ def make_payload(data):
 
 def cache(payload):
     cache_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s.data"%payload[constants.timep])
+    tmp_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s.tmp"%payload[constants.timep])
     n = 1
     while os.path.exists(cache_file_path):
         cache_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-%s.data"%(payload[constants.timep], n))
+        tmp_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-%s.tmp"%(payload[constants.timep], n))
         n += 1
-    cache_file = open(cache_file_path, "wb")
-    json.dump(payload, cache_file)
+
+    with open(tmp_file_path, "wb") as cache_file:
+        json.dump(payload, cache_file)
+    shutil.move(tmp_file_path, cache_file_path)
     logger.debug("Wrote cache file: %s"%cache_file_path)
 
 def decache(cache_file):
