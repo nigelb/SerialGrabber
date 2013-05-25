@@ -52,9 +52,9 @@ class Processor:
                                     self.counter.posted()
                                     cache.decache(entry_path)
                         except BaseException, e:
-                            self.logger.error("Failed to upload data: %s"%e)
+                            self.logger.error("Failed to process data: %s"%e)
                             self.logger.exception(e)
-            self.logger.log(5, "Uploader Sleeping.")
+            self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.uploader_sleep)
 
     def process(self, process_entry):
