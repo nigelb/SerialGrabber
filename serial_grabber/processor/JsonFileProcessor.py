@@ -45,7 +45,7 @@ class JsonFileProcessor(Processor):
                     with open(self.output_file, "rb") as existing:
                         data = json.load(existing)
                 if self.limit > 0 and len(data) >= self.limit:
-                    data = data[((self.limit + 1 ) * -1):]
+                    data = data[((self.limit - 1 ) * -1):]
                 data.append(process_entry.data.payload)
                 fid, path = tempfile.mkstemp()
                 with os.fdopen(fid, "wb") as out_data:
