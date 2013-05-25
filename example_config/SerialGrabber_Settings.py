@@ -52,6 +52,6 @@ reader = SerialReader(port, baud,
 processor = CompositeProcessor([
     FileAppenderProcessor("all.txt"),
     TransformCompositeProcessor(EcoFestTransform(), [
-        JsonFileProcessor("every_10.json", CountingTransactionFilter(10), 720),
+        JsonFileProcessor("every_10.json", CountingTransactionFilter(10), 72),
         JsonFileProcessor("current.json", None, 1)])
 ])
