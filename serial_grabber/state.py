@@ -40,7 +40,6 @@ def begin_transaction(_state):
     def b_trans_impl(state, config, data):
         try:
             state.data = []
-#            state.data.append(data)   # Not needed because the catchall matcher below will catch it
             state.match_all = matches(".*")
             _state[state.match_all] = lambda state_, config_, data_: state_.data.append(data_)
         except Exception, e:
@@ -56,13 +55,17 @@ def end_transaction(_state):
     def e_trans_impl(state, config, data):
         try:
             if "match_all" in state: del _state[state.match_all]
-            state.data.append(data)
-            cache.cache(cache.make_payload(format_data(state.data)))
-            del state["data"]
-            logger.info("End of Transaction")
+            if "data" in state:
+                state.data.append(data)
+                cache.cache(cache.make_payload(format_data(state.data)))
+                del state["data"]
+                logger.info("End of Transaction")
+                config.counter.read()
+                config.counter.update()
         except Exception, e:
             import traceback
             traceback.print_exc()
+            config.counter.error()
 
     return e_trans_impl
 
