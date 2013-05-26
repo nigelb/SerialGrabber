@@ -39,6 +39,7 @@ class Reader:
     def run(self):
         state = config_helper({})
         config = config_helper({})
+        config.counter = self.counter
         while self.isRunning.running:
             try:
                 if self.stream is None:
@@ -48,7 +49,6 @@ class Reader:
                 if len(read_data) == 0:
                     time.sleep(SerialGrabber_Settings.reader_error_sleep)
                     continue
-#                self.counter.update()
                 matched = False
                 for matcher in SerialGrabber_State.READER_STATE:
                     m = matcher(state, config, read_data)
@@ -58,5 +58,7 @@ class Reader:
                 if not matched:
                     self.logger.error("There was unmatched input (in trace):")
                     self.logger.trace(read_data)
-            except:pass
+            except Exception, e:
+                self.counter.error()
+                self.logger.error(e)
             if self.stream is None: time.sleep(SerialGrabber_Settings.reader_error_sleep)
