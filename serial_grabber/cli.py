@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import signal
 import time
+from serial_grabber import cache
 
 from serial_grabber.watchdog import running, counter, Watchdog
 
@@ -40,13 +41,16 @@ def register_handler(running, watchdog, reader, processor):
     signal.signal(signal.SIGINT, signal_handler)
 
 def start(logger, reader, processor):
-    si = status(logger)
-    isRunning = running(True)
-    c = counter(si)
+    try:
+        si = status(logger)
+        isRunning = running(True)
+        c = counter(si)
 
-    watchdog = Watchdog(isRunning)
-    register_handler(isRunning, watchdog, reader, processor)
-    watchdog.start_thread(reader, (isRunning, c), "Runner")
-    watchdog.start_thread(processor, (isRunning, c), "Uploader")
-    while isRunning.running:
-        time.sleep(1)
+        watchdog = Watchdog(isRunning)
+        register_handler(isRunning, watchdog, reader, processor)
+        watchdog.start_thread(reader, (isRunning, c), "Runner")
+        watchdog.start_thread(processor, (isRunning, c), "Uploader")
+        while isRunning.running:
+            time.sleep(1)
+    finally:
+        cache.close_cache()
