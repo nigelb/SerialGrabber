@@ -20,6 +20,7 @@ import logging
 
 import os, SerialGrabber_Paths, SerialGrabber_Settings
 import time
+import datetime
 from serial_grabber import cache
 from serial_grabber.util import config_helper
 
@@ -39,21 +40,28 @@ class Processor:
             order, c_entries = cache.list_cache()
             if c_entries:
                 for entry in order:
-                    entry_path = c_entries[entry]
-                    if os.path.isfile(entry_path):
-                        try:
-                                data = {
-                                    "data":cache.read_cache(entry_path),
-                                    "entry_path": entry_path,
-                                    "entry": entry
-                                }
+                    parts = entry.split("-")
+                    cache_time = float(parts[0].split(".")[0])
+                    current_time = time.mktime(datetime.datetime.now().timetuple())
+                    if abs(cache_time - current_time) > SerialGrabber_Settings.uploader_collision_avoidance_delay:
+                        entry_path = c_entries[entry]
+                        if os.path.isfile(entry_path):
+                            try:
+                                    data = {
+                                        "data":cache.read_cache(entry_path),
+                                        "entry_path": entry_path,
+                                        "entry": entry
+                                    }
 
-                                if self.process(config_helper(data)):
-                                    self.counter.posted()
-                                    cache.decache(entry_path)
-                        except BaseException, e:
-                            self.logger.error("Failed to process data: %s"%e)
-                            self.logger.exception(e)
+                                    if self.process(config_helper(data)):
+                                        self.counter.processed()
+                                        cache.decache(entry_path)
+                            except BaseException, e:
+                                self.logger.error("Failed to process data: %s"%e)
+                                self.logger.exception(e)
+                                self.counter.error()
+                        else:
+                            self.logger.debug("File is to new. Leaving for next round.")
             self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.uploader_sleep)
 
