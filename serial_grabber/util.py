@@ -45,7 +45,11 @@ class config_helper:
         return self.config[key]
 
     def __contains__(self, item):
-        return self.__getattr__(item)
+        try:
+            self.__getattr__(item)
+            return True
+        except KeyError, e:
+            return False
 
 def locate_resource(name):
     import SerialGrabber_Paths, os.path
