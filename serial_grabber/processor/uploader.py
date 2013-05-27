@@ -43,7 +43,7 @@ class Uploader:
                 if os.path.isfile(entry_path):
                     try:
                         if self.post(entry_path, entry):
-                            self.counter.posted()
+                            self.counter.processed()
                     except BaseException, e:
                         self.logger.error("Failed to upload data: %s"%e)
 #                        self.logger.error(traceback.format_exception(*sys.exc_info())[0])
