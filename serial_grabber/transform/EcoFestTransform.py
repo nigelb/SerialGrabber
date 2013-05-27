@@ -17,6 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from datetime import datetime, timedelta
+import logging
 import time
 from pprint import pprint
 from serial_grabber.transform import Transform
@@ -38,7 +39,7 @@ def calculate_humidity(temp, Vs, Vo):
     return true_rh
 
 class EcoFestTransform(Transform):
-
+    logger = logging.getLogger("EcoFestTransform")
     def __init__(self):
         self.temp_calibration = None
         if "ECOFEST_TEMPERATURE_CALIBRATION" in SerialGrabber_Calibration.__dict__:
@@ -55,32 +56,42 @@ class EcoFestTransform(Transform):
         for i in process_entry.data:
             transform_result.data[i] = process_entry.data[i]
 
-        transform_result.data.original_payload = transform_result.data.payload
-        temp, hum = process_entry.data.payload.split("END TEMPERATURE")
-        temp = temp.strip().split("BEGIN TEMPERATURE")[1].strip().split("\n")
-        hum = hum.split("BEGIN HUMIDITY")[1].split("END HUMIDITY")[0].strip().split("\n")
+        original_payload = transform_result.data.payload
+        _temp, _hum = process_entry.data.payload.split("END TEMPERATURE")
+        temp = _temp.strip().split("BEGIN TEMPERATURE")[1].strip().split("\n")
+        hum = _hum.split("BEGIN HUMIDITY")[1].split("END HUMIDITY")[0].strip().split("\n")
         first = None
 
         result = {}
         for temp_entry in temp:
-            _time, address, temp = temp_entry.split(",")
-            _time = EPOCH + timedelta(seconds=int(_time))
-            if first is None:
-                first = time.mktime(_time.timetuple())
-                result[first] = {}
-                result[first]["temperature"] = {}
-            temp = float(temp)
-            if self.temp_calibration:
-                temp = self.temp_calibration.calibrate(address, temp)
-            result[first]["temperature"][str(address)] = temp
+            temp_line = temp_entry.split(",")
+            if len(temp_line) == 3:
+                _time, address, temp = temp_line
+                _time = EPOCH + timedelta(seconds=int(_time))
+                if first is None:
+                    first = time.mktime(_time.timetuple())
+                    result[first] = {}
+                    result[first]["temperature"] = {}
+                temp = float(temp)
+                if self.temp_calibration:
+                    temp = self.temp_calibration.calibrate(address, temp)
+                result[first]["temperature"][str(address)] = temp
+            else:
+                self.logger.error("Invalid Temperature line: %s"%temp_entry)
 
         result[first]["humidity"] = {}
         for hum_entry in hum:
-            _time, address, temp, v1, v2 = hum_entry.split(",")
-            rh = calculate_humidity(float(temp), float(v1), float(v2))
-            if self.humidity_calibration:
-                rh = self.humidity_calibration.calibrate(address, rh)
-            result[first]["humidity"][str(address)] = rh
+            humidity_line = hum_entry.split(",")
+            if len(humidity_line) == 5:
+                _time, address, temp, v1, v2 = humidity_line
+                rh = calculate_humidity(float(temp), float(v1), float(v2))
+                if self.humidity_calibration:
+                    rh = self.humidity_calibration.calibrate(address, rh)
+                result[first]["humidity"][str(address)] = rh
+            else:
+                self.logger.error("Invalid line: %s"%hum_entry)
+
         transform_result.data.payload = result
+        transform_result.data.original_payload = original_payload
         return transform_result
 
