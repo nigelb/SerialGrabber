@@ -18,18 +18,46 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import glob
 
-import shutil, os, os.path, constants, datetime, time, logging, json
-import SerialGrabber_Paths
+import shutil, os, os.path, constants, time, logging, json
+from datetime import datetime
 from serial_grabber.util import config_helper
 import tarfile
 
+import SerialGrabber_Paths
+
 logger = logging.getLogger("Cache")
 
-def open_archive():
+archive = None
+
+def open_archive(depth=0):
+    if depth == 2:
+        return None
+    global archive
+    if archive:
+        return archive
     if not os.path.exists(SerialGrabber_Paths.archive_dir):
         os.makedirs(SerialGrabber_Paths.archive_dir)
     archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "archive.tar")
-    return tarfile.open(archive_path,"a")
+    archive_existed = os.path.exists(archive_path)
+    try:
+        archive = tarfile.open(archive_path,"a")
+    except:
+        if archive_existed:
+            n = datetime.now()
+            while os.path.exists(os.path.join(SerialGrabber_Paths.archive_dir, "archive-%s.tar"%n.strftime("%Y_%m_%d_%H_%M_%S"))):
+                n = datetime.now()
+            old_archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "archive-%s.tar"%n.strftime("%Y_%m_%d_%H_%M_%S"))
+            logger.error("Could not open archive.tar, moving to %s and starting new archive."%old_archive_path)
+            shutil.move(archive_path, old_archive_path)
+            return open_archive(depth=depth+1)
+    return archive
+
+def close_cache():
+    global archive
+    if archive:
+        archive.close()
+    logger.warn("Closed cache.")
+
 
 def cache_cmp(a,b):
     a_t, a_s, a_ext = a.split('.')
@@ -64,7 +92,7 @@ def read_cache(cache_filename):
 def make_payload(data):
     toRet =  {
         constants.payload: data,
-        constants.timep: time.mktime(datetime.datetime.now().timetuple())
+        constants.timep: time.mktime(datetime.now().timetuple())
     }
     return toRet
 
@@ -85,9 +113,10 @@ def cache(payload):
 def decache(cache_file):
     if os.path.exists(cache_file):
         shutil.move(cache_file, SerialGrabber_Paths.archive_dir)
-        with open_archive() as archive:
-            name = os.path.basename(cache_file)
-            archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
-            archive.add(archived_name, arcname=os.path.join("archive",name))
-            os.remove(archived_name)
+        _archive = open_archive()
+        name = os.path.basename(cache_file)
+        archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
+        _archive.add(archived_name, arcname=os.path.join("archive",name))
+        os.remove(archived_name)
+        logger.info("decached %s"%os.path.basename(archived_name))
 
