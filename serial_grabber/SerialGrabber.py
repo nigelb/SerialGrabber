@@ -37,8 +37,9 @@ def main():
         print "Could not find configuration in %s, specify with --config-dir option."%(args.config_dir)
         exit(1)
         #Ensure the directories exist.
-    if SerialGrabber_Paths.data_logger_dir is not None and not os.path.exists(SerialGrabber_Paths.data_logger_dir):
-        os.makedirs(SerialGrabber_Paths.data_logger_dir)
+    if SerialGrabber_Paths.data_logger_dir is not None:
+        if not os.path.exists(SerialGrabber_Paths.data_logger_dir):
+            os.makedirs(SerialGrabber_Paths.data_logger_dir)
         if not os.path.exists(SerialGrabber_Paths.cache_dir):
             os.makedirs(SerialGrabber_Paths.cache_dir)
         if not os.path.exists(SerialGrabber_Paths.archive_dir):
