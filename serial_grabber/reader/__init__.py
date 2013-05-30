@@ -46,6 +46,8 @@ class Reader:
                     self.setup()
                     continue
                 read_data = self.stream.readline().strip()
+                if SerialGrabber_Settings.drop_carriage_return:
+                    read_data = read_data.replace("\r","")
                 if len(read_data) == 0:
                     time.sleep(SerialGrabber_Settings.reader_error_sleep)
                     continue

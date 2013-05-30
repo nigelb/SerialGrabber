@@ -41,6 +41,8 @@ watchdog_sleep = 1
 
 reader_error_sleep = 1
 
+drop_carriage_return = True
+
 
 reader = SerialReader(port, baud,
     timeout=timeout,
