@@ -20,8 +20,11 @@
 import logging
 import time
 import SerialGrabber_Settings, SerialGrabber_State
+import datetime
 from serial_grabber.util import config_helper
 
+def get_millis():
+    return time.mktime(datetime.datetime.now().timetuple()) * 1000
 class Reader:
     logger = logging.getLogger("Reader")
     def __call__(self, *args, **kwargs):
@@ -40,12 +43,16 @@ class Reader:
         state = config_helper({})
         config = config_helper({})
         config.counter = self.counter
+        start = get_millis()
         while self.isRunning.running:
             try:
                 if self.stream is None:
                     self.setup()
                     continue
                 read_data = self.stream.readline().strip()
+                if (get_millis() - start)  <= SerialGrabber_Settings.startup_ignore_threshold_milliseconds:
+                    self.logger.warn("Dropping data received inside startup threshold.")
+                    continue
                 if SerialGrabber_Settings.drop_carriage_return:
                     read_data = read_data.replace("\r","")
                 if len(read_data) == 0:
@@ -58,9 +65,9 @@ class Reader:
                         matched = True
                         SerialGrabber_State.READER_STATE[matcher](state, config, read_data)
                 if not matched:
-                    self.logger.error("There was unmatched input (in trace):")
-                    self.logger.trace(read_data)
+                    self.logger.error("There was unmatched input: %s"%read_data)
             except Exception, e:
                 self.counter.error()
-                self.logger.error(e)
+                import traceback
+                traceback.print_exc()
             if self.stream is None: time.sleep(SerialGrabber_Settings.reader_error_sleep)

@@ -41,6 +41,8 @@ watchdog_sleep = 1
 
 reader_error_sleep = 1
 
+startup_ignore_threshold_milliseconds = 1000
+
 drop_carriage_return = True
 
 
