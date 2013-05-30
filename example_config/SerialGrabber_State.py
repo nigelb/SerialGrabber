@@ -23,8 +23,11 @@ try:
 except:
     from ordereddict import OrderedDict
 
-READER_STATE = OrderedDict()
-READER_STATE[matches("BEGIN TEMPERATURE")] = begin_transaction(READER_STATE)
-READER_STATE[matches("END HUMIDITY")] = end_transaction(READER_STATE)
+def reader_state():
+    READER_STATE = OrderedDict()
+    READER_STATE[matches("BEGIN TEMPERATURE")] = begin_transaction(READER_STATE)
+    READER_STATE[matches("END HUMIDITY")] = end_transaction(READER_STATE)
+    return READER_STATE
+
 
 

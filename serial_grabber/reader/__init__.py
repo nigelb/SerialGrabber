@@ -16,11 +16,13 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+from collections import OrderedDict
 
 import logging
 import time
 import SerialGrabber_Settings, SerialGrabber_State
 import datetime
+from serial import SerialException
 from serial_grabber.util import config_helper
 
 def get_millis():
@@ -44,10 +46,12 @@ class Reader:
         config = config_helper({})
         config.counter = self.counter
         start = get_millis()
+        processor_state = SerialGrabber_State.reader_state()
         while self.isRunning.running:
             try:
                 if self.stream is None:
                     self.setup()
+                    start = get_millis()
                     continue
                 read_data = self.stream.readline().strip()
                 if (get_millis() - start)  <= SerialGrabber_Settings.startup_ignore_threshold_milliseconds:
@@ -59,13 +63,16 @@ class Reader:
                     time.sleep(SerialGrabber_Settings.reader_error_sleep)
                     continue
                 matched = False
-                for matcher in SerialGrabber_State.READER_STATE:
+                for matcher in processor_state:
                     m = matcher(state, config, read_data)
                     if m:
                         matched = True
-                        SerialGrabber_State.READER_STATE[matcher](state, config, read_data)
+                        processor_state[matcher](state, config, read_data)
                 if not matched:
                     self.logger.error("There was unmatched input: %s"%read_data)
+            except SerialException, se:
+                self.close()
+                return
             except Exception, e:
                 self.counter.error()
                 import traceback

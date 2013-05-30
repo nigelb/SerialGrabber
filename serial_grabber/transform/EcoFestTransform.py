@@ -63,6 +63,7 @@ class EcoFestTransform(Transform):
         first = None
 
         result = {}
+        temp = [x for x in temp if len(x) > 0]
         for temp_entry in temp:
             temp_line = temp_entry.split(",")
             if len(temp_line) == 3:
@@ -80,6 +81,7 @@ class EcoFestTransform(Transform):
                 self.logger.error("Invalid Temperature line: %s"%temp_entry)
 
         result[first]["humidity"] = {}
+        hum = [x for x in hum if len(x) > 0]
         for hum_entry in hum:
             humidity_line = hum_entry.split(",")
             if len(humidity_line) == 5:
