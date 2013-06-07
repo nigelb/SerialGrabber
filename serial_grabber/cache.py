@@ -82,12 +82,17 @@ def list_cache():
 
 def read_cache(cache_filename):
     with open(cache_filename, "rb") as cache_file:
-        cache_entry = json.load(cache_file)
-        if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
+        try:
+            cache_entry = json.load(cache_file)
+            if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
+                logger.error("Corrupted Cache Entry: %s de-caching."%cache_filename)
+                decache(cache_filename)
+                return None
+            return config_helper(cache_entry)
+        except ValueError, ve:
             logger.error("Corrupted Cache Entry: %s de-caching."%cache_filename)
             decache(cache_filename)
             return None
-        return config_helper(cache_entry)
 
 def make_payload(data):
     toRet =  {
