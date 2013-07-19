@@ -62,6 +62,9 @@ class Processor:
                                 self.counter.error()
                         else:
                             self.logger.debug("File is to new. Leaving for next round.")
+                    if not self.isRunning.running:
+                        self.logger.error("Stopped Running during entry iteration, breaking.")
+                        break
             self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.uploader_sleep)
 
