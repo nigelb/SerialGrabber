@@ -17,13 +17,40 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import httplib
+
 import logging
 import socket
+import urllib
+
 from serial_grabber.processor import Processor
+from urlparse import urlparse
 
 
 class UploadProcessor(Processor):
     logger = logging.getLogger("Uploader")
 
-    def __init__(self):
+    def __init__(self, url):
         socket.setdefaulttimeout(15)
+        self.url = url
+
+    def process(self, process_entry):
+        toRet = False
+        _url = urlparse(self.url)
+        params = urllib.urlencode(process_entry.data.config_delegate)
+
+        headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+        if _url.scheme == "https":
+            conn = httplib.HTTPSConnection(_url.hostname)
+        else:
+            conn = httplib.HTTPConnection(_url.hostname)
+        conn.request("POST", _url.path, body=params, headers=headers)
+        response = conn.getresponse()
+        self.logger.info("HTTP Response: %s %s"%(response.status, response.reason))
+
+        data = response.read()
+        self.logger.log(5,data)
+        conn.close()
+        if response.status == 200:
+            return True
+        raise Exception(self.url, response.status, response.reason)
