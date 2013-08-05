@@ -22,6 +22,12 @@ import serial
 from serial_grabber import poster_exceptions
 from serial_grabber.reader import Reader
 
+class _Stream:
+    def __init__(self, stream):
+        self.stream = stream
+    def write(self, *args, **kwargs):
+        return self.stream.write(*args, **kwargs)
+
 class SerialReader(Reader):
     def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
         self.port = port
@@ -62,3 +68,6 @@ class SerialReader(Reader):
     def close(self):
         if self.stream:
             self.stream.close()
+
+    def getCommandStream(self):
+        return _Stream(self.stream)

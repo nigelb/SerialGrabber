@@ -19,6 +19,7 @@
 
 #Serial Settings
 import serial
+from serial_grabber.commander.AquariumCommander import Aquarium
 from serial_grabber.filter.CountingFilter import CountingTransactionFilter
 from serial_grabber.processor import CompositeProcessor, TransformCompositeProcessor
 from serial_grabber.processor.FileAppenderProcessor import FileAppenderProcessor
@@ -52,6 +53,7 @@ reader = SerialReader(port, baud,
     stop_bits=stop_bits)
 
 #reader = FileReader("test_data.txt")
+#commander = Aquarium()
 
 processor = CompositeProcessor([
     FileAppenderProcessor("all.txt"),

@@ -32,6 +32,9 @@ class JsonFileProcessor(Processor):
         self.filter = transaction_filter
         self.limit = limit
         self.output_file = output_file
+        _dir = os.path.dirname(os.path.abspath(output_file))
+        if not os.path.exists(_dir):
+           os.makedirs(_dir)
 
     def process(self, process_entry):
         filtered = False

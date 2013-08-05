@@ -16,30 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-import glob
 
-requires=[
-    "requests",
-    "pyserial",
-]
+#from serial_grabber.commander.cgi.AquariumCGI import AquariumAPI
 
-from setuptools import setup, find_packages
-
-setup(name='SerialGrabber',
-    version='0.0.1',
-    description='SerialGrabber reads data from a serial port and processes it with the configured processor.',
-    author='NigelB',
-    author_email='nigel.blair@gmail.com',
-    packages=find_packages(),
-    zip_safe=False,
-    install_requires=requires,
-    entry_points={
-        "console_scripts": [
-            "serial_grabber = serial_grabber.SerialGrabber:main",
-        ]
-    },
-    data_files=[
-        ("/etc/SerialGrabber", glob.glob("example_config/*")),
-        ("/etc/dbus-1/system.d", glob.glob("dbus/system.d/*"))
-    ]
-)
+#cgi_handler = AquariumAPI

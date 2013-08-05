@@ -35,6 +35,9 @@ class Reader:
         self.stream = None
         self.run()
 
+    def getCommandStream(self):
+        return None
+
     def setup(self):
         raise Exception("Reader method \"setup\" not implemented.")
 

@@ -58,8 +58,11 @@ def main():
 #    logging.root.addHandler(hdlr)
 
     logger = logging.getLogger("Main")
+    commander = None
+    if "commander" in SerialGrabber_Settings.__dict__:
+        commander = SerialGrabber_Settings.commander
 
-    SerialGrabber_UI.ui.start(logger, SerialGrabber_Settings.reader, SerialGrabber_Settings.processor)
+    SerialGrabber_UI.ui.start(logger, SerialGrabber_Settings.reader, SerialGrabber_Settings.processor, commander)
 
 if __name__ == "__main__":
     main()

@@ -29,10 +29,12 @@ class status:
     def set_tooltip(self, tooltip):
         self.logger.info(tooltip)
 
-def register_handler(running, watchdog, reader, processor):
+def register_handler(running, watchdog, reader, processor, command):
     def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
         running.running = False
+        if command:
+            command.stop()
         watchdog.join()
         reader.close()
 
@@ -40,16 +42,18 @@ def register_handler(running, watchdog, reader, processor):
         exit(0)
     signal.signal(signal.SIGINT, signal_handler)
 
-def start(logger, reader, processor):
+def start(logger, reader, processor, command):
     try:
         si = status(logger)
         isRunning = running(True)
         c = counter(si)
 
         watchdog = Watchdog(isRunning)
-        register_handler(isRunning, watchdog, reader, processor)
+        register_handler(isRunning, watchdog, reader, processor, command)
         watchdog.start_thread(reader, (isRunning, c), "Runner")
         watchdog.start_thread(processor, (isRunning, c), "Uploader")
+        if command:
+            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream()), "Commander")
         while isRunning.running:
             time.sleep(1)
     finally:
