@@ -69,7 +69,7 @@ def tempSchedule(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
     return func(float(request.request))
 
-@metadata(group="/temp/set")
+@metadata(name="Point", group="/temp/set")
 @Route("/temp/set/Point")
 def tempPID_setSetPoint(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
@@ -107,7 +107,7 @@ def phSchedule(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
     return func(float(request.request))
 
-@metadata(group="/ph/set")
+@metadata(name="Point", group="/ph/set")
 @Route("/ph/set/Point")
 def phPID_setSetPoint(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
