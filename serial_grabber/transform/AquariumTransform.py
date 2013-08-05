@@ -20,20 +20,20 @@ from serial_grabber.transform import Transform
 from serial_grabber.util import config_helper
 
 def __temp(args):
-    name, temp, tempSetPoint, pidVal = args
-    return "Temperature",{"temp":temp, "set_point":tempSetPoint, "pid_val":pidVal}
+    name, temp, tempSetPoint = args
+    return "Temperature",{"temp":temp, "set_point":tempSetPoint}
 
 def __ph(args):
-    name, ph, phSetPoint, pidVal = args
-    return "PH",{"ph":ph, "set_point":phSetPoint, "pid_val":pidVal}
+    name, ph, phSetPoint = args
+    return "PH",{"ph":ph, "set_point":phSetPoint}
 
 def __tempPID(args):
-    name, kp, ki, kd = args
-    return "TemperaturePID",{"Kp":kp, "Ki":ki, "Kd":kd}
+    name, kp, ki, kd, pidVal = args
+    return "TemperaturePID",{"Kp":kp, "Ki":ki, "Kd":kd, "pid_val":pidVal}
 
 def __phPID(args):
-    name, kp, ki, kd = args
-    return "PHPID",{"Kp":kp, "Ki":ki, "Kd":kd}
+    name, kp, ki, kd, pidVal = args
+    return "PHPID",{"Kp":kp, "Ki":ki, "Kd":kd, "pid_val":pidVal}
 
 row_map = {
     "temp":__temp,
