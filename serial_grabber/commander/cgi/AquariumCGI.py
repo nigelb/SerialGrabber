@@ -69,6 +69,12 @@ def tempSchedule(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
     return func(float(request.request))
 
+@metadata(group="/temp/set")
+@Route("/temp/set/Point")
+def tempPID_setSetPoint(request):
+    func = get_dbus_proxy(inspect.stack()[0][3])
+    return func(float(request.request))
+
 ###################################################
 
 @Route("/ph/set(/*)$")
@@ -98,5 +104,11 @@ def phPID_setKd(request):
 @metadata(group="/ph/set")
 @Route("/ph/set/Schedule")
 def phSchedule(request):
+    func = get_dbus_proxy(inspect.stack()[0][3])
+    return func(float(request.request))
+
+@metadata(group="/ph/set")
+@Route("/ph/set/Point")
+def phPID_setSetPoint(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
     return func(float(request.request))
