@@ -28,10 +28,11 @@ import os, os.path
 
 class JsonFileProcessor(Processor):
     logger = logging.getLogger("JsonFileProcessor")
-    def __init__(self, output_file, transaction_filter=None, limit=-1):
+    def __init__(self, output_file, transaction_filter=None, limit=-1, permission=0644):
         self.filter = transaction_filter
         self.limit = limit
         self.output_file = output_file
+        self.permission = permission
         _dir = os.path.dirname(os.path.abspath(output_file))
         if not os.path.exists(_dir):
            os.makedirs(_dir)
@@ -56,6 +57,7 @@ class JsonFileProcessor(Processor):
                 with os.fdopen(fid, "wb") as out_data:
                     json.dump(data, out_data)
                 shutil.move(path, self.output_file)
+                os.chmod(self.output_file, self.permission)
                 return True
         except:
             import traceback
