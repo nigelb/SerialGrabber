@@ -50,7 +50,7 @@ def open_archive(depth=0, name="archive"):
             logger.error("Could not open archive.tar, moving to %s and starting new archive."%old_archive_path)
             shutil.move(archive_path, old_archive_path)
             return open_archive(depth=depth+1)
-    return archive
+    return archive[name]
 
 def close_cache():
     global archive
