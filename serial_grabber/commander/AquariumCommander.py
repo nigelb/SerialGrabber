@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import logging
 
 import dbus
 
@@ -31,6 +32,7 @@ BUS_PATH = '/serial_grabber/Aquarium'
 
 class Aquarium(dbus.service.Object, Commander):
     dbus_loop = DBusGMainLoop(set_as_default=True)
+    logger = logging.getLogger("AquariumCommander")
     def __init__(self):
         bus_name = dbus.service.BusName(BUS_NAME, bus=dbus.SystemBus(mainloop=self.dbus_loop))
         dbus.service.Object.__init__(self, bus_name, BUS_PATH)
@@ -39,6 +41,7 @@ class Aquarium(dbus.service.Object, Commander):
         self.ph_pid = "ph_pid set"
 
     def __call__(self, *args, **kwargs):
+        self.logger.info("Started Aquarium Commander")
         self.isRunning, self.counter, self.stream = args
         gobject.threads_init()
         self.loop.run()
