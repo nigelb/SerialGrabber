@@ -66,6 +66,6 @@ def locate_resource(name):
     return None
 
 def get_millis():
-    dt = datetime.now()
+    dt = datetime.datetime.now()
     return  int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
 
