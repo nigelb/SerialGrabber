@@ -62,7 +62,15 @@ def main():
     if "commander" in SerialGrabber_Settings.__dict__:
         commander = SerialGrabber_Settings.commander
 
-    SerialGrabber_UI.ui.start(logger, SerialGrabber_Settings.reader, SerialGrabber_Settings.processor, commander)
+    reader = None
+    if "reader" in SerialGrabber_Settings.__dict__:
+        reader = SerialGrabber_Settings.reader
+        commander = None
+    processor = None
+    if "processor" in SerialGrabber_Settings.__dict__:
+        processor = SerialGrabber_Settings.processor
+
+    SerialGrabber_UI.ui.start(logger, reader, processor, commander)
 
 if __name__ == "__main__":
     main()

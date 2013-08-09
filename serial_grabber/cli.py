@@ -50,8 +50,10 @@ def start(logger, reader, processor, command):
 
         watchdog = Watchdog(isRunning)
         register_handler(isRunning, watchdog, reader, processor, command)
-        watchdog.start_thread(reader, (isRunning, c), "Runner")
-        watchdog.start_thread(processor, (isRunning, c), "Uploader")
+        if reader:
+            watchdog.start_thread(reader, (isRunning, c), "Runner")
+        if processor:
+            watchdog.start_thread(processor, (isRunning, c), "Uploader")
         if command:
             watchdog.start_thread(command, (isRunning, c, reader.getCommandStream()), "Commander")
         while isRunning.running:
