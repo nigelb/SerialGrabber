@@ -27,26 +27,26 @@ import SerialGrabber_Paths
 
 logger = logging.getLogger("Cache")
 
-archive = None
+archive = {}
 
-def open_archive(depth=0):
+def open_archive(depth=0, name="archive"):
     if depth == 2:
         return None
     global archive
-    if archive:
-        return archive
+    if name in archive:
+        return archive[name]
     if not os.path.exists(SerialGrabber_Paths.archive_dir):
         os.makedirs(SerialGrabber_Paths.archive_dir)
-    archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "archive.tar")
+    archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "%s.tar"%name)
     archive_existed = os.path.exists(archive_path)
     try:
-        archive = tarfile.open(archive_path,"a")
+        archive[name] = tarfile.open(archive_path,"a")
     except:
         if archive_existed:
             n = datetime.now()
-            while os.path.exists(os.path.join(SerialGrabber_Paths.archive_dir, "archive-%s.tar"%n.strftime("%Y_%m_%d_%H_%M_%S"))):
+            while os.path.exists(os.path.join(SerialGrabber_Paths.archive_dir, "%s-%s.tar"%(name, n.strftime("%Y_%m_%d_%H_%M_%S")))):
                 n = datetime.now()
-            old_archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "archive-%s.tar"%n.strftime("%Y_%m_%d_%H_%M_%S"))
+            old_archive_path = os.path.join(SerialGrabber_Paths.archive_dir, ("%s-%s.tar"%(name, n.strftime("%Y_%m_%d_%H_%M_%S"))))
             logger.error("Could not open archive.tar, moving to %s and starting new archive."%old_archive_path)
             shutil.move(archive_path, old_archive_path)
             return open_archive(depth=depth+1)
@@ -54,8 +54,8 @@ def open_archive(depth=0):
 
 def close_cache():
     global archive
-    if archive:
-        archive.close()
+    for name in archive:
+        archive[name].close()
     logger.warn("Closed cache.")
 
 
@@ -113,10 +113,10 @@ def cache(payload):
     shutil.move(tmp_file_path, cache_file_path)
     logger.debug("Wrote cache file: %s"%cache_file_path)
 
-def decache(cache_file):
+def decache(cache_file, type="archive"):
     if os.path.exists(cache_file):
         shutil.move(cache_file, SerialGrabber_Paths.archive_dir)
-        _archive = open_archive()
+        _archive = open_archive(name=type)
         name = os.path.basename(cache_file)
         archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
         _archive.add(archived_name, arcname=os.path.join("archive",name))
