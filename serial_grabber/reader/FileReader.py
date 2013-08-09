@@ -28,5 +28,6 @@ class FileReader(Reader):
         self.stream = open(self.file_name, "rb")
 
     def close(self):
-        self.stream.close()
+        if self.stream:
+            self.stream.close()
 
