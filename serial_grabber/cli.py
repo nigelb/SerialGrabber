@@ -36,7 +36,8 @@ def register_handler(running, watchdog, reader, processor, command):
         if command:
             command.stop()
         watchdog.join()
-        reader.close()
+        if reader:
+            reader.close()
 
 
         exit(0)
