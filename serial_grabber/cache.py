@@ -20,7 +20,7 @@ import glob
 
 import shutil, os, os.path, constants, time, logging, json
 from datetime import datetime
-from serial_grabber.util import config_helper
+from serial_grabber.util import config_helper, get_millis
 import tarfile
 
 import SerialGrabber_Paths
@@ -97,7 +97,7 @@ def read_cache(cache_filename):
 def make_payload(data):
     toRet =  {
         constants.payload: data,
-        constants.timep: time.mktime(datetime.now().timetuple())
+        constants.timep: get_millis()
     }
     return toRet
 

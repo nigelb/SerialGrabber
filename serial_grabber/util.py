@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import datetime, time
 
 class config_helper:
 
@@ -63,3 +64,8 @@ def locate_resource(name):
         if os.path.exists(path):
             return os.path.abspath(path)
     return None
+
+def get_millis():
+    dt = datetime.now()
+    return  int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
+

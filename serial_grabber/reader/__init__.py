@@ -23,10 +23,10 @@ import time
 import SerialGrabber_Settings, SerialGrabber_State
 import datetime
 from serial import SerialException
-from serial_grabber.util import config_helper
+from serial_grabber.util import config_helper, get_millis
 
-def get_millis():
-    return time.mktime(datetime.datetime.now().timetuple()) * 1000
+#def get_millis():
+#    return time.mktime(datetime.datetime.now().timetuple()) * 1000
 class Reader:
     logger = logging.getLogger("Reader")
     def __call__(self, *args, **kwargs):
