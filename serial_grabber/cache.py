@@ -60,7 +60,6 @@ def close_cache():
 
 
 def cache_cmp(a,b):
-    print a
     _a_t, a_ext = a.split('.')
     _b_t, b_ext = b.split('.')
     a_1, a_2 = _a_t.split("-")
