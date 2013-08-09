@@ -36,6 +36,10 @@ class JsonFileProcessor(Processor):
         _dir = os.path.dirname(os.path.abspath(output_file))
         if not os.path.exists(_dir):
            os.makedirs(_dir)
+        self.data = []
+        if os.path.exists(self.output_file):
+           with open(self.output_file, "rb") as existing:
+               self.data = json.load(existing)
 
     def process(self, process_entry):
         filtered = False
@@ -44,12 +48,8 @@ class JsonFileProcessor(Processor):
         self.logger.debug("Filtered: %s, %s"%(filtered, self.output_file))
         try:
             if not filtered:
-                data = []
-                if os.path.exists(self.output_file):
-                    with open(self.output_file, "rb") as existing:
-                        data = json.load(existing)
-                if self.limit > 0 and len(data) >= self.limit:
-                    data = data[((self.limit - 1 ) * -1):]
+                if self.limit > 0 and len(self.data) >= self.limit:
+                    self.data = self.data[((self.limit - 1 ) * -1):]
                     if (self.limit - 1) == 0:
                         data = []
                 data.append(process_entry.data.payload)
