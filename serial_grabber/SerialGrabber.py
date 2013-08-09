@@ -65,7 +65,7 @@ def main():
     reader = None
     if "reader" in SerialGrabber_Settings.__dict__:
         reader = SerialGrabber_Settings.reader
-        commander = None
+
     processor = None
     if "processor" in SerialGrabber_Settings.__dict__:
         processor = SerialGrabber_Settings.processor
