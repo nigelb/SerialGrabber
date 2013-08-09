@@ -66,8 +66,8 @@ def cache_cmp(a,b):
     a_1, a_2 = _a_t.split("-")
     b_1, b_2 = _b_t.split("-")
     v = int(a_1) - int(b_1)
-    if v != 0: return v
-    return int(a_2) - int(b_2)
+    if v != 0: return int(v)
+    return int(int(a_2) - int(b_2))
 
 def list_cache():
     toRet = {}
