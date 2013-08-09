@@ -51,11 +51,11 @@ class JsonFileProcessor(Processor):
                 if self.limit > 0 and len(self.data) >= self.limit:
                     self.data = self.data[((self.limit - 1 ) * -1):]
                     if (self.limit - 1) == 0:
-                        data = []
-                data.append(process_entry.data.payload)
+                        self.data = []
+                self.data.append(process_entry.data.payload)
                 fid, path = tempfile.mkstemp()
                 with os.fdopen(fid, "wb") as out_data:
-                    json.dump(data, out_data)
+                    json.dump(self.data, out_data)
                 shutil.move(path, self.output_file)
                 os.chmod(self.output_file, self.permission)
                 return True
