@@ -57,9 +57,10 @@ class Processor:
                                         self.counter.processed()
                                         cache.decache(entry_path)
                             except BaseException, e:
-                                self.logger.error("Failed to process data: %s"%e)
-                                self.logger.exception(e)
+                                self.logger.error("Failed to process data: %s moving to bad data archive"%e)
+#                                self.logger.exception(e)
                                 self.counter.error()
+                                cache.decache(entry_path, type="bad_data")
                         else:
                             self.logger.debug("File is to new. Leaving for next round.")
                     if not self.isRunning.running:
