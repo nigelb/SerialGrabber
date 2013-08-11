@@ -28,6 +28,7 @@ import os, os.path
 
 class JsonFileProcessor(Processor):
     logger = logging.getLogger("JsonFileProcessor")
+
     def __init__(self, output_file, transaction_filter=None, limit=-1, permission=0644):
         self.filter = transaction_filter
         self.limit = limit
@@ -35,17 +36,20 @@ class JsonFileProcessor(Processor):
         self.permission = permission
         _dir = os.path.dirname(os.path.abspath(output_file))
         if not os.path.exists(_dir):
-           os.makedirs(_dir)
+            os.makedirs(_dir)
         self.data = []
         if os.path.exists(self.output_file):
-           with open(self.output_file, "rb") as existing:
-               self.data = json.load(existing)
+            with open(self.output_file, "rb") as existing:
+                data = json.load(existing)
+            for i in data:
+                self.data.append(json.dumps(i))
+
 
     def process(self, process_entry):
         filtered = False
         if self.filter:
             filtered = self.filter.filter(process_entry)
-        self.logger.debug("Filtered: %s, %s"%(filtered, self.output_file))
+        self.logger.debug("Filtered: %s, %s" % (filtered, self.output_file))
         try:
             if not filtered:
                 if self.limit > 0 and len(self.data) >= self.limit:
@@ -63,6 +67,7 @@ class JsonFileProcessor(Processor):
                 return True
         except:
             import traceback
+
             traceback.print_exc()
             return False
 
