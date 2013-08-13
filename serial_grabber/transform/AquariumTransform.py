@@ -21,30 +21,31 @@ from serial_grabber.util import config_helper
 
 def __temp(args):
     name, temp, tempSetPoint = args
-    return "Temperature",{"temp":temp, "set_point":tempSetPoint}
+    return "Temperature", {"temp": temp, "set_point": tempSetPoint}
+
 
 def __ph(args):
     name, ph, phSetPoint = args
-    return "PH",{"ph":ph, "set_point":phSetPoint}
+    return "PH", {"ph": ph, "set_point": phSetPoint}
+
 
 def __tempPID(args):
     name, kp, ki, kd, pidVal = args
-    return "TemperaturePID",{"Kp":kp, "Ki":ki, "Kd":kd, "pid_val":pidVal}
+    return "TemperaturePID", {"Kp": kp, "Ki": ki, "Kd": kd, "pid_val": pidVal}
+
 
 def __phPID(args):
     name, kp, ki, kd, pidVal = args
-    return "PHPID",{"Kp":kp, "Ki":ki, "Kd":kd, "pid_val":pidVal}
+    return "PHPID", {"Kp": kp, "Ki": ki, "Kd": kd, "pid_val": pidVal}
 
 row_map = {
-    "temp":__temp,
-    "ph":__ph,
-    "temp_pid":__tempPID,
-    "ph_pid":__phPID,
+    "temp": __temp,
+    "ph": __ph,
+    "temp_pid": __tempPID,
+    "ph_pid": __phPID,
 }
 
 class AquariumTransform(Transform):
-
-
     def transform(self, process_entry):
         transform_result = config_helper({})
         for i in process_entry:
@@ -65,5 +66,51 @@ class AquariumTransform(Transform):
         transform_result.data.payload = result
         transform_result.data.original_payload = original_payload
         return transform_result
+
+
+def averageAquariumData(data):
+    result = config_helper({
+        'PHPID': {"Kp": 0, "Ki": 0, "Kd": 0, "pid_val": 0},
+        "TemperaturePID": {"Kp": 0, "Ki": 0, "Kd": 0, "pid_val": 0},
+        "PH": {"ph": 0, "set_point": 0},
+        "Temperature": {"temp": 0, "set_point": 0}
+    })
+    _time = 0
+    for element in data:
+        _time += element.data.time
+        result.PHPID.Kp += float(element.data.payload.PHPID.Kp)
+        result.PHPID.Ki += float(element.data.payload.PHPID.Ki)
+        result.PHPID.Kd += float(element.data.payload.PHPID.Kd)
+
+        result.TemperaturePID.Kp += float(element.data.payload.TemperaturePID.Kp)
+        result.TemperaturePID.Ki += float(element.data.payload.TemperaturePID.Ki)
+        result.TemperaturePID.Kd += float(element.data.payload.TemperaturePID.Kd)
+
+
+        result.PH.ph += float(element.data.payload.PH.ph)
+        result.PH.set_point += float(element.data.payload.PH.set_point)
+
+        result.Temperature.temp += float(element.data.payload.Temperature.temp)
+        result.Temperature.set_point += float(element.data.payload.Temperature.set_point)
+
+
+    length = len(data)
+    result.PHPID.Kp /= length
+    result.PHPID.Ki /= length
+    result.PHPID.Kd /= length
+
+    result.TemperaturePID.Kp /= length
+    result.TemperaturePID.Ki /= length
+    result.TemperaturePID.Kd /= length
+
+    result.PH.ph /= length
+    result.PH.set_point /= length
+
+    result.Temperature.temp /= length
+    result.Temperature.set_point /= length
+    toRet = {'data':{'payload':result.config_delegate, 'time':int(_time/length)}}
+    return toRet
+
+
 
 
