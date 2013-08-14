@@ -72,6 +72,10 @@ class Processor:
     def process(self, process_entry):
         raise Exception("Reader method \"process\" not implemented.")
 
+class ExternalFilenameProcessor(Processor):
+    def setOutputFileName(self, filename):
+        self.filename = filename
+
 class CompositeProcessor(Processor):
     logger = logging.getLogger("CompositeProcessor")
 
@@ -96,4 +100,28 @@ class TransformCompositeProcessor(CompositeProcessor):
 
     def process(self, process_entry):
         transformed_entry = self.transform.transform(process_entry)
-        return CompositeProcessor.process(self, transformed_entry)
+        if transformed_entry:
+            return CompositeProcessor.process(self, transformed_entry)
+        return True
+
+class ChunkingProcessor(Processor):
+    def __init__(self, boundary, chunk_size, output_dir, output_processor):
+        self.output_dir = output_dir
+        self.output_processor = output_processor
+        self.boundary = boundary
+        self.chunk_size = chunk_size
+        self.out_name = None
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+
+    def process(self, process_entry):
+        print process_entry.data.time , process_entry.data.time - (24 * 60 * 60 * 1000)
+        op = self.calculate_output_name(process_entry.data.time - (24 * 60 * 60 * 1000))
+        if op != self.out_name:
+            self.out_name = op
+            self.output_processor.setOutputFileName(os.path.join(self.output_dir, op))
+        self.output_processor.process(process_entry)
+
+    def calculate_output_name(self, ts):
+        v =  (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
+        return "%s.csv"%v
