@@ -56,7 +56,7 @@ class JsonFileProcessor(Processor):
                     self.data = self.data[((self.limit - 1 ) * -1):]
                     if (self.limit - 1) == 0:
                         self.data = []
-                self.data.append(json.dumps(process_entry.data.payload))
+                self.data.append(json.dumps(process_entry.data.payload.config_delegate))
                 fid, path = tempfile.mkstemp()
                 with os.fdopen(fid, "wb") as out_data:
                     out_data.write("[")
