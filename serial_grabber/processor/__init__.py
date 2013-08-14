@@ -115,12 +115,13 @@ class ChunkingProcessor(Processor):
             os.makedirs(self.output_dir)
 
     def process(self, process_entry):
-        print process_entry.data.time , process_entry.data.time - (24 * 60 * 60 * 1000)
-        op = self.calculate_output_name(process_entry.data.time - (24 * 60 * 60 * 1000))
+        __process_entry = config_helper(process_entry)
+        print __process_entry.data.time , __process_entry.data.time - (24 * 60 * 60 * 1000)
+        op = self.calculate_output_name(__process_entry.data.time - (24 * 60 * 60 * 1000))
         if op != self.out_name:
             self.out_name = op
             self.output_processor.setOutputFileName(os.path.join(self.output_dir, op))
-        self.output_processor.process(process_entry)
+        self.output_processor.process(__process_entry)
 
     def calculate_output_name(self, ts):
         v =  (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary

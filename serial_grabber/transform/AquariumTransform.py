@@ -116,7 +116,7 @@ def averageAquariumData(data):
     result.Temperature_set_point /= length
     result.timestamp = int(_time/length)
     toRet = {'data':{'payload':result.config_delegate, 'time':result.timestamp}}
-    return config_helper(toRet)
+    return toRet
 
 
 
