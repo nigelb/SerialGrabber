@@ -34,7 +34,10 @@ def main():
     try:
         import SerialGrabber_Paths, SerialGrabber_Settings, SerialGrabber_UI
     except ImportError, e:
+        import traceback
+        traceback.print_exc()
         print "Could not find configuration in %s, specify with --config-dir option."%(args.config_dir)
+
         exit(1)
         #Ensure the directories exist.
     if SerialGrabber_Paths.data_logger_dir is not None:
