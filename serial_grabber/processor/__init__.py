@@ -116,8 +116,7 @@ class ChunkingProcessor(Processor):
 
     def process(self, process_entry):
         __process_entry = config_helper(process_entry)
-        print __process_entry.data.time , __process_entry.data.time - (24 * 60 * 60 * 1000)
-        op = self.calculate_output_name(__process_entry.data.time - (24 * 60 * 60 * 1000))
+        op = self.calculate_output_name(__process_entry.data.time)
         if op != self.out_name:
             self.out_name = op
             self.output_processor.setOutputFileName(os.path.join(self.output_dir, op))
