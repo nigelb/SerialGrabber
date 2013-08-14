@@ -37,12 +37,15 @@ class config_helper:
 
     def __delitem__(self, key):
         del self.config[key]
-
+    def __nonzero__(self):
+        return True
     def __getattr__(self, key):
         if key is "__str__": return self.config.__str__
         elif key is "__repr__": return self.config.__repr__
         elif key is "__iter__": return self.config.__iter__
         elif key is "config_delegate": return self.config
+        if type(self.config[key]) == dict:
+            return config_helper(self.config[key])
         return self.config[key]
 
     def __contains__(self, item):
@@ -65,7 +68,15 @@ def locate_resource(name):
             return os.path.abspath(path)
     return None
 
-def get_millis():
-    dt = datetime.datetime.now()
+def get_millis(dt = None):
+    if dt is None:
+        dt = datetime.datetime.now()
     return  int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
 
+def PreviousWeekStartBoundry():
+    _dt = datetime.datetime.now()
+    return get_millis(dt = _dt.replace(day=(_dt.day - (_dt.weekday() + 1 )), hour=0, minute=0, second=0, microsecond=0))
+
+def PreviousMidnightBoundry():
+    dt = datetime.datetime.now()
+    return get_millis(dt = dt.replace(hour=0, minute=0, second=0, microsecond=0))
