@@ -20,3 +20,21 @@
 class Transform:
     def transform(self, process_entry):
         raise Exception('Method "transform" not implemented.')
+
+class BlockAveragingTransform(Transform):
+    import logging
+    logger = logging.getLogger("AveragingTransform")
+    def __init__(self, count, compute_average):
+        self.count = count
+        self.compute_average = compute_average
+        self.values = []
+
+
+    def transform(self, process_entry):
+        self.values.append(process_entry)
+        if len(self.values) == self.count:
+            result = self.compute_average(self.values)
+            self.values = []
+            return result
+
+        return None
