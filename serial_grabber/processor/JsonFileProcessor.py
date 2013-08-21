@@ -62,8 +62,8 @@ class JsonFileProcessor(Processor):
                     out_data.write("[")
                     out_data.write(",".join(self.data))
                     out_data.write("]")
+                os.chmod(path, self.permission)
                 shutil.move(path, self.output_file)
-                os.chmod(self.output_file, self.permission)
                 return True
         except:
             import traceback

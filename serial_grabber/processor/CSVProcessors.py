@@ -24,10 +24,11 @@ import os.path
 class CSVFileProcessor(ExternalFilenameProcessor):
     logger = logging.getLogger("CSVFileProcessor")
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, permission=0644):
         self.field_names = None
         if filename:
             self.setOutputFileName(filename)
+        self.permission = permission
 
     def setOutputFileName(self, filename):
         ExternalFilenameProcessor.setOutputFileName(self, filename)
@@ -49,7 +50,8 @@ class CSVFileProcessor(ExternalFilenameProcessor):
             if header:
                 existing.writeheader()
             existing.writerow(process_entry.data.payload.config_delegate)
-
+        if header:
+            os.chmod(self.filename, self.permission)
 
     def run(self):
         raise Exception("No!")
