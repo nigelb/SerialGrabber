@@ -44,7 +44,7 @@ class Aquarium(dbus.service.Object, Commander):
     def __call__(self, *args, **kwargs):
         self.logger.info("Started Aquarium Commander")
         self.isRunning, self.counter, self.stream = args
-        setproctitle.setproctitle("%s - AquariumCommander",setproctitle.getproctitle())
+        setproctitle.setproctitle("%s - AquariumCommander"%setproctitle.getproctitle())
         gobject.threads_init()
         self.loop.run()
 

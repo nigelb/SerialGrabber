@@ -33,7 +33,7 @@ class Reader:
         self.logger.info("Reader Thread Started.")
         self.isRunning, self.counter = args
         self.stream = None
-        setproctitle.setproctitle("%s - Reader",setproctitle.getproctitle())
+        setproctitle.setproctitle("%s - Reader"%setproctitle.getproctitle())
         self.run()
 
     def getCommandStream(self):

@@ -32,7 +32,7 @@ class Processor:
             self.logger.info("Processor Thread Started.")
             self.isRunning, self.counter = args
             self.run()
-            setproctitle.setproctitle("%s - Processor",setproctitle.getproctitle())
+            setproctitle.setproctitle("%s - Processor"%setproctitle.getproctitle())
         except BaseException, e:
             self.logger.exception(e)
 
