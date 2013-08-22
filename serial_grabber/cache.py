@@ -23,40 +23,10 @@ from datetime import datetime
 from serial_grabber.util import config_helper, get_millis
 import tarfile
 
-import SerialGrabber_Paths
+import SerialGrabber_Paths, Serial_Grabber_Cache
 
 logger = logging.getLogger("Cache")
 
-archive = {}
-
-def open_archive(depth=0, name="archive"):
-    if depth == 2:
-        return None
-    global archive
-    if name in archive:
-        return archive[name]
-    if not os.path.exists(SerialGrabber_Paths.archive_dir):
-        os.makedirs(SerialGrabber_Paths.archive_dir)
-    archive_path = os.path.join(SerialGrabber_Paths.archive_dir, "%s.tar"%name)
-    archive_existed = os.path.exists(archive_path)
-    try:
-        archive[name] = tarfile.open(archive_path,"a")
-    except:
-        if archive_existed:
-            n = datetime.now()
-            while os.path.exists(os.path.join(SerialGrabber_Paths.archive_dir, "%s-%s.tar"%(name, n.strftime("%Y_%m_%d_%H_%M_%S")))):
-                n = datetime.now()
-            old_archive_path = os.path.join(SerialGrabber_Paths.archive_dir, ("%s-%s.tar"%(name, n.strftime("%Y_%m_%d_%H_%M_%S"))))
-            logger.error("Could not open archive.tar, moving to %s and starting new archive."%old_archive_path)
-            shutil.move(archive_path, old_archive_path)
-            return open_archive(depth=depth+1)
-    return archive[name]
-
-def close_cache():
-    global archive
-    for name in archive:
-        archive[name].close()
-    logger.warn("Closed cache.")
 
 
 def cache_cmp(a,b):
@@ -116,10 +86,12 @@ def cache(payload):
 def decache(cache_file, type="archive"):
     if os.path.exists(cache_file):
         shutil.move(cache_file, SerialGrabber_Paths.archive_dir)
-        _archive = open_archive(name=type)
+        _archive = Serial_Grabber_Cache.open_archive(name=type)
         name = os.path.basename(cache_file)
         archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
         _archive.add(archived_name, arcname=os.path.join("archive",name))
         os.remove(archived_name)
         logger.info("decached %s"%os.path.basename(archived_name))
 
+def close_cache():
+    Serial_Grabber_Cache.close_archive()
