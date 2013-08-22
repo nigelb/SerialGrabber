@@ -20,7 +20,7 @@ import logging
 
 import os, SerialGrabber_Paths, SerialGrabber_Settings
 import time
-import datetime
+import datetime, setproctitle
 from serial_grabber import cache
 from serial_grabber.util import config_helper
 
@@ -32,6 +32,7 @@ class Processor:
             self.logger.info("Processor Thread Started.")
             self.isRunning, self.counter = args
             self.run()
+            setproctitle.setproctitle("%s - Processor",setproctitle.getproctitle())
         except BaseException, e:
             self.logger.exception(e)
 

@@ -21,7 +21,7 @@ from collections import OrderedDict
 import logging
 import time
 import SerialGrabber_Settings, SerialGrabber_State
-import datetime
+import datetime, setproctitle
 from serial import SerialException
 from serial_grabber.util import config_helper, get_millis
 
@@ -33,6 +33,7 @@ class Reader:
         self.logger.info("Reader Thread Started.")
         self.isRunning, self.counter = args
         self.stream = None
+        setproctitle.setproctitle("%s - Reader",setproctitle.getproctitle())
         self.run()
 
     def getCommandStream(self):
