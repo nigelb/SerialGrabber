@@ -91,12 +91,14 @@ def averageAquariumData(data):
         result.PHPID_Kp += float(element.data.payload.PHPID_Kp)
         result.PHPID_Ki += float(element.data.payload.PHPID_Ki)
         result.PHPID_Kd += float(element.data.payload.PHPID_Kd)
+        result.PHPID_pid_val += float(element.data.payload.PHPID_pid_val)
 
 
         if has_temp_pid:
             result.TemperaturePID_Kp += float(element.data.payload.TemperaturePID_Kp)
             result.TemperaturePID_Ki += float(element.data.payload.TemperaturePID_Ki)
             result.TemperaturePID_Kd += float(element.data.payload.TemperaturePID_Kd)
+            result.TemperaturePID_pid_val += float(element.data.payload.TemperaturePID_pid_val)
 
 
         result.PH_ph += float(element.data.payload.PH_ph)
@@ -110,11 +112,13 @@ def averageAquariumData(data):
     result.PHPID_Kp /= length
     result.PHPID_Ki /= length
     result.PHPID_Kd /= length
+    result.PHPID_pid_val /= length
 
     if has_temp_pid:
         result.TemperaturePID_Kp /= length
         result.TemperaturePID_Ki /= length
         result.TemperaturePID_Kd /= length
+        result.TemperaturePID_pid_val /= length
 
     result.PH_ph /= length
     result.PH_set_point /= length
