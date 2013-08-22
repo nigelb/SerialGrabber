@@ -23,7 +23,7 @@ from datetime import datetime
 from serial_grabber.util import config_helper, get_millis
 import tarfile
 
-import SerialGrabber_Paths, Serial_Grabber_Cache
+import SerialGrabber_Paths, SerialGrabber_Cache
 
 logger = logging.getLogger("Cache")
 
