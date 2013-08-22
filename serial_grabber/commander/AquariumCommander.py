@@ -25,7 +25,6 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 import gobject
 from serial_grabber.commander import Commander
-import setproctitle
 
 
 BUS_NAME = "serial_grabber.Aquarium"
@@ -44,7 +43,6 @@ class Aquarium(dbus.service.Object, Commander):
     def __call__(self, *args, **kwargs):
         self.logger.info("Started Aquarium Commander")
         self.isRunning, self.counter, self.stream = args
-        setproctitle.setproctitle("%s - AquariumCommander"%setproctitle.getproctitle())
         gobject.threads_init()
         self.loop.run()
 
