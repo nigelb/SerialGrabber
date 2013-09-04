@@ -61,7 +61,7 @@ class Reader:
                 current = None
                 dat = []
                 while self.isRunning.running and current != "\n":
-                    current = self.ser.read()
+                    current = self.stream.read()
                     dat.append(current)
                 read_data = "".join(dat).strip()
                 if (get_millis() - start)  <= SerialGrabber_Settings.startup_ignore_threshold_milliseconds:
