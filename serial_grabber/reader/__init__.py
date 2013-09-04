@@ -23,6 +23,7 @@ import time
 import SerialGrabber_Settings, SerialGrabber_State
 import datetime
 from serial import SerialException
+from serial_grabber.constants import current_matcher
 from serial_grabber.util import config_helper, get_millis
 
 #def get_millis():
@@ -70,7 +71,9 @@ class Reader:
                     m = matcher(state, config, read_data)
                     if m:
                         matched = True
+                        state[current_matcher] = m
                         processor_state[matcher](state, config, read_data)
+                        del state[current_matcher]
                 if not matched:
                     self.logger.error("There was unmatched input: %s"%read_data)
             except SerialException, se:
