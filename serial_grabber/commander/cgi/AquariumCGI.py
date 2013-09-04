@@ -112,3 +112,37 @@ def phSchedule(request):
 def phPID_setSetPoint(request):
     func = get_dbus_proxy(inspect.stack()[0][3])
     return func(float(request.request))
+
+
+@Route("/ph/calibration(/*)$")
+def phCalibration(request):
+    methods = metadata(group="/ph/calibration").methods()
+    m = [x.replace("/ph/calibration","").replace("ph","").replace("PID_set","") for x in methods]
+    return "\n".join(m)
+
+@metadata(name="Low", group="/ph/calibration")
+@Route("/ph/calibration/Low")
+def phCalibration_Low(request):
+    func = get_dbus_proxy(inspect.stack()[0][3])
+    result = func(timeout=200)
+    if result != "OK":
+        raise Exception(result)
+    return result
+
+@metadata(name="Neutral", group="/ph/calibration")
+@Route("/ph/calibration/Neutral")
+def phCalibration_Neutral(request):
+    func = get_dbus_proxy(inspect.stack()[0][3])
+    result = func(timeout=200)
+    if result != "OK":
+        raise Exception(result)
+    return result
+
+@metadata(name="High", group="/ph/calibration")
+@Route("/ph/calibration/High")
+def phCalibration_High(request):
+    func = get_dbus_proxy(inspect.stack()[0][3])
+    result = func(timeout=200)
+    if result != "OK":
+        raise Exception(result)
+    return result
