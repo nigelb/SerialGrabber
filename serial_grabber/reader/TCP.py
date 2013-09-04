@@ -40,6 +40,9 @@ class TCPReader(Reader):
         self.soc = s
         self.stream = self
 
+    def read(self):
+        return self.soc.recv(1)
+
     def readline(self):
         data = []
         while True:

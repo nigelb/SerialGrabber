@@ -57,7 +57,13 @@ class Reader:
                     self.setup()
                     start = get_millis()
                     continue
-                read_data = self.stream.readline().strip()
+                read_data = ""
+                current = None
+                dat = []
+                while self.isRunning.running and current != "\n":
+                    current = self.ser.read()
+                    dat.append(current)
+                read_data = "".join(dat).strip()
                 if (get_millis() - start)  <= SerialGrabber_Settings.startup_ignore_threshold_milliseconds:
                     self.logger.warn("Dropping data received inside startup threshold.")
                     continue
