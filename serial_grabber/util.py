@@ -73,10 +73,11 @@ def get_millis(dt = None):
         dt = datetime.datetime.now()
     return  int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
 
-def PreviousWeekStartBoundry():
+def PreviousWeekStartBoundary():
     _dt = datetime.datetime.now()
-    return get_millis(dt = _dt.replace(day=(_dt.day - (_dt.weekday() + 1 )), hour=0, minute=0, second=0, microsecond=0))
+    _dt = _dt + datetime.timedelta(days=(-1 * (_dt.weekday() + 1 )))
+    return get_millis(dt = _dt.replace(hour=0, minute=0, second=0, microsecond=0))
 
-def PreviousMidnightBoundry():
+def PreviousMidnightBoundary():
     dt = datetime.datetime.now()
     return get_millis(dt = dt.replace(hour=0, minute=0, second=0, microsecond=0))
