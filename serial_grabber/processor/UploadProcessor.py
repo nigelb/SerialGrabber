@@ -30,14 +30,23 @@ from urlparse import urlparse
 class UploadProcessor(Processor):
     logger = logging.getLogger("Uploader")
 
-    def __init__(self, url):
+    def __init__(self, url, **kwargs):
         socket.setdefaulttimeout(15)
         self.url = url
+        if 'params' in kwargs:
+            self.upload_params = kwargs['params']
 
     def process(self, process_entry):
         toRet = False
         _url = urlparse(self.url)
-        params = urllib.urlencode(process_entry.data.config_delegate)
+        data = {}
+        for i in self.upload_params:
+            data[i] = self.upload_params[i]
+
+        for i in process_entry.data.config_delegate:
+            data[i] = process_entry.data.config_delegate[i]
+
+        params = urllib.urlencode(data)
 
         headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
         if _url.scheme == "https":
