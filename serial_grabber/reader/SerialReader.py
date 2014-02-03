@@ -19,7 +19,6 @@
 
 import logging
 import serial, os, os.path, time
-from SerialGrabber_Settings import reader_error_sleep
 from serial_grabber import poster_exceptions
 from serial_grabber.reader import Reader
 
@@ -44,14 +43,14 @@ class SerialReader(Reader):
         if not os.path.exists(self.port):
             raise Exception("Port: " + self.port + " does not exists.")
         else:
-            time.sleep(reader_error_sleep)
+            time.sleep(2)
 
         ser = serial.Serial(self.port, self.baud,
                             timeout=self.timeout,
                             parity=self.parity,
                             stopbits=self.stop_bits
         )
-        time.sleep(reader_error_sleep)
+        time.sleep(2)
         #These are not the droids you are looking for....
         os.system("/bin/stty -F %s %s"%(self.port, self.baud))
         return ser
