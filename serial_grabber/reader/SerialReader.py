@@ -18,15 +18,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import logging
-import serial
+import serial, os, os.path, time
+from SerialGrabber_Settings import reader_error_sleep
 from serial_grabber import poster_exceptions
 from serial_grabber.reader import Reader
+
 
 class _Stream:
     def __init__(self, stream):
         self.stream = stream
+
     def write(self, *args, **kwargs):
         return self.stream.write(*args, **kwargs)
+
 
 class SerialReader(Reader):
     def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
@@ -37,11 +41,19 @@ class SerialReader(Reader):
         self.stop_bits = stop_bits
 
     def connect(self):
+        if not os.path.exists(self.port):
+            raise Exception("Port: " + self.port + " does not exists.")
+        else:
+            time.sleep(reader_error_sleep)
+
         ser = serial.Serial(self.port, self.baud,
-            timeout=self.timeout,
-            parity=self.parity,
-            stopbits=self.stop_bits
+                            timeout=self.timeout,
+                            parity=self.parity,
+                            stopbits=self.stop_bits
         )
+        time.sleep(reader_error_sleep)
+        #These are not the droids you are looking for....
+        os.system("/bin/stty -F %s %s"%(self.port, self.baud))
         return ser
 
     def try_connect(self):
@@ -60,7 +72,7 @@ class SerialReader(Reader):
             except Exception, e:
                 pass
         if con is None:
-            raise poster_exceptions.ConnectionException("Could not connect to port: %s"%self.port)
+            raise poster_exceptions.ConnectionException("Could not connect to port: %s" % self.port)
 
     def setup(self):
         self.stream = self.try_connect()
