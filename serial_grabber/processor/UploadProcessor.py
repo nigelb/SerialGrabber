@@ -66,4 +66,4 @@ class UploadProcessor(Processor):
             return True
         else:
             return False
-        raise Exception(self.url, response.status, response.reason)
+        # raise Exception(self.url, response.status, response.reason)
