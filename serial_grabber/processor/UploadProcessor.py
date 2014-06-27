@@ -22,6 +22,7 @@ import httplib
 import logging
 import socket
 import urllib
+import time
 
 from serial_grabber.processor import Processor
 from urlparse import urlparse
@@ -30,9 +31,10 @@ from urlparse import urlparse
 class UploadProcessor(Processor):
     logger = logging.getLogger("Uploader")
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, upload_error_sleep=10, **kwargs):
         socket.setdefaulttimeout(15)
         self.url = url
+        self.upload_error_sleep = upload_error_sleep
         self.upload_params = None
         if 'params' in kwargs:
             self.upload_params = kwargs['params']
@@ -65,5 +67,7 @@ class UploadProcessor(Processor):
         if response.status == 200:
             return True
         else:
+            self.logger.error("Upload Error, sleeping for %s seconds"%self.upload_error_sleep)
+            time.sleep(self.upload_error_sleep)
             return False
         # raise Exception(self.url, response.status, response.reason)
