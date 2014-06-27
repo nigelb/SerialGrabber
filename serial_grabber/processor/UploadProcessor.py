@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -33,7 +33,7 @@ class UploadProcessor(Processor):
     def __init__(self, url, **kwargs):
         socket.setdefaulttimeout(15)
         self.url = url
-	self.upload_params = None
+        self.upload_params = None
         if 'params' in kwargs:
             self.upload_params = kwargs['params']
 
@@ -41,7 +41,7 @@ class UploadProcessor(Processor):
         toRet = False
         _url = urlparse(self.url)
         data = {}
-	if self.upload_params is not None: 
+        if self.upload_params is not None:
             for i in self.upload_params:
                 data[i] = self.upload_params[i]
 
@@ -57,13 +57,13 @@ class UploadProcessor(Processor):
             conn = httplib.HTTPConnection(_url.hostname)
         conn.request("POST", _url.path, body=params, headers=headers)
         response = conn.getresponse()
-        self.logger.info("HTTP Response: %s %s"%(response.status, response.reason))
+        self.logger.info("HTTP Response: %s %s" % (response.status, response.reason))
 
         data = response.read()
-        self.logger.log(5,data)
+        self.logger.log(5, data)
         conn.close()
         if response.status == 200:
             return True
         else:
-	    return False
+            return False
         raise Exception(self.url, response.status, response.reason)
