@@ -33,6 +33,7 @@ class UploadProcessor(Processor):
     def __init__(self, url, **kwargs):
         socket.setdefaulttimeout(15)
         self.url = url
+	self.upload_params = None
         if 'params' in kwargs:
             self.upload_params = kwargs['params']
 
@@ -40,8 +41,9 @@ class UploadProcessor(Processor):
         toRet = False
         _url = urlparse(self.url)
         data = {}
-        for i in self.upload_params:
-            data[i] = self.upload_params[i]
+	if self.upload_params is not None: 
+            for i in self.upload_params:
+                data[i] = self.upload_params[i]
 
         for i in process_entry.data.config_delegate:
             data[i] = process_entry.data.config_delegate[i]
