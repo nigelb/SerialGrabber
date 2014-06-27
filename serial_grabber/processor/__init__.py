@@ -79,15 +79,16 @@ class ExternalFilenameProcessor(Processor):
 class CompositeProcessor(Processor):
     logger = logging.getLogger("CompositeProcessor")
 
-    def __init__(self, processors=()):
+    def __init__(self, processors=(), composition_operation=lambda a, b: a or b):
         self.processors = processors
+        self.operation = composition_operation
 
     def process(self, process_entry):
         toRet = False
         for pcs in self.processors:
             v = pcs.process(process_entry)
             if v is None: v = False
-            toRet |= v
+            toRet = self.operation(toRet, v)
         return toRet
 
 class TransformCompositeProcessor(CompositeProcessor):
