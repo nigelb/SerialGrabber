@@ -64,4 +64,6 @@ class UploadProcessor(Processor):
         conn.close()
         if response.status == 200:
             return True
+        else:
+	    return False
         raise Exception(self.url, response.status, response.reason)
