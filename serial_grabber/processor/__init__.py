@@ -79,12 +79,13 @@ class ExternalFilenameProcessor(Processor):
 class CompositeProcessor(Processor):
     logger = logging.getLogger("CompositeProcessor")
 
-    def __init__(self, processors=(), composition_operation=lambda a, b: a or b):
+    def __init__(self, processors=(), composition_operation=lambda a, b: a or b, starting_value=False):
         self.processors = processors
         self.operation = composition_operation
+        self.starting_value = starting_value
 
     def process(self, process_entry):
-        toRet = False
+        toRet = self.starting_value
         for pcs in self.processors:
             v = pcs.process(process_entry)
             if v is None: v = False
