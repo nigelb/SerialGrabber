@@ -2,7 +2,6 @@ SerialGrabber has the following dependencies:
 
  * pyserial
  * requests
- * ppygtk - if using the gui ui (opposed the cli ui)
 
 Instilation:
 	
