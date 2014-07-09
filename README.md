@@ -18,13 +18,3 @@ This will create a deafult configuration in /etc/SerialGrabber:
 * [`SerialGrabber_UI.py`](example_config/SerialGrabber_UI.py) - Select the UI to use: eg. cli
 
 
-
-
-To configure it, edit it and specify the serial connection parameters
-and the server to which the data is posted.
-
-This is a new implementation that caches and archives the data to the local
-disk. Ensuring that less data is lost due to network issues etc.
-
-
-Ensure you have the configuration in settings.py set correctly.
