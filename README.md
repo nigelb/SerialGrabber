@@ -4,6 +4,17 @@ SerialGrabber has the following dependencies:
  * requests
  * ppygtk
 
+Instilation:
+	
+	#> python setup.py install
+
+This will create a deafult configuration in /etc/SerialGrabber:
+
+* SerialGrabber_Cache.py - Configure the cache function handles
+
+
+
+
 To configure it, edit it and specify the serial connection parameters
 and the server to which the data is posted.
 
