@@ -27,6 +27,7 @@ from serial_grabber.processor.JsonFileProcessor import JsonFileProcessor
 from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.transform.EcoFestTransform import EcoFestTransform
+from serial_grabber.processor.UploadProcessor import UploadProcessor
 
 timeout = 1
 #port = "COM4"
@@ -55,9 +56,14 @@ reader = SerialReader(port, baud,
 #reader = FileReader("test_data.txt")
 #commander = Aquarium()
 
+#processor = CompositeProcessor([
+#    FileAppenderProcessor("all.txt"),
+#    TransformCompositeProcessor(EcoFestTransform(), [
+#        JsonFileProcessor("every_10.json", CountingTransactionFilter(10), 72),
+#        JsonFileProcessor("current.json", None, 1)])
+#])
+
 processor = CompositeProcessor([
     FileAppenderProcessor("all.txt"),
-    TransformCompositeProcessor(EcoFestTransform(), [
-        JsonFileProcessor("every_10.json", CountingTransactionFilter(10), 72),
-        JsonFileProcessor("current.json", None, 1)])
-])
+        UploadProcessor("https://example.org/cgi-bin/upload.py")
+	], composition_operation=lambda a, b: a and b, starting_value=True)
