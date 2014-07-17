@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 from collections import OrderedDict
 
 import logging
@@ -26,8 +27,7 @@ from serial import SerialException
 from serial_grabber.constants import current_matcher
 from serial_grabber.util import config_helper, get_millis
 
-#def get_millis():
-#    return time.mktime(datetime.datetime.now().timetuple()) * 1000
+
 class Reader:
     logger = logging.getLogger("Reader")
     def __call__(self, *args, **kwargs):
