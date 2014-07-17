@@ -1,0 +1,69 @@
+======================
+SerialGrabber Settings
+======================
+
+``configdir/SerialGrabber_Settings.py`` 
+
+uploader_collision_avoidance_delay
+----------------------------------
+The minimum amount of time to let a transaction exist in the cache before being processed by the processor.
+.. code-block:: python
+
+    uploader_collision_avoidance_delay = 1
+ 
+uploader_sleep
+--------------
+This need to be refactored. It is used by the processor and the uploader.
+The uploader should have it passed in the constructor, and the processor's should have a different name.
+
+.. code-block:: python
+
+    uploader_sleep = 1
+    
+watchdog_sleep
+--------------
+The amount of time that the watchdog thread will sleep for on each iteration.
+
+.. code-block:: python
+
+    watchdog_sleep = 1
+
+reader_error_sleep
+------------------
+The amount of time the reader thread will sleep if there is an error. This avoids the reader's thread using all of the cpu when there is an error.
+
+.. code-block:: python
+
+    reader_error_sleep = 1  
+
+startup_ignore_threshold_milliseconds
+-------------------------------------
+The amount of time that the reader will ignore input from the reader on startup. Some devices spew some garbage characters out on the serial port when they are powered up. 
+This option helps avoid mistaking this garbage for real data.
+
+.. code-block:: python
+
+    startup_ignore_threshold_milliseconds = 1000
+
+drop_carriage_return
+--------------------
+If this option is `True` then ``\r (0x0A)`` characters are removed from the data stream.
+
+reader
+------
+An object that implements :class:`serial_grabber.reader.Reader`, see :doc:`../Reader`
+
+.. code-block:: python
+
+    reader = SerialReader('/dev/ttyUSB0', 115200,
+        timeout=1,
+        parity=serial.PARITY_NONE,
+        stop_bits=1)
+
+processor
+---------
+An object that implements :class:`serial_grabber.processor.Processor`, see: :doc:`../Processor`
+
+.. code-block:: python
+
+    processor = UploadProcessor("https://example.org/cgi-bin/data.py", params={'device':'Device-1'})

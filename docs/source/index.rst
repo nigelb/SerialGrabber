@@ -11,8 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   SerialGrabber_Settings
-   Processors
+   Settings
+   Reader
+   Processor
 
 Indices and tables
 ==================
