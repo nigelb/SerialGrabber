@@ -26,23 +26,23 @@ If this option is `True` then \r (0x0A) characters are removed from the data str
 
 reader
 ====
-An object that implements [serial_grabber.reader.Reader](serial_grabber/reader/__init__.py):
+An object that implements [serial_grabber.reader.Reader](../serial_grabber/reader/__init__.py):
 
-* [serial_grabber.reader.FileReader.FileReader](serial_grabber/reader/FileReader.py)
-* [serial_grabber.reader.SerialReader.SerialReader](serial_grabber/reader/SerialReader.py)
-* [serial_grabber.reader.TCP.TCPReader](serial_grabber/reader/TCP.py)
+* [serial_grabber.reader.FileReader.FileReader](../serial_grabber/reader/FileReader.py)
+* [serial_grabber.reader.SerialReader.SerialReader](../serial_grabber/reader/SerialReader.py)
+* [serial_grabber.reader.TCP.TCPReader](../serial_grabber/reader/TCP.py)
 
 processor
 ====
-An object that implements [serial_grabber.processor.Processor](serial_grabber/processor/__init__.py):
+An object that implements [serial_grabber.processor.Processor](../serial_grabber/processor/__init__.py):
 
-* [serial_grabber.processor.ChunkingProcessor](serial_grabber/processor/__init__.py):
-* [serial_grabber.processor.CompositeProcessor](serial_grabber/processor/__init__.py):
-* [serial_grabber.processor.TransformCompositeProcessor](serial_grabber/processor/__init__.py):
-* [serial_grabber.processor.CSVProcessors.CSVFileProcessor](serial_grabber/processor/CSVProcessors.py)
-* [serial_grabber.processor.FileAppenderProcessor.CSVFileProcessor](serial_grabber/processor/FileAppenderProcessor.py)
-* [serial_grabber.processor.JsonFileProcessor.JsonFileProcessor](serial_grabber/processor/JsonFileProcessor.py)
-* [serial_grabber.processor.UploadProcessor.UploadProcessor](serial_grabber/processor/UploadProcessor.py)
+* [serial_grabber.processor.ChunkingProcessor](../serial_grabber/processor/__init__.py):
+* [serial_grabber.processor.CompositeProcessor](../serial_grabber/processor/__init__.py):
+* [serial_grabber.processor.TransformCompositeProcessor](../serial_grabber/processor/__init__.py):
+* [serial_grabber.processor.CSVProcessors.CSVFileProcessor](../serial_grabber/processor/CSVProcessors.py)
+* [serial_grabber.processor.FileAppenderProcessor.CSVFileProcessor](../serial_grabber/processor/FileAppenderProcessor.py)
+* [serial_grabber.processor.JsonFileProcessor.JsonFileProcessor](../serial_grabber/processor/JsonFileProcessor.py)
+* [serial_grabber.processor.UploadProcessor.UploadProcessor](../serial_grabber/processor/UploadProcessor.py)
 ```python
 UploadProcessor("https://example.org/cgi-bin/data.py", params={'device':'DEVICE_1'})
 ```
