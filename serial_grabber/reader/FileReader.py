@@ -20,12 +20,16 @@
 from serial_grabber.reader import Reader
 
 class FileReader(Reader):
+    """
+    A reader that opens and reads a file for its input.
 
-    def __init__(self, file_name):
-        self.file_name = file_name
+    :param str filename: The file to open and read as input.
+    """
+    def __init__(self, filename):
+        self.filename = filename
 
     def setup(self):
-        self.stream = open(self.file_name, "rb")
+        self.stream = open(self.filename, "rb")
 
     def close(self):
         if self.stream:

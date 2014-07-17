@@ -32,6 +32,15 @@ class _Stream:
 
 
 class SerialReader(Reader):
+    """
+    A reader that connects to the specified serial port for its input.
+
+    :param str port: The serial port to use, eg: /dev/ttyUSB0
+    :param int baud: The baud rate to use, eg: 115200
+    :param int timeout: eg: 60
+    :param int parity: eg: serial.PARITY_NONE
+    :param int stop_bits: eg: serial.STOPBITS_ONE
+    """
     def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
         self.port = port
         self.baud = baud

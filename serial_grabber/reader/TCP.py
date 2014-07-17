@@ -22,7 +22,12 @@ from serial_grabber.reader import Reader
 import socket
 
 class TCPReader(Reader):
+    """
+    A reader that connects to the specified hostname:port for its input.
 
+    :param str hostname: The hostname to connect to
+    :param int port: The port to connect to
+    """
     def __init__(self, hostname, port):
         self.hostname = hostname
         self.port = port
