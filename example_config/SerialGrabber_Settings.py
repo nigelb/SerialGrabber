@@ -17,26 +17,18 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#Serial Settings
 import serial
-from serial_grabber.commander.AquariumCommander import Aquarium
-from serial_grabber.filter.CountingFilter import CountingTransactionFilter
-from serial_grabber.processor import CompositeProcessor, TransformCompositeProcessor
-from serial_grabber.processor.FileAppenderProcessor import FileAppenderProcessor
-from serial_grabber.processor.JsonFileProcessor import JsonFileProcessor
-from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.reader.SerialReader import SerialReader
-from serial_grabber.transform.EcoFestTransform import EcoFestTransform
 from serial_grabber.processor.UploadProcessor import UploadProcessor
 
+#Serial Settings
 timeout = 1
-#port = "COM4"
 port = "/dev/ttyUSB0"
-#port=0
 baud = 57600
 parity = serial.PARITY_NONE
 stop_bits = 1
 
+#Settings
 uploader_collision_avoidance_delay = 1
 uploader_sleep = 1
 watchdog_sleep = 1
@@ -47,23 +39,9 @@ startup_ignore_threshold_milliseconds = 1000
 
 drop_carriage_return = True
 
-
 reader = SerialReader(port, baud,
     timeout=timeout,
     parity=parity,
     stop_bits=stop_bits)
 
-#reader = FileReader("test_data.txt")
-#commander = Aquarium()
-
-#processor = CompositeProcessor([
-#    FileAppenderProcessor("all.txt"),
-#    TransformCompositeProcessor(EcoFestTransform(), [
-#        JsonFileProcessor("every_10.json", CountingTransactionFilter(10), 72),
-#        JsonFileProcessor("current.json", None, 1)])
-#])
-
-processor = CompositeProcessor([
-    FileAppenderProcessor("all.txt"),
-        UploadProcessor("https://example.org/cgi-bin/upload.py")
-	], composition_operation=lambda a, b: a and b, starting_value=True)
+processor = UploadProcessor("https://example.org/cgi-bin/upload.py")
