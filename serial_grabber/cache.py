@@ -23,7 +23,7 @@ from datetime import datetime
 from serial_grabber.util import config_helper, get_millis
 import tarfile
 
-import SerialGrabber_Paths, SerialGrabber_Cache
+import SerialGrabber_Paths, SerialGrabber_Storage
 
 logger = logging.getLogger("Cache")
 
@@ -86,7 +86,7 @@ def cache(payload):
 def decache(cache_file, type="archive"):
     if os.path.exists(cache_file):
         shutil.move(cache_file, SerialGrabber_Paths.archive_dir)
-        _archive = SerialGrabber_Cache.open_archive(name=type)
+        _archive = SerialGrabber_Storage.open_archive(name=type)
         name = os.path.basename(cache_file)
         archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
         _archive.add(archived_name, arcname=os.path.join("archive",name))
@@ -94,4 +94,4 @@ def decache(cache_file, type="archive"):
         logger.info("decached %s"%os.path.basename(archived_name))
 
 def close_cache():
-    SerialGrabber_Cache.close_archive()
+    SerialGrabber_Storage.close_archive()
