@@ -6,13 +6,18 @@
 SerialGrabber Documentation
 ===========================
 
-Contents:
+The typical use case for Serial Grabber is to read data from a serial port and then post it to an internet endpoint.
+It can however read data from other sources like a file or a tcp connection.
+
+
+**Contents**
 
 .. toctree::
    :maxdepth: 2
 
    Install
    CommandLine
+   DataLifeCycle
    Settings
    Reader
    Processor

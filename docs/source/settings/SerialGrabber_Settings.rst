@@ -2,14 +2,20 @@
 SerialGrabber Settings
 ======================
 
-``configdir/SerialGrabber_Settings.py`` 
+Parameters located in the ``SerialGrabber_Settings.py`` file located in the configuration directory, see: :doc:`../CommandLine`.
+ 
 
-uploader_collision_avoidance_delay
+.. _cache_collision_avoidance_delay:
+
+cache_collision_avoidance_delay
 ----------------------------------
 The minimum amount of time to let a transaction exist in the cache before being processed by the processor.
+
+.. important:: This avoids the situation where the ``processor`` thread starts reading the cache entry before the ``reader`` has finished writing it.
+
 .. code-block:: python
 
-    uploader_collision_avoidance_delay = 1
+    cache_collision_avoidance_delay = 1
  
 uploader_sleep
 --------------
@@ -66,4 +72,11 @@ An object that implements :class:`serial_grabber.processor.Processor`, see: :doc
 
 .. code-block:: python
 
-    processor = UploadProcessor("https://example.org/cgi-bin/data.py", params={'device':'Device-1'})
+    from serial_grabber.processor.UploadProcessor import UploadProcessor
+
+    processor = UploadProcessor("https://example.org/cgi-bin/data.py", form_params={'device':'Device-1'})
+
+Example Config
+--------------
+
+.. literalinclude:: ../../../example_config/SerialGrabber_Settings.py

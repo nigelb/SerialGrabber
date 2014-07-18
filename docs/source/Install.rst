@@ -12,7 +12,7 @@ SerialGrabber depends on these packages:
 From Source
 -----------
 
-To install Serial Grabber run the following commands as root:
+To install Serial Grabber run the following commands as ``root``:
 
 .. code-block:: bash
 
