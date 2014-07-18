@@ -29,7 +29,7 @@ parity = serial.PARITY_NONE
 stop_bits = 1
 
 #Settings
-uploader_collision_avoidance_delay = 1
+cache_collision_avoidance_delay = 1
 uploader_sleep = 1
 watchdog_sleep = 1
 
