@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from serial_grabber.state import matches, set_url, send_data, begin_transaction, end_transaction
+from serial_grabber.state import matches, begin_transaction, end_transaction
 try:
     from collections import OrderedDict
 except:
@@ -25,8 +25,8 @@ except:
 
 def reader_state():
     READER_STATE = OrderedDict()
-    READER_STATE[matches("BEGIN TEMPERATURE")] = begin_transaction(READER_STATE)
-    READER_STATE[matches("END HUMIDITY")] = end_transaction(READER_STATE)
+    READER_STATE[matches("BEGIN DATA")] = begin_transaction(READER_STATE)
+    READER_STATE[matches("END DATA")] = end_transaction(READER_STATE)
     return READER_STATE
 
 
