@@ -17,14 +17,13 @@ The minimum amount of time to let a transaction exist in the cache before being 
 
     cache_collision_avoidance_delay = 1
  
-uploader_sleep
+processor_sleep
 --------------
-This need to be refactored. It is used by the processor and the uploader.
-The uploader should have it passed in the constructor, and the processor's should have a different name.
+The amount of time the processor should sleep between iterations.
 
 .. code-block:: python
 
-    uploader_sleep = 1
+    processor_sleep = 1
     
 watchdog_sleep
 --------------

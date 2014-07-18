@@ -30,7 +30,7 @@ stop_bits = 1
 
 #Settings
 cache_collision_avoidance_delay = 1
-uploader_sleep = 1
+processor_sleep = 1
 watchdog_sleep = 1
 
 reader_error_sleep = 1

@@ -67,7 +67,7 @@ class Processor:
                         self.logger.error("Stopped Running during entry iteration, breaking.")
                         break
             self.logger.log(5, "Processor Sleeping.")
-            time.sleep(SerialGrabber_Settings.uploader_sleep)
+            time.sleep(SerialGrabber_Settings.processor_sleep)
 
     def process(self, process_entry):
         raise Exception("Reader method \"process\" not implemented.")
