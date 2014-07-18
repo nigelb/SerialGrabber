@@ -12,7 +12,7 @@ The location of the cache directory, see :doc:`../DataLifeCycle`
 
 .. code-block:: python
 
-    cache_dir = os.path.join(data_logger_dir, "cache")
+    cache_dir = "/path/to/cache/directory"
 
 archive_dir
 -----------
@@ -20,7 +20,7 @@ The location of the archive directory, see :doc:`../DataLifeCycle`
 
 .. code-block:: python
 
-    archive_dir = os.path.join(data_logger_dir, "archive")
+    archive_dir = "/path/to/archive/directory"
 
 Example Config
 --------------
