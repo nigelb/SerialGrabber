@@ -7,3 +7,4 @@ Settings
 
    settings/SerialGrabber_Settings
    settings/SerialGrabber_Paths
+   settings/SerialGrabber_Storage
