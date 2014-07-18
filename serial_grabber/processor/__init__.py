@@ -43,7 +43,7 @@ class Processor:
                     parts = entry.split("-")
                     cache_time = float(parts[0].split(".")[0])
                     current_time = time.mktime(datetime.datetime.now().timetuple())
-                    if abs(cache_time - current_time) > SerialGrabber_Settings.uploader_collision_avoidance_delay:
+                    if abs(cache_time - current_time) > SerialGrabber_Settings.cache_collision_avoidance_delay:
                         entry_path = c_entries[entry]
                         if os.path.isfile(entry_path):
                             try:
