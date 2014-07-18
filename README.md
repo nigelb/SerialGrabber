@@ -1,13 +1,12 @@
 SerialGrabber has the following dependencies:
 
  * pyserial
- * requests
 
-Instilation:
+Instillation:
 	
 	#> python setup.py install
 
-This will create a deafult configuration in /etc/SerialGrabber:
+This will create a default configuration in /etc/SerialGrabber:
 
 * [`SerialGrabber_Cache.py`](example_config/SerialGrabber_Cache.py) - Configure the cache/archive function handlers
 * [`SerialGrabber_Calibration.py`](example_config/SerialGrabber_Calibration.py) - Configure Calibration providers
