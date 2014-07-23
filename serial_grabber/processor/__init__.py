@@ -132,3 +132,11 @@ class ChunkingProcessor(Processor):
     def calculate_output_name(self, ts):
         v = (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
         return "%s.csv" % v
+
+
+class TransactionFilter:
+    def __init__(self):
+        pass
+
+    def filter(self, transaction):
+        raise Exception("Not implemented")
