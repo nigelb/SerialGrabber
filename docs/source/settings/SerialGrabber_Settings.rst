@@ -8,7 +8,7 @@ Parameters located in the ``SerialGrabber_Settings.py`` file located in the conf
 .. _cache_collision_avoidance_delay:
 
 cache_collision_avoidance_delay
-----------------------------------
+-------------------------------
 The minimum amount of time to let a transaction exist in the cache before being processed by the processor.
 
 .. important:: This avoids the situation where the ``processor`` thread starts reading the cache entry before the ``reader`` has finished writing it.
@@ -18,7 +18,7 @@ The minimum amount of time to let a transaction exist in the cache before being 
     cache_collision_avoidance_delay = 1
  
 processor_sleep
---------------
+---------------
 The amount of time the processor should sleep between iterations.
 
 .. code-block:: python
