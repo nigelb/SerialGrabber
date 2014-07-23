@@ -1,3 +1,8 @@
+[Read the documentation.](http://serialgrabber.readthedocs.org/)
+
+Quickly
+-------
+
 SerialGrabber has the following dependencies:
 
  * pyserial
