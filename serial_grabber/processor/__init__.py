@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -27,6 +27,7 @@ from serial_grabber.util import config_helper
 
 class Processor:
     logger = logging.getLogger("Processor")
+
     def __call__(self, *args, **kwargs):
         try:
             self.logger.info("Processor Thread Started.")
@@ -47,17 +48,17 @@ class Processor:
                         entry_path = c_entries[entry]
                         if os.path.isfile(entry_path):
                             try:
-                                    data = {
-                                        "data":cache.read_cache(entry_path),
-                                        "entry_path": entry_path,
-                                        "entry": entry
-                                    }
+                                data = {
+                                    "data": cache.read_cache(entry_path),
+                                    "entry_path": entry_path,
+                                    "entry": entry
+                                }
 
-                                    if self.process(config_helper(data)):
-                                        self.counter.processed()
-                                        cache.decache(entry_path)
+                                if self.process(config_helper(data)):
+                                    self.counter.processed()
+                                    cache.decache(entry_path)
                             except BaseException, e:
-                                self.logger.error("Failed to process data: %s moving to bad data archive"%e)
+                                self.logger.error("Failed to process data: %s moving to bad data archive" % e)
                                 self.logger.exception(e)
                                 self.counter.error()
                                 cache.decache(entry_path, type="bad_data")
@@ -72,9 +73,11 @@ class Processor:
     def process(self, process_entry):
         raise Exception("Reader method \"process\" not implemented.")
 
+
 class ExternalFilenameProcessor(Processor):
     def setOutputFileName(self, filename):
         self.filename = filename
+
 
 class CompositeProcessor(Processor):
     logger = logging.getLogger("CompositeProcessor")
@@ -92,6 +95,7 @@ class CompositeProcessor(Processor):
             toRet = self.operation(toRet, v)
         return toRet
 
+
 class TransformCompositeProcessor(CompositeProcessor):
     logger = logging.getLogger("TransformCompositeProcessor")
 
@@ -105,6 +109,7 @@ class TransformCompositeProcessor(CompositeProcessor):
         if transformed_entry:
             return CompositeProcessor.process(self, transformed_entry)
         return True
+
 
 class ChunkingProcessor(Processor):
     def __init__(self, boundary, chunk_size, output_dir, output_processor):
@@ -125,5 +130,5 @@ class ChunkingProcessor(Processor):
         self.output_processor.process(__process_entry)
 
     def calculate_output_name(self, ts):
-        v =  (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
-        return "%s.csv"%v
+        v = (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
+        return "%s.csv" % v
