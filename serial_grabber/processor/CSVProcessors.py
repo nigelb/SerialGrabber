@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -21,7 +21,11 @@ import logging
 from serial_grabber.processor import ExternalFilenameProcessor
 import os.path
 
+
 class CSVFileProcessor(ExternalFilenameProcessor):
+    """
+
+    """
     logger = logging.getLogger("CSVFileProcessor")
 
     def __init__(self, filename=None, permission=0644):
@@ -42,9 +46,9 @@ class CSVFileProcessor(ExternalFilenameProcessor):
         if not self.field_names:
             self.field_names = process_entry.data.payload.config_delegate.keys()
             self.field_names.sort()
-        header=True
+        header = True
         if os.path.exists(self.filename):
-            header=False
+            header = False
         with open(self.filename, "a") as csv_file:
             existing = DictWriter(csv_file, self.field_names)
             if header:

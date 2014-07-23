@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -18,7 +18,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from serial_grabber.processor import Processor
 
+
 class FileAppenderProcessor(Processor):
+    """
+    Append the contents of the transactions payload to *output_file*.
+
+    :param string output_file: The name of the file to append to.
+    """
 
     def __init__(self, output_file):
         self.output_file = output_file
@@ -26,10 +32,11 @@ class FileAppenderProcessor(Processor):
     def process(self, process_entry):
         try:
             with open(self.output_file, "a+b") as out_f:
-#                print cache_entry.data
+                # print cache_entry.data
                 out_f.write(process_entry.data.payload)
             return True
         except:
             import traceback
+
             traceback.print_exc()
             return False

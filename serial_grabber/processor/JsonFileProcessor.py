@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -21,16 +21,27 @@ import json
 import logging
 import shutil
 import tempfile
-from serial_grabber.processor import Processor
+from serial_grabber.processor import TransactionFilteringProcessor
 
 import os, os.path
 
 
-class JsonFileProcessor(Processor):
+class JsonFileProcessor(TransactionFilteringProcessor):
+    """
+    Writes the last *limit* transactions that were not filtered out by *transaction_filter* as a JSON encoded array
+    to *output_file*.
+
+    :param str output_file: The filename of the json output file.
+    :param transaction_filter: Used to filter transactions.
+    :type transaction_filter: serial_grabber.processor.TransactionFilter or None
+    :param int limit: The number of transactions keep and write to the output_file, -1 for unlimited.
+    :param int permission: The file permissions to set on the output_file.
+
+    """
     logger = logging.getLogger("JsonFileProcessor")
 
     def __init__(self, output_file, transaction_filter=None, limit=-1, permission=0644):
-        self.filter = transaction_filter
+        self.setTransactionFilter(transaction_filter)
         self.limit = limit
         self.output_file = output_file
         self.permission = permission
@@ -43,7 +54,6 @@ class JsonFileProcessor(Processor):
                 data = json.load(existing)
             for i in data:
                 self.data.append(json.dumps(i))
-
 
     def process(self, process_entry):
         filtered = False

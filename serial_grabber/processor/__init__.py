@@ -78,6 +78,10 @@ class ExternalFilenameProcessor(Processor):
     def setOutputFileName(self, filename):
         self.filename = filename
 
+class TransactionFilteringProcessor(Processor):
+    def setTransactionFilter(self, filter):
+        self.filter = filter
+
 
 class CompositeProcessor(Processor):
     logger = logging.getLogger("CompositeProcessor")
@@ -112,12 +116,24 @@ class TransformCompositeProcessor(CompositeProcessor):
 
 
 class ChunkingProcessor(Processor):
-    def __init__(self, boundary, chunk_size, output_dir, output_processor):
+    """
+    Partitions transactions (based on their transaction time) into chunks of size *chunk_size* aligned on *boundary*
+    calls *output_processor.setOutputFileName* with the filename of the form *output_dir*/*chunk_id*.*file_extension*.
+
+    :param int boundary: The boundary on which to align the chunking.
+    :param int chunk_size: The chunk size (in milliseconds).
+    :param string output_dir: The directory to write the output to
+    :param string file_extension: The file extension to give the output file.
+    :param output_processor: The processor to process the chunk.
+    :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
+    """
+    def __init__(self, boundary, chunk_size, output_dir, file_extension, output_processor):
         self.output_dir = output_dir
         self.output_processor = output_processor
         self.boundary = boundary
         self.chunk_size = chunk_size
         self.out_name = None
+        self.file_extension = file_extension
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -131,7 +147,7 @@ class ChunkingProcessor(Processor):
 
     def calculate_output_name(self, ts):
         v = (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
-        return "%s.csv" % v
+        return "%s.%s" % (v, self.file_extension)
 
 
 class TransactionFilter:
