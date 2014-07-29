@@ -28,6 +28,9 @@ logger = logging.getLogger("Archive")
 archive = {}
 
 def tar_open_archive(depth=0, name="archive"):
+    """
+    The archived transactions are stored in a tar file
+    """
     if depth == 2:
         return None
     global archive
