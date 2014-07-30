@@ -38,6 +38,7 @@ class TCPReader(Reader):
     def close(self):
         self.soc.close()
         del self.soc
+        self.stream = None
 
     def setup(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

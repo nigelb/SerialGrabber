@@ -88,6 +88,7 @@ class SerialReader(Reader):
     def close(self):
         if self.stream:
             self.stream.close()
+            self.stream = None
 
     def getCommandStream(self):
         return _Stream(self.stream)
