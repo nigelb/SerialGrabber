@@ -89,6 +89,7 @@ class XbeeAPIm2Reader(SerialReader):
         return data
 
 class XBeeReader(SerialReader):
+    # http://code.google.com/p/python-xbee/
     def run(self):
         config = config_helper({})
         config.counter = self.counter
