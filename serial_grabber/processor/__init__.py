@@ -84,6 +84,15 @@ class TransactionFilteringProcessor(Processor):
 
 
 class CompositeProcessor(Processor):
+    """
+    Allows processing by multiple processors.
+
+    :param processors: The list of Processors.
+    :type processors: List of objects that implement serial_grabber.processor.Processor
+    :param composition_operation: The function that composes the Processor results.
+    :type composition_operation: lambda a, b
+    :param bool starting_value: The initial value passed to the composition_operation with the result from the first processor.
+    """
     logger = logging.getLogger("CompositeProcessor")
 
     def __init__(self, processors=(), composition_operation=lambda a, b: a or b, starting_value=False):
@@ -101,7 +110,15 @@ class CompositeProcessor(Processor):
 
 
 class TransformProcessor(Processor):
-    logger = logging.getLogger("TransformCompositeProcessor")
+    """
+    Transforms the transaction being processed and passes it to the specified Processor.
+
+    :param transform: The transformation to use
+    :type transform: serial_grabber.transform.Transform
+    :param processor: The Processor to pass the transformed transaction
+    :type processor: serial_grabber.processor.Processor
+    """
+    logger = logging.getLogger("TransformProcessor")
 
     def __init__(self, transform, processor):
         self.transform = transform
