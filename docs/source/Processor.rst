@@ -6,7 +6,7 @@ Processor
 
    processor/ChunkingProcessor
    processor/CompositeProcessor
-   processor/TransformCompositeProcessor
+   processor/TransformProcessor
    processor/CSVFileProcessor
    processor/FileAppenderProcessor
    processor/JsonFileProcessor
@@ -23,7 +23,7 @@ SerialGrabber_Settings.py
 *************************
 .. code-block:: python
 
-    from serial_grabber.processor import CompositeProcessor, TransformCompositeProcessor, ChunkingProcessor
+    from serial_grabber.processor import CompositeProcessor, TransformProcessor, ChunkingProcessor
     from serial_grabber.processor.CSVProcessors import CSVFileProcessor
     from serial_grabber.processor.JsonFileProcessor import JsonFileProcessor
     from serial_grabber.transform import BlockAveragingTransform
@@ -34,17 +34,17 @@ SerialGrabber_Settings.py
 
     processor = CompositeProcessor([
         FileAppenderProcessor("all.txt"),
-        TransformCompositeProcessor(AquariumTransform(), [
+        TransformCompositeProcessor(AquariumTransform(), CompositeProcessor([
             JsonFileProcessor("data/processed/current.json", None, 1),
-            TransformCompositeProcessor(BlockAveragingTransform(10, averageAquariumData),[
-                ChunkingProcessor(PreviousMidnightBoundary(), 60 * 60 * 1000, "/home/user/data/aquarium/10_sec",CSVFileProcessor())]),
+            TransformProcessor(BlockAveragingTransform(10, averageAquariumData),
+                ChunkingProcessor(PreviousMidnightBoundary(), 60 * 60 * 1000, "/home/user/data/aquarium/10_sec",CSVFileProcessor())),
     
-            TransformCompositeProcessor(BlockAveragingTransform(10 * 60, averageAquariumData),[
-                ChunkingProcessor(PreviousMidnightBoundary(), 24 * 60 * 60 * 1000, "/home/user/data/aquarium/10_min",CSVFileProcessor())]),
+            TransformProcessor(BlockAveragingTransform(10 * 60, averageAquariumData),
+                ChunkingProcessor(PreviousMidnightBoundary(), 24 * 60 * 60 * 1000, "/home/user/data/aquarium/10_min",CSVFileProcessor())),
     
-            TransformCompositeProcessor(BlockAveragingTransform(60 * 60, averageAquariumData),[
-                ChunkingProcessor(PreviousWeekStartBoundary(), 7 * 24 * 60 * 60 * 1000, "/home/user/data/aquarium/hour",CSVFileProcessor())])
-        ]),
+            TransformProcessor(BlockAveragingTransform(60 * 60, averageAquariumData),
+                ChunkingProcessor(PreviousWeekStartBoundary(), 7 * 24 * 60 * 60 * 1000, "/home/user/data/aquarium/hour",CSVFileProcessor()))
+        ])),
     
     
     ])
