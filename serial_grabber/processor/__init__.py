@@ -100,18 +100,18 @@ class CompositeProcessor(Processor):
         return toRet
 
 
-class TransformCompositeProcessor(CompositeProcessor):
+class TransformProcessor(Processor):
     logger = logging.getLogger("TransformCompositeProcessor")
 
-    def __init__(self, transform, processors=()):
-        CompositeProcessor.__init__(self, processors)
+    def __init__(self, transform, processor):
         self.transform = transform
+        self.processor = processor
 
 
     def process(self, process_entry):
         transformed_entry = self.transform.transform(process_entry)
         if transformed_entry:
-            return CompositeProcessor.process(self, transformed_entry)
+            return self.processor.process(transformed_entry)
         return True
 
 
