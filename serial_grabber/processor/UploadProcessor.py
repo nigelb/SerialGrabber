@@ -89,16 +89,20 @@ class UploadProcessor(Processor):
             conn = httplib.HTTPSConnection(_url.hostname)
         else:
             conn = httplib.HTTPConnection(_url.hostname)
-        conn.request("POST", _url.path, body=params, headers=self.headers)
-        response = conn.getresponse()
-        self.logger.info("HTTP Response: %s %s" % (response.status, response.reason))
+        try:
+            conn.request("POST", _url.path, body=params, headers=self.headers)
+            response = conn.getresponse()
+            self.logger.info("HTTP Response: %s %s" % (response.status, response.reason))
 
-        data = response.read()
-        self.logger.log(5, data)
-        conn.close()
-        if response.status == 200:
-            return True
-        else:
-            self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
-            time.sleep(self.upload_error_sleep)
+            data = response.read()
+            self.logger.log(5, data)
+            conn.close()
+            if response.status == 200:
+                return True
+            else:
+                self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
+                time.sleep(self.upload_error_sleep)
+                return False
+        except Exception, e:
+            self.logger.error("Unknown error", e.message)
             return False
