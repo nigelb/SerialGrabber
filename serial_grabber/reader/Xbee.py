@@ -128,7 +128,6 @@ class DigiRadioReader(SerialReader):
                     self.radio = self.radio_class(self.stream, **self.radio_args)
                     continue
                 response = self.radio.wait_read_frame()
-                print response
                 if response is None:
                     self.logger.error("There was an error reading")
                 else:
