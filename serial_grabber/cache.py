@@ -17,9 +17,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import glob
+import pickle
 
 import shutil, os, os.path, constants, time, logging, json
 from datetime import datetime
+import base64
 from serial_grabber.util import config_helper, get_millis
 import tarfile
 
@@ -52,6 +54,8 @@ def read_cache(cache_filename):
     with open(cache_filename, "rb") as cache_file:
         try:
             cache_entry = json.load(cache_file)
+            if constants.binary in cache_entry and cache_entry[constants.binary]:
+                cache_entry[constants.payload] = pickle.loads(base64.b64decode(cache_entry[constants.payload]))
             if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
                 logger.error("Corrupted Cache Entry: %s de-caching."%cache_filename)
                 decache(cache_filename)
@@ -62,14 +66,17 @@ def read_cache(cache_filename):
             decache(cache_filename)
             return None
 
-def make_payload(data):
+def make_payload(data, binary=False):
     toRet =  {
         constants.payload: data,
-        constants.timep: get_millis()
+        constants.timep: get_millis(),
+        constants.binary: binary
     }
     return toRet
 
 def cache(payload):
+    if constants.binary in payload and payload[constants.binary]:
+        payload[constants.payload] = base64.b64encode(pickle.dumps(payload[constants.payload]))
     cache_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-0.data"%payload[constants.timep])
     tmp_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-0.tmp"%payload[constants.timep])
     n = 1
