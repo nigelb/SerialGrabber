@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import httplib
+import base64
 
 import logging
 import socket
@@ -28,16 +29,46 @@ from serial_grabber.processor import Processor
 from urlparse import urlparse
 
 
+class HTTPBasicAuthentication:
+    """
+    HTTP Basic Authentication
+
+    :param str username: The username for the HTTP request
+    :param str password: The password for the HTTP request
+    """
+
+    def __init__(self, username, password):
+        self.basic = "Basic %s" % (base64.b64encode("%s:%s" % (username, password)))
+
+    def add_header(self, headers):
+        headers["Authorization"] = self.basic
+
+
 class UploadProcessor(Processor):
+    """
+    Encodes the data as a HTTP form and uploads it to the configured url.
+
+    :param str url: The url to upload the data to.
+    :param int upload_error_sleep: The amount of time to sleep if an error occurred during upload.
+    :param auth: The credentials to use.
+    :type auth: serial_grabber.processor.UploadProcessor.HTTPBasicAuthentication or None
+    :param dict form_params: Addition parameters to be added to the uploaded form.
+    :param dict headers: Headers to add to the upload requests.
+
+    """
     logger = logging.getLogger("Uploader")
 
-    def __init__(self, url, upload_error_sleep=10, **kwargs):
+    def __init__(self, url, upload_error_sleep=10, auth=None, form_params=None, headers=None):
         socket.setdefaulttimeout(15)
         self.url = url
         self.upload_error_sleep = upload_error_sleep
         self.upload_params = None
-        if 'params' in kwargs:
-            self.upload_params = kwargs['params']
+        if form_params is not None:
+            self.upload_params = form_params
+        self.headers = [{}, headers][headers is not None]
+        if auth is not None:
+            auth.add_header(self.headers)
+
 
     def process(self, process_entry):
         toRet = False
@@ -52,12 +83,13 @@ class UploadProcessor(Processor):
 
         params = urllib.urlencode(data)
 
-        headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+        self.headers["Content-type"] = "application/x-www-form-urlencoded"
+        self.headers["Accept"] = "text/plain"
         if _url.scheme == "https":
             conn = httplib.HTTPSConnection(_url.hostname)
         else:
             conn = httplib.HTTPConnection(_url.hostname)
-        conn.request("POST", _url.path, body=params, headers=headers)
+        conn.request("POST", _url.path, body=params, headers=self.headers)
         response = conn.getresponse()
         self.logger.info("HTTP Response: %s %s" % (response.status, response.reason))
 
@@ -67,7 +99,6 @@ class UploadProcessor(Processor):
         if response.status == 200:
             return True
         else:
-            self.logger.error("Upload Error, sleeping for %s seconds"%self.upload_error_sleep)
+            self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
             time.sleep(self.upload_error_sleep)
             return False
-        # raise Exception(self.url, response.status, response.reason)
