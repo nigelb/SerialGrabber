@@ -41,3 +41,21 @@ TCPReader
     ...
 
     reader = TCPReader("example.org", 8111)
+
+
+DigiRadioReader
+---------------
+.. autoclass:: serial_grabber.reader.Xbee.DigiRadioReader
+
+.. code-block:: python
+
+    from serial_grabber.reader.Xbee import DigiRadioReader
+
+    ...
+
+    reader = DigiRadioReader("/dev/ttyUSB0", 115200,
+                             timeout=timeout,
+                             parity=parity,
+                             stop_bits=stop_bits,
+                             packet_filter=packet_filter,
+                             escaped=True)
