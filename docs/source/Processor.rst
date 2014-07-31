@@ -34,7 +34,7 @@ SerialGrabber_Settings.py
 
     processor = CompositeProcessor([
         FileAppenderProcessor("all.txt"),
-        TransformCompositeProcessor(AquariumTransform(), CompositeProcessor([
+        TransformProcessor(AquariumTransform(), CompositeProcessor([
             JsonFileProcessor("data/processed/current.json", None, 1),
             TransformProcessor(BlockAveragingTransform(10, averageAquariumData),
                 ChunkingProcessor(PreviousMidnightBoundary(), 60 * 60 * 1000, "/home/user/data/aquarium/10_sec",CSVFileProcessor())),
