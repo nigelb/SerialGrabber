@@ -24,6 +24,10 @@ import os.path
 
 class CSVFileProcessor(ExternalFilenameProcessor):
     """
+    Converts the payload to a CSV file and appends it to *filename*
+
+    :param string filename: The output location
+    :param int permission: The file mode to set on the output file
 
     """
     logger = logging.getLogger("CSVFileProcessor")
