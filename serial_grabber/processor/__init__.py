@@ -132,23 +132,24 @@ class TransformProcessor(Processor):
         return True
 
 
-class ChunkingProcessor(Processor):
+class RollingFilenameProcessor(Processor):
     """
-    Partitions transactions (based on their transaction time) into chunks of size *chunk_size* aligned on *boundary*
-    calls *output_processor.setOutputFileName* with the filename of the form *output_dir*/*chunk_id*.*file_extension*.
+    Used to change the output filename of processors that implement :py:class:`serial_grabber.processor.ExternalFilenameProcessor`.
+    The file names are aligned on *boundary* it rolled foward every *period_ms* with a call to *output_processor.setOutputFileName*
+    having the form of:  *output_dir*/*date_time.file_extension*.
 
-    :param int boundary: The boundary on which to align the chunking.
-    :param int chunk_size: The chunk size (in milliseconds).
+    :param int boundary: The boundary on which to align the filename roll on.
+    :param int period_ms: The period (in milliseconds) to change the filename on.
     :param string output_dir: The directory to write the output to
     :param string file_extension: The file extension to give the output file.
     :param output_processor: The processor to process the chunk.
     :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
     """
-    def __init__(self, boundary, chunk_size, output_dir, file_extension, output_processor):
+    def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor):
         self.output_dir = output_dir
         self.output_processor = output_processor
         self.boundary = boundary
-        self.chunk_size = chunk_size
+        self.chunk_size = period_ms
         self.out_name = None
         self.file_extension = file_extension
         if not os.path.exists(self.output_dir):
