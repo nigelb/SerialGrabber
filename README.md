@@ -13,7 +13,7 @@ Instillation:
 
 This will create a default configuration in /etc/SerialGrabber:
 
-* [`SerialGrabber_Cache.py`](example_config/SerialGrabber_Cache.py) - Configure the cache/archive function handlers
+* [`SerialGrabber_Storage.py`](example_config/SerialGrabber_Storage.py) - Configure the storage function handlers
 * [`SerialGrabber_Calibration.py`](example_config/SerialGrabber_Calibration.py) - Configure Calibration providers
 * [`SerialGrabber_Paths.py`](example_config/SerialGrabber_Paths.py) - Configure the logging, data, and cache directories
 * [`SerialGrabber_Settings.py`](example_config/SerialGrabber_Settings.py) - Configure the reader (i.e serial port) and processors (i.e. uploader)
