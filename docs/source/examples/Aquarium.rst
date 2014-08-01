@@ -75,7 +75,5 @@ SerialGrabber_State.py
         READER_STATE = OrderedDict()
         READER_STATE[matches("BEGIN AQUARIUM")] = begin_transaction(READER_STATE)
         READER_STATE[matches("END AQUARIUM")] = end_transaction(READER_STATE)
-        READER_STATE[matches(AQUARIUM_CLI_CALIBRATION_PATTERN)] = aquarium_commander_calibration_handler(READER_STATE)
-        READER_STATE[matches(AQUARIUM_CLI_ERROR_PATTERN)] = aquarium_commander_cli_error_handler(READER_STATE)
         return READER_STATE
 
