@@ -49,13 +49,14 @@ DigiRadioReader
 
 .. code-block:: python
 
+    import serial
     from serial_grabber.reader.Xbee import DigiRadioReader
 
     ...
 
     reader = DigiRadioReader("/dev/ttyUSB0", 115200,
-                             timeout=timeout,
-                             parity=parity,
-                             stop_bits=stop_bits,
-                             packet_filter=packet_filter,
+                             timeout=60,
+                             parity=serial.PARITY_NONE,
+                             stop_bits=serial.STOPBITS_ONE,
+                             packet_filter=lambda packet: packet['id'] == 'rx',
                              escaped=True)
