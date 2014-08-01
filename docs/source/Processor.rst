@@ -58,7 +58,7 @@ SerialGrabber_Settings.py
 
     processor = CompositeProcessor([
         FileAppenderProcessor("/home/user/data/eco/all.txt"),
-        TransformCompositeProcessor(EcoFestTransform(), [
+        TransformProcessor(EcoFestTransform(), CompositeProcessor([
             JsonFileProcessor("/home/user/data/eco/every_10.json", CountingTransactionFilter(10), 72),
-            JsonFileProcessor("/home/user/data/eco/current.json", None, 1)])
+            JsonFileProcessor("/home/user/data/eco/current.json", None, 1)]))
     ])
