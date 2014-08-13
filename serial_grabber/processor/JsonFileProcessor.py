@@ -33,7 +33,7 @@ class JsonFileProcessor(TransactionFilteringProcessor):
 
     :param str output_file: The filename of the json output file.
     :param transaction_filter: Used to filter transactions.
-    :type transaction_filter: serial_grabber.processor.TransactionFilter or None
+    :type transaction_filter: serial_grabber.filter.TransactionFilter or None
     :param int limit: The number of transactions keep and write to the output_file, -1 for unlimited.
     :param int permission: The file permissions to set on the output_file.
 
