@@ -146,7 +146,8 @@ class RollingFilenameProcessor(RollingFilename, Processor):
     :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
     """
     def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor):
-        RollingFilename.__init__(self, boundary, period_ms, output_dir, file_extension)
+        RollingFilename.__init__(self, boundary, period_ms, file_extension)
+        self.output_dir = output_dir
         self.output_processor = output_processor
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
