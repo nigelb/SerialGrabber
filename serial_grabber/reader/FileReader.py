@@ -26,6 +26,7 @@ class FileReader(Reader):
     :param str filename: The file to open and read as input.
     """
     def __init__(self, filename):
+        Reader.__init__(self, 0)
         self.filename = filename
 
     def setup(self):
