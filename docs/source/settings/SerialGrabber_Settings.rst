@@ -60,7 +60,7 @@ An object that implements :class:`serial_grabber.reader.Reader`, see :doc:`../Re
 
 .. code-block:: python
 
-    reader = SerialReader('/dev/ttyUSB0', 115200,
+    reader = SerialReader(1000, '/dev/ttyUSB0', 115200,
         timeout=1,
         parity=serial.PARITY_NONE,
         stop_bits=1)
