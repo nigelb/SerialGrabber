@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import serial
+from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.processor.UploadProcessor import UploadProcessor
 
@@ -35,11 +36,9 @@ watchdog_sleep = 1
 
 reader_error_sleep = 1
 
-startup_ignore_threshold_milliseconds = 1000
-
 drop_carriage_return = True
 
-reader = SerialReader(port, baud,
+reader = SerialReader(1000, port, baud,
     timeout=timeout,
     parity=parity,
     stop_bits=stop_bits)
