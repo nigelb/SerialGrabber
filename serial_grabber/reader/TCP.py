@@ -29,6 +29,7 @@ class TCPReader(Reader):
     :param int port: The port to connect to
     """
     def __init__(self, hostname, port):
+        Reader.__init__(self, 0)
         self.hostname = hostname
         self.port = port
 
