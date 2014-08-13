@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -16,22 +16,21 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 import glob
 import pickle
-
-import shutil, os, os.path, constants, time, logging, json
-from datetime import datetime
+import shutil
+import os
+import os.path
+import logging
+import json
 import base64
+
+import constants
 from serial_grabber.util import config_helper, get_millis
-import tarfile
-
-import SerialGrabber_Paths, SerialGrabber_Storage
-
-logger = logging.getLogger("Cache")
 
 
-
-def cache_cmp(a,b):
+def cache_cmp(a, b):
     _a_t, a_ext = a.split('.')
     _b_t, b_ext = b.split('.')
     a_1, a_2 = _a_t.split("-")
@@ -40,65 +39,92 @@ def cache_cmp(a,b):
     if v != 0: return int(v)
     return int(int(a_2) - int(b_2))
 
-def list_cache():
-    toRet = {}
-    for _entry in glob.glob(os.path.join(SerialGrabber_Paths.cache_dir, "*.data")):
-        entry_path = _entry
-        entry = os.path.basename(_entry)
-        toRet[entry] = entry_path
-    order = toRet.keys()
-    order.sort(cache_cmp)
-    return order, toRet
-
-def read_cache(cache_filename):
-    with open(cache_filename, "rb") as cache_file:
-        try:
-            cache_entry = json.load(cache_file)
-            if constants.binary in cache_entry and cache_entry[constants.binary]:
-                cache_entry[constants.payload] = pickle.loads(base64.b64decode(cache_entry[constants.payload]))
-            if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
-                logger.error("Corrupted Cache Entry: %s de-caching."%cache_filename)
-                decache(cache_filename)
-                return None
-            return config_helper(cache_entry)
-        except ValueError, ve:
-            logger.error("Corrupted Cache Entry: %s de-caching."%cache_filename)
-            decache(cache_filename)
-            return None
 
 def make_payload(data, binary=False):
-    toRet =  {
+    return {
         constants.payload: data,
         constants.timep: get_millis(),
         constants.binary: binary
     }
-    return toRet
 
-def cache(payload):
-    if constants.binary in payload and payload[constants.binary]:
-        payload[constants.payload] = base64.b64encode(pickle.dumps(payload[constants.payload]))
-    cache_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-0.data"%payload[constants.timep])
-    tmp_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-0.tmp"%payload[constants.timep])
-    n = 1
-    while os.path.exists(cache_file_path):
-        cache_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-%s.data"%(payload[constants.timep], n))
-        tmp_file_path = os.path.join(SerialGrabber_Paths.cache_dir, "%s-%s.tmp"%(payload[constants.timep], n))
-        n += 1
 
-    with open(tmp_file_path, "wb") as cache_file:
-        json.dump(payload, cache_file)
-    shutil.move(tmp_file_path, cache_file_path)
-    logger.debug("Wrote cache file: %s"%cache_file_path)
+class Cache:
+    logger = logging.getLogger("Cache")
 
-def decache(cache_file, type="archive"):
-    if os.path.exists(cache_file):
-        shutil.move(cache_file, SerialGrabber_Paths.archive_dir)
-        _archive = SerialGrabber_Storage.open_archive(name=type)
-        name = os.path.basename(cache_file)
-        archived_name = os.path.join(SerialGrabber_Paths.archive_dir, name)
-        _archive.add(archived_name, arcname=os.path.join("archive",name))
-        os.remove(archived_name)
-        logger.info("decached %s"%os.path.basename(archived_name))
+    def __init__(self, cache_dir, archive):
+        self.cache_dir = cache_dir
+        self.archive = archive
 
-def close_cache():
-    SerialGrabber_Storage.close_archive()
+
+    def list_cache(self):
+        raise Exception("Not Implemented")
+
+    def read_cache(self, cache_filename):
+        raise Exception("Not Implemented")
+
+    def make_payload(self, data, binary=False):
+        raise Exception("Not Implemented")
+
+    def cache(self, payload):
+        raise Exception("Not Implemented")
+
+    def decache(self, cache_file, type="archive"):
+        raise Exception("Not Implemented")
+
+    def close_cache(self):
+        raise Exception("Not Implemented")
+
+
+class FileSystemCache(Cache):
+    def list_cache(self):
+        toRet = {}
+        for _entry in glob.glob(os.path.join(self.cache_dir, "*.data")):
+            entry_path = _entry
+            entry = os.path.basename(_entry)
+            toRet[entry] = entry_path
+        order = toRet.keys()
+        order.sort(cache_cmp)
+        return order, toRet
+
+    def read_cache(self, cache_filename):
+        with open(cache_filename, "rb") as cache_file:
+            try:
+                cache_entry = json.load(cache_file)
+                if constants.binary in cache_entry and cache_entry[constants.binary]:
+                    cache_entry[constants.payload] = pickle.loads(base64.b64decode(cache_entry[constants.payload]))
+                if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
+                    self.logger.error("Corrupted Cache Entry: %s de-caching." % cache_filename)
+                    self.decache(cache_filename)
+                    return None
+                return config_helper(cache_entry)
+            except ValueError, ve:
+                self.logger.error("Corrupted Cache Entry: %s de-caching." % cache_filename)
+                self.decache(cache_filename)
+                return None
+
+    def cache(self, payload):
+        if constants.binary in payload and payload[constants.binary]:
+            payload[constants.payload] = base64.b64encode(pickle.dumps(payload[constants.payload]))
+        cache_file_path = os.path.join(self.cache_dir, "%s-0.data" % payload[constants.timep])
+        tmp_file_path = os.path.join(self.cache_dir, "%s-0.tmp" % payload[constants.timep])
+        n = 1
+        while os.path.exists(cache_file_path):
+            cache_file_path = os.path.join(self.cache_dir, "%s-%s.data" % (payload[constants.timep], n))
+            tmp_file_path = os.path.join(self.cache_dir, "%s-%s.tmp" % (payload[constants.timep], n))
+            n += 1
+
+        with open(tmp_file_path, "wb") as cache_file:
+            json.dump(payload, cache_file)
+        shutil.move(tmp_file_path, cache_file_path)
+        self.logger.debug("Wrote cache file: %s" % cache_file_path)
+
+    def decache(self, cache_file, type="archive"):
+        if self.archive.archive(cache_file, type):
+            self.logger.info("decached %s" % os.path.basename(cache_file))
+            if os.path.exists(cache_file):
+                self.logger.error("Archiver did not remove file, deleting: %s" % os.path.basename(cache_file))
+                os.remove(cache_file)
+
+
+    def close_cache(self):
+        self.archive.close()
