@@ -21,8 +21,9 @@ import logging
 import os, SerialGrabber_Paths, SerialGrabber_Settings
 import time
 import datetime
+from SerialGrabber_Storage import storage_cache
 from serial_grabber import cache
-from serial_grabber.util import config_helper
+from serial_grabber.util import config_helper, RollingFilename
 
 
 class Processor:
@@ -38,7 +39,7 @@ class Processor:
 
     def run(self):
         while self.isRunning.running:
-            order, c_entries = cache.list_cache()
+            order, c_entries = storage_cache.list_cache()
             if c_entries:
                 for entry in order:
                     parts = entry.split("-")
@@ -49,19 +50,19 @@ class Processor:
                         if os.path.isfile(entry_path):
                             try:
                                 data = {
-                                    "data": cache.read_cache(entry_path),
+                                    "data": storage_cache.read_cache(entry_path),
                                     "entry_path": entry_path,
                                     "entry": entry
                                 }
 
                                 if self.process(config_helper(data)):
                                     self.counter.processed()
-                                    cache.decache(entry_path)
+                                    storage_cache.decache(entry_path)
                             except BaseException, e:
                                 self.logger.error("Failed to process data: %s moving to bad data archive" % e)
                                 self.logger.exception(e)
                                 self.counter.error()
-                                cache.decache(entry_path, type="bad_data")
+                                storage_cache.decache(entry_path, type="bad_data")
                         else:
                             self.logger.debug("File is to new. Leaving for next round.")
                     if not self.isRunning.running:
@@ -132,10 +133,10 @@ class TransformProcessor(Processor):
         return True
 
 
-class RollingFilenameProcessor(Processor):
+class RollingFilenameProcessor(RollingFilename, Processor):
     """
     Used to change the output filename of processors that implement :py:class:`serial_grabber.processor.ExternalFilenameProcessor`.
-    The file names are aligned on *boundary* it rolled foward every *period_ms* with a call to *output_processor.setOutputFileName*
+    The file names are aligned on *boundary* it rolled forward every *period_ms* with a call to *output_processor.setOutputFileName*
     having the form of:  *output_dir*/*date_time.file_extension*.
 
     :param int boundary: The boundary on which to align the filename roll on.
@@ -146,31 +147,23 @@ class RollingFilenameProcessor(Processor):
     :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
     """
     def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor):
-        self.output_dir = output_dir
+        RollingFilename.__init__(self, boundary, period_ms, output_dir, file_extension)
         self.output_processor = output_processor
-        self.boundary = boundary
-        self.chunk_size = period_ms
-        self.out_name = None
-        self.file_extension = file_extension
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
     def process(self, process_entry):
         __process_entry = config_helper(process_entry)
-        op = self.calculate_output_name(__process_entry.data.time)
+        op = self.calculate_output_name("{ts}.{ext}", __process_entry.data.time)
         if op != self.out_name:
             self.out_name = op
             self.output_processor.setOutputFileName(os.path.join(self.output_dir, op))
         self.output_processor.process(__process_entry)
 
-    def calculate_output_name(self, ts):
-        v = (int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary
-        return "%s.%s" % (v, self.file_extension)
 
-
-class TransactionFilter:
-    def __init__(self):
-        pass
-
-    def filter(self, transaction):
-        raise Exception("Not implemented")
+# class TransactionFilter:
+#     def __init__(self):
+#         pass
+#
+#     def filter(self, transaction):
+#         raise Exception("Not implemented")
