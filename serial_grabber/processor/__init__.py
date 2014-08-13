@@ -18,11 +18,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import logging
 
-import os, SerialGrabber_Paths, SerialGrabber_Settings
+import os, SerialGrabber_Settings
 import time
 import datetime
 from SerialGrabber_Storage import storage_cache
-from serial_grabber import cache
 from serial_grabber.util import config_helper, RollingFilename
 
 

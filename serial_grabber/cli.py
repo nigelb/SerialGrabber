@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import signal
 import time
-from serial_grabber import cache
+from SerialGrabber_Storage import storage_cache
 
 from serial_grabber.watchdog import running, counter, Watchdog
 
@@ -60,4 +60,4 @@ def start(logger, reader, processor, command):
         while isRunning.running:
             time.sleep(1)
     finally:
-        cache.close_cache()
+        storage_cache.close_cache()
