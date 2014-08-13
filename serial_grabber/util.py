@@ -83,6 +83,13 @@ def get_millis(dt=None):
     return int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
 
 
+week_period = 1000 * 60 * 60 * 24 * 7
+
+def to_date_format(ts_millis):
+    dt = datetime.datetime.fromtimestamp(ts_millis/1000)
+    return dt.strftime("%Y_%m_%d-%H_%M_%S")
+
+
 def PreviousWeekStartBoundary():
     _dt = datetime.datetime.now()
     _dt = _dt + datetime.timedelta(days=(-1 * (_dt.weekday() + 1 )))
@@ -95,9 +102,8 @@ def PreviousMidnightBoundary():
 
 
 class RollingFilename:
-    def __init__(self, boundary, period_ms, output_dir, file_extension, ts_transform=lambda a: a):
+    def __init__(self, boundary, period_ms, file_extension, ts_transform=lambda ts_millis: ts_millis):
         self.ts_transform = ts_transform
-        self.output_dir = output_dir
         self.boundary = boundary
         self.chunk_size = period_ms
         self.out_name = None
