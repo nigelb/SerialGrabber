@@ -32,7 +32,8 @@ def main():
     sys.path.append(args.config_dir)
 
     try:
-        import SerialGrabber_Paths, SerialGrabber_Settings, SerialGrabber_UI
+        import SerialGrabber_Paths
+        import SerialGrabber_Settings, SerialGrabber_UI
     except ImportError, e:
         import traceback
         traceback.print_exc()
