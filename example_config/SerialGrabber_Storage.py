@@ -16,14 +16,20 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 from serial_grabber.archive import *
+from serial_grabber.cache import FileSystemCache
+from serial_grabber.util import RollingFilename, PreviousWeekStartBoundary, week_period, to_date_format
 
 
-#open_archive = file_open_archive
-#close_archive =  file_close_cache
-
-open_archive = tar_open_archive
-close_archive =  tar_close_cache
-
-#open_archive = dump_open_archive
-#close_archive =  dump_close_cache
+storage_cache = FileSystemCache(SerialGrabber_Paths.cache_dir,
+                        JSONLineCodec(
+                            SerialGrabber_Paths.archive_dir,
+                            RollingFilename(
+                                PreviousWeekStartBoundary(),
+                                week_period,
+                                None,
+                                to_date_format
+                            )
+                        )
+                )
