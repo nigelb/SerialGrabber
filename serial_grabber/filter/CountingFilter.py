@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -18,14 +18,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from serial_grabber.filter import TransactionFilter
 
-class CountingTransactionFilter(TransactionFilter):
 
+class CountingTransactionFilter(TransactionFilter):
     def __init__(self, count):
         self.count = count
         self.current = 0
 
-
     def filter(self, cache_entry):
-        toRet =  ( self.current % self.count ) == 0
+        toRet = (self.current % self.count) == 0
         self.current += 1
         return not toRet
