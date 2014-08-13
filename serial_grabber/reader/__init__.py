@@ -30,6 +30,11 @@ from serial_grabber.util import config_helper, get_millis
 
 class Reader:
     logger = logging.getLogger("Reader")
+
+    def __init__(self, startup_ignore_threshold_milliseconds):
+        self.startup_ignore_threshold_milliseconds = startup_ignore_threshold_milliseconds
+
+
     def __call__(self, *args, **kwargs):
         self.logger.info("Reader Thread Started.")
         self.isRunning, self.counter = args
@@ -68,7 +73,7 @@ class Reader:
                     dat.append(current)
 
                 read_data = "".join(dat).strip()
-                if SerialGrabber_Settings.startup_ignore_threshold_milliseconds > 0 and (get_millis() - start)  <= SerialGrabber_Settings.startup_ignore_threshold_milliseconds:
+                if self.startup_ignore_threshold_milliseconds > 0 and (get_millis() - start)  <= self.startup_ignore_threshold_milliseconds:
                     self.logger.warn("Dropping data received inside startup threshold.")
                     continue
                 if SerialGrabber_Settings.drop_carriage_return:
