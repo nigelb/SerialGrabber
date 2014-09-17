@@ -18,11 +18,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import glob
 
-requires=[
-    "requests",
-    "pyserial",
-]
-
 from setuptools import setup, find_packages
 
 setup(name='SerialGrabber',
@@ -32,7 +27,10 @@ setup(name='SerialGrabber',
     author_email='nigel.blair@gmail.com',
     packages=find_packages(),
     zip_safe=False,
-    install_requires=requires,
+    install_requires=["pyserial"],
+    extras_require = {
+        'XBee': ["xbee"]
+    },
     entry_points={
         "console_scripts": [
             "serial_grabber = serial_grabber.SerialGrabber:main",
