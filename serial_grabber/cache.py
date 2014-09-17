@@ -86,6 +86,10 @@ class FileSystemCache(Cache):
         order.sort(cache_cmp)
         return order, toRet
 
+    def make_payload(self, data, binary=False):
+        return make_payload(data, binary)
+
+
     def read_cache(self, cache_filename):
         with open(cache_filename, "rb") as cache_file:
             try:
