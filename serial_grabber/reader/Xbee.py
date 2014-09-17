@@ -173,11 +173,10 @@ class StreamRadioReader(DigiRadioReader):
                     lambda stream_id, transaction: self.handle_transaction(stream_id, transaction))
             self.streams[frame['source_addr_long']].write(frame['rf_data'])
         else:
-            print frame
+            self.logger.info(frame)
 
     def handle_transaction(self, stream_id, transaction):
         try:
-            print " ".join([format(ord(x), "02x") for x in transaction])
             entry = cache.make_payload(transaction, binary=True)
             entry['stream_id'] = " ".join([format(ord(x), "02x") for x in stream_id])
             cache.cache(entry)
@@ -185,7 +184,6 @@ class StreamRadioReader(DigiRadioReader):
             self.counter.update()
             if self.ack:
                 dest_addr = self.short_address[stream_id]
-                print " ".join([format(ord(x), "02x") for x in stream_id])
                 self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack)
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
