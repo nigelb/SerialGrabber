@@ -98,4 +98,38 @@ class Reader:
                 self.counter.error()
                 import traceback
                 traceback.print_exc()
-            if self.stream is None: time.sleep(SerialGrabber_Settings.reader_error_sleep)
+            if self.stream is None:
+                time.sleep(SerialGrabber_Settings.reader_error_sleep)
+
+
+class TransactionExtractor:
+    """
+    A TransactionExtractor reads a stream and breaks it into transaction beginning at the *start_boundary* and ending at
+    the *stop_boundary*. Once it has create a transaction it calls the specified *callback*
+
+    :param str stream_id: The id of the stream that this TransactionExtractor is attached to.
+    :param str start_boundary: The string that specifies the beginning of the transaction.
+    :param str stop_boundary: The string that specifies the end of the transaction.
+    :param callback: The function called with the contents of the transaction
+    :type callback: fn(stream_id, emit) or None
+    """
+    def __init__(self, stream_id, start_boundary, stop_boundary, callback=None):
+        self.stream_id = stream_id
+        self.start_boundary = start_boundary
+        self.stop_boundary = stop_boundary
+        self.buffer = ""
+        self.callback = callback
+
+    def set_callback(self, callback):
+        self.callback = callback
+
+    def write(self, data):
+        self.buffer += data
+        start = self.buffer.find(self.start_boundary)
+        if start >= 0:
+            self.buffer = self.buffer[start:]
+        end = self.buffer.find(self.stop_boundary, len(self.start_boundary))
+        if end > 0:
+            emit = self.buffer[:end + len(self.stop_boundary)]
+            self.buffer = self.buffer[end + len(self.stop_boundary):]
+            self.callback(self.stream_id, emit)
