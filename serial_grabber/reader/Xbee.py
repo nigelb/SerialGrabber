@@ -133,8 +133,7 @@ class PacketRadioReader(DigiRadioReader):
 
 class StreamRadioReader(DigiRadioReader):
     """
-    Reads Digi Xbee/ZigBee API mode packets from the configured serial port, converts the packets into a stream for each
-     MAC Address and passes the stream onto a :py:class:`serial.grabber.reader.TransactionExtractor`
+    Reads Digi Xbee/ZigBee API mode packets from the configured serial port, converts the packets into a stream for each MAC Address and passes the stream onto a :py:class:`serial.grabber.reader.TransactionExtractor`
 
     :param stream_transaction_factory: The function that creates a :py:class:`serial.grabber.reader.TransactionExtractor`
         with the specified stream_id
