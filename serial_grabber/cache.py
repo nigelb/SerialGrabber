@@ -35,9 +35,10 @@ def cache_cmp(a, b):
     _b_t, b_ext = b.split('.')
     a_1, a_2 = _a_t.split("-")
     b_1, b_2 = _b_t.split("-")
-    v = int(a_1) - int(b_1)
-    if v != 0: return int(v)
-    return int(int(a_2) - int(b_2))
+    v = cmp(int(a_1), int(b_1))
+    if v == 0:
+        return int(int(a_2) - int(b_2))
+    return v
 
 
 def make_payload(data, binary=False):
