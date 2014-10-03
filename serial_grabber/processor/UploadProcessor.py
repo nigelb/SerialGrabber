@@ -104,6 +104,7 @@ class UploadProcessor(Processor):
                 time.sleep(self.upload_error_sleep)
                 return False
         except Exception, e:
-            self.logger.error("Unknown error: %s", e)
+            self.logger.exception(e)
+            self.logger.error("Unknown error: %s"%e.message)
             time.sleep(self.upload_error_sleep)
             return False
