@@ -20,6 +20,7 @@
 import logging
 import serial, os, os.path, time
 from serial_grabber import poster_exceptions
+from serial_grabber.poster_exceptions import ConnectionException
 from serial_grabber.reader import Reader
 
 
@@ -51,17 +52,16 @@ class SerialReader(Reader):
         self.stop_bits = stop_bits
 
     def connect(self):
-        if not os.path.exists(self.port):
-            raise Exception("Port: " + self.port + " does not exists.")
-        else:
+        try:
+            ser = serial.Serial(self.port, self.baud,
+                                timeout=self.timeout,
+                                parity=self.parity,
+                                stopbits=self.stop_bits
+            )
+        except OSError, e:
             time.sleep(2)
+            raise ConnectionException("Port: " + self.port + " does not exists.", e)
 
-        ser = serial.Serial(self.port, self.baud,
-                            timeout=self.timeout,
-                            parity=self.parity,
-                            stopbits=self.stop_bits
-        )
-        time.sleep(2)
         #These are not the droids you are looking for....
         os.system("/bin/stty -F %s %s"%(self.port, self.baud))
         return ser
