@@ -86,6 +86,8 @@ class SerialReader(Reader):
             raise poster_exceptions.ConnectionException("Could not connect to port: %s" % self.port)
 
     def setup(self):
+        if self.stream is not None:
+            self.stream.close()
         self.stream = self.try_connect()
 
     def close(self):
