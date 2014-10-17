@@ -73,6 +73,7 @@ class SerialReader(Reader):
             con = self.connect()
             if con is not None: return con
         except serial.SerialException, se:
+            time.sleep(2)
             con = None
             logger.error(se)
             logger.error("Closing port and re-opening it.")
