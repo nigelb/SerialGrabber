@@ -43,7 +43,7 @@ SerialGrabber_Settings.py
     #Serial Settings
     timeout = 1
     port = "/dev/ttyUSB0"
-    baud = 57600
+    baud = 115200
     parity = serial.PARITY_NONE
     stop_bits = 1
 
