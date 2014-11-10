@@ -38,6 +38,5 @@ setup(name='SerialGrabber',
     },
     data_files=[
         ("/etc/SerialGrabber", glob.glob("example_config/*")),
-        ("/etc/dbus-1/system.d", glob.glob("dbus/system.d/*"))
     ]
 )
