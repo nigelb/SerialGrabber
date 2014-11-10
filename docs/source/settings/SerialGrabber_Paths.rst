@@ -14,6 +14,8 @@ The location of the cache directory, see :doc:`../DataLifeCycle`
 
     cache_dir = "/path/to/cache/directory"
 
+.. _archive_dir:
+
 archive_dir
 -----------
 The location of the archive directory, see :doc:`../DataLifeCycle`

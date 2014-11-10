@@ -12,7 +12,7 @@ FileReader
 
     ...
 
-    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
     reader = FileReader(transaction, "data.txt")
 
 SerialReader
@@ -25,7 +25,7 @@ SerialReader
 
     ...
 
-    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
     reader = SerialReader(transaction,
                           '/dev/ttyUSB0',
                           115200,
@@ -44,7 +44,7 @@ TCPReader
 
     ...
 
-    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
     reader = TCPReader(transaction, "example.org", 8111)
 
 

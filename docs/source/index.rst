@@ -6,8 +6,10 @@
 SerialGrabber Documentation
 ===========================
 
-The typical use case for Serial Grabber is to read data from a serial port and then post it to an internet endpoint.
-It can however read data from other sources like a file or a tcp connection.
+We use SerialGrabber to read data from sensor devices, process this data and post it to an internet endpoint.
+
+The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a :doc:`Processor`, and archived by an :doc:`Archive`.
+
 
 
 **Contents**
@@ -21,6 +23,9 @@ It can however read data from other sources like a file or a tcp connection.
    Settings
    Reader
    Processor
+   Cache
+   Archive
+
 
 Indices and tables
 ==================
