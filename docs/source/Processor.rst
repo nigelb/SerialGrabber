@@ -65,16 +65,6 @@ UploadProcessor
     )
 
 
-================
-Complex Examples
-================
-The following example are taken from some of our deployments.
 
-
-.. toctree::
-   :maxdepth: 2
-
-   examples/Aquarium
-   examples/EcoFest
 
 

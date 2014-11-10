@@ -26,6 +26,17 @@ The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a
    Cache
    Archive
 
+Complex Examples
+================
+The following example are taken from some of our deployments.
+
+
+.. toctree::
+   :maxdepth: 2
+
+   examples/Aquarium
+   examples/EcoFest
+
 
 Indices and tables
 ==================
