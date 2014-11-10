@@ -22,6 +22,7 @@ import serial, os, os.path, time
 from serial_grabber import poster_exceptions
 from serial_grabber.poster_exceptions import ConnectionException
 from serial_grabber.reader import Reader
+from serial.serialutil import SerialException
 
 
 class _Stream:
@@ -101,6 +102,11 @@ class SerialReader(Reader):
         return _Stream(self.stream)
 
     def read_data(self):
-        return self.stream.read()
+        try:
+            return self.stream.read()
+        except SerialException, se:
+            self.stream.close()
+            self.stream = None
+            raise se
 
 
