@@ -49,7 +49,7 @@ TCPReader
 
 
 PacketRadioReader
----------------
+-----------------
 .. autoclass:: serial_grabber.reader.Xbee.PacketRadioReader
 
 .. code-block:: python
@@ -68,7 +68,7 @@ PacketRadioReader
 
 
 StreamRadioReader
----------------
+-----------------
 .. autoclass:: serial_grabber.reader.Xbee.StreamRadioReader
 
 .. code-block:: python
