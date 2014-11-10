@@ -40,7 +40,7 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['pygtk', 'serial', 'SerialGrabber_Settings', 'SerialGrabber_State', 'SerialGrabber_Paths',
+MOCK_MODULES = ['pygtk', 'serial', 'serial.serialutil', 'SerialGrabber_Settings', 'SerialGrabber_State', 'SerialGrabber_Paths',
                 'SerialGrabber_Storage', 'xbee']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
