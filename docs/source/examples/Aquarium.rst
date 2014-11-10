@@ -34,14 +34,37 @@ SerialGrabber_Settings.py
 
 .. code-block:: python
 
-    from serial_grabber.processor import CompositeProcessor, TransformProcessor, RollingFilenameProcessor
-    from serial_grabber.processor.CSVProcessors import CSVFileProcessor
-    from serial_grabber.processor.JsonFileProcessor import JsonFileProcessor
-    from serial_grabber.transform import BlockAveragingTransform
-    from serial_grabber.transform.AquariumTransform import AquariumTransform, averageAquariumData
-    from serial_grabber.util import PreviousMidnightBoundary, PreviousWeekStartBoundary
+    import serial
+    from serial_grabber.reader import TransactionExtractor
+    from serial_grabber.reader.FileReader import FileReader
+    from serial_grabber.reader.SerialReader import SerialReader
+    from serial_grabber.processor.UploadProcessor import UploadProcessor
 
-    ...
+    #Serial Settings
+    timeout = 1
+    port = "/dev/ttyUSB0"
+    baud = 57600
+    parity = serial.PARITY_NONE
+    stop_bits = 1
+
+    #Settings
+    cache_collision_avoidance_delay = 1
+    processor_sleep = 1
+    watchdog_sleep = 1
+
+    reader_error_sleep = 1
+
+    drop_carriage_return = True
+
+    transaction = TransactionExtractor("default", "BEGIN AQUARIUM", "END AQUARIUM")
+
+    reader = SerialReader(transaction,
+                          1000,
+                          port,
+                          baud,
+                          timeout=timeout,
+                          parity=parity,
+                          stop_bits=stop_bits)
 
     processor = CompositeProcessor([
         FileAppenderProcessor("all.txt"),
@@ -60,20 +83,4 @@ SerialGrabber_Settings.py
 
     ])
 
-SerialGrabber_State.py
-++++++++++++++++++++++
-
-.. code-block:: python
-
-    from serial_grabber.state import matches, begin_transaction, end_transaction
-    try:
-        from collections import OrderedDict
-    except:
-        from ordereddict import OrderedDict
-
-    def reader_state():
-        READER_STATE = OrderedDict()
-        READER_STATE[matches("BEGIN AQUARIUM")] = begin_transaction(READER_STATE)
-        READER_STATE[matches("END AQUARIUM")] = end_transaction(READER_STATE)
-        return READER_STATE
 
