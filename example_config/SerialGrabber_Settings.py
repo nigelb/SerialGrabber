@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import serial
+from serial_grabber.reader import TransactionExtractor
 from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.processor.UploadProcessor import UploadProcessor
@@ -38,9 +39,14 @@ reader_error_sleep = 1
 
 drop_carriage_return = True
 
-reader = SerialReader(1000, port, baud,
-    timeout=timeout,
-    parity=parity,
-    stop_bits=stop_bits)
+transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
+
+reader = SerialReader(transaction,
+                      1000,
+                      port,
+                      baud,
+                      timeout=timeout,
+                      parity=parity,
+                      stop_bits=stop_bits)
 
 processor = UploadProcessor("https://example.org/cgi-bin/upload.py")

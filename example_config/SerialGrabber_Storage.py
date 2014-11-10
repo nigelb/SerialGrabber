@@ -22,14 +22,14 @@ from serial_grabber.cache import FileSystemCache
 from serial_grabber.util import RollingFilename, PreviousWeekStartBoundary, week_period, to_date_format
 
 
-storage_cache = FileSystemCache(SerialGrabber_Paths.cache_dir,
-                        JSONLineCodec(
-                            SerialGrabber_Paths.archive_dir,
-                            RollingFilename(
-                                PreviousWeekStartBoundary(),
-                                week_period,
-                                None,
-                                to_date_format
-                            )
-                        )
-                )
+storage_archive = JSONLineArchive(
+    SerialGrabber_Paths.archive_dir,
+    RollingFilename(
+        PreviousWeekStartBoundary(),
+        week_period,
+        None,
+        to_date_format
+    )
+)
+
+storage_cache = FileSystemCache(SerialGrabber_Paths.cache_dir, storage_archive)
