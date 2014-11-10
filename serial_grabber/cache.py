@@ -52,11 +52,6 @@ def make_payload(data, binary=False):
 class Cache:
     logger = logging.getLogger("Cache")
 
-    def __init__(self, cache_dir, archive):
-        self.cache_dir = cache_dir
-        self.archive = archive
-
-
     def list_cache(self):
         raise Exception("Not Implemented")
 
@@ -77,6 +72,18 @@ class Cache:
 
 
 class FileSystemCache(Cache):
+    """
+    An implementation of :py:class:`serial_grabber.cache.Cache` that stores the cache entries on the local filesystem.
+
+    :param str cache_dir: The directory location to store the cached entries.
+    :param archive: The archive implementation used to archive the processed data.
+    :type archive: :py:class:`serial_grabber.archive.BaseArchive`
+
+    """
+    def __init__(self, cache_dir, archive):
+        self.cache_dir = cache_dir
+        self.archive = archive
+
     def list_cache(self):
         toRet = {}
         for _entry in glob.glob(os.path.join(self.cache_dir, "*.data")):

@@ -81,6 +81,12 @@ class BaseArchive:
 
 
 class FileSystemArchive(BaseArchive):
+    """
+    A :py:class:`serial_grabber.archive.BaseArchive` implementation that moves the cache entry from the cache directory
+        to the archive directory.
+
+    :param str archive_dir: The directory in which to store the archive files.
+    """
     def __init__(self, archive_dir):
         BaseArchive.__init__(self, archive_dir)
         if not os.path.exists(archive_dir):
@@ -99,6 +105,9 @@ class FileSystemArchive(BaseArchive):
 
 
 class DumpArchive(BaseArchive):
+    """
+    A :py:class:`serial_grabber.archive.BaseArchive` implementation that dumps the cache entry data.
+    """
     def close(self):
         pass
 
@@ -109,7 +118,15 @@ class DumpArchive(BaseArchive):
         pass
 
 
-class JSONLineCodec(BaseArchive):
+class JSONLineArchive(BaseArchive):
+    """
+    A :py:class:`serial_grabber.archive.BaseArchive` implementation that stores each cache entry as a JSON encoded line
+    within the archive file.
+
+    :param str archive_dir: The directory in which to store the archive files.
+    :param filename_roller: The filename roller to use.
+    :type filename_roller: :py:class:`serial_grabber.util.RollingFilename` or None
+    """
     def __init__(self, archive_dir, filename_roller=None):
         BaseArchive.__init__(self, archive_dir)
         self.filename_roller = filename_roller
