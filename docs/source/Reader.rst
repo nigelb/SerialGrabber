@@ -12,7 +12,8 @@ FileReader
 
     ...
 
-    reader = FileReader("data.txt")
+    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    reader = FileReader(transaction, "data.txt")
 
 SerialReader
 ------------
@@ -24,10 +25,13 @@ SerialReader
 
     ...
 
-    reader = SerialReader('/dev/ttyUSB0', 115200,
-        timeout=1,
-        parity=serial.PARITY_NONE,
-        stop_bits=1)
+    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    reader = SerialReader(transaction,
+                          '/dev/ttyUSB0',
+                          115200,
+                          timeout=1,
+                          parity=serial.PARITY_NONE,
+                          stop_bits=1)
 
 
 TCPReader
@@ -40,7 +44,8 @@ TCPReader
 
     ...
 
-    reader = TCPReader("example.org", 8111)
+    transaction = TransactionExtractor("transaction_id", "BEGIN DATA", "END DATA")
+    reader = TCPReader(transaction, "example.org", 8111)
 
 
 PacketRadioReader
