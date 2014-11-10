@@ -23,10 +23,12 @@ class FileReader(Reader):
     """
     A reader that opens and reads a file for its input.
 
+    :param transaction_extractor: The transaction extractor used to parse the input stream.
+    :type transaction_extractor: :py:class:`serial.grabber.reader.TransactionExtractor`
     :param str filename: The file to open and read as input.
     """
-    def __init__(self, filename):
-        Reader.__init__(self, 0)
+    def __init__(self, transaction_extractor, filename):
+        Reader.__init__(self, transaction_extractor, 0)
         self.filename = filename
 
     def setup(self):
@@ -36,4 +38,9 @@ class FileReader(Reader):
         if self.stream:
             self.stream.close()
             self.stream = None
+
+    def read_data(self):
+        return self.stream.read(1)
+
+
 

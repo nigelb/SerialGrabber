@@ -36,6 +36,8 @@ class SerialReader(Reader):
     """
     A reader that connects to the specified serial port for its input.
 
+    :param transaction_extractor: The transaction extractor used to parse the input stream.
+    :type transaction_extractor: :py:class:`serial.grabber.reader.TransactionExtractor`
     :param int startup_ignore_threshold_milliseconds: The interval that input is ignored for at startup
     :param str port: The serial port to use, eg: /dev/ttyUSB0
     :param int baud: The baud rate to use, eg: 115200
@@ -43,8 +45,8 @@ class SerialReader(Reader):
     :param int parity: eg: serial.PARITY_NONE
     :param int stop_bits: eg: serial.STOPBITS_ONE
     """
-    def __init__(self, startup_ignore_threshold_milliseconds, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
-        Reader.__init__(self, startup_ignore_threshold_milliseconds)
+    def __init__(self, transaction_extractor, startup_ignore_threshold_milliseconds, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
+        Reader.__init__(self, transaction_extractor, startup_ignore_threshold_milliseconds)
         self.port = port
         self.baud = baud
         self.timeout = timeout
@@ -97,3 +99,8 @@ class SerialReader(Reader):
 
     def getCommandStream(self):
         return _Stream(self.stream)
+
+    def read_data(self):
+        return self.stream.read()
+
+

@@ -25,11 +25,13 @@ class TCPReader(Reader):
     """
     A reader that connects to the specified hostname:port for its input.
 
+    :param transaction_extractor: The transaction extractor used to parse the input stream.
+    :type transaction_extractor: :py:class:`serial.grabber.reader.TransactionExtractor`
     :param str hostname: The hostname to connect to
     :param int port: The port to connect to
     """
-    def __init__(self, hostname, port):
-        Reader.__init__(self, 0)
+    def __init__(self, transaction_extractor, hostname, port):
+        Reader.__init__(self, transaction_extractor, 0)
         self.hostname = hostname
         self.port = port
 
