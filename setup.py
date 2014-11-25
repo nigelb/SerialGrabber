@@ -27,7 +27,7 @@ setup(name='SerialGrabber',
     author_email='nigel.blair@gmail.com',
     packages=find_packages(),
     zip_safe=False,
-    install_requires=["pyserial"],
+    install_requires=["pyserial", "requests"],
     extras_require = {
         'XBee': ["xbee"]
     },
