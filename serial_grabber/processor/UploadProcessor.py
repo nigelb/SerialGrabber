@@ -17,32 +17,13 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import httplib
-import base64
-
 import logging
 import socket
-import urllib
 import time
+import requests
 
 from serial_grabber.processor import Processor
 from urlparse import urlparse
-
-
-class HTTPBasicAuthentication:
-    """
-    HTTP Basic Authentication
-
-    :param str username: The username for the HTTP request
-    :param str password: The password for the HTTP request
-    """
-
-    def __init__(self, username, password):
-        self.basic = "Basic %s" % (base64.b64encode("%s:%s" % (username, password)))
-
-    def add_header(self, headers):
-        headers["Authorization"] = self.basic
-
 
 class UploadProcessor(Processor):
     """
@@ -54,20 +35,19 @@ class UploadProcessor(Processor):
     :type auth: serial_grabber.processor.UploadProcessor.HTTPBasicAuthentication or None
     :param dict form_params: Addition parameters to be added to the uploaded form.
     :param dict headers: Headers to add to the upload requests.
+    :param dict request_kw: Paramaters that are passed to the requests.post method call
 
     """
     logger = logging.getLogger("Uploader")
 
-    def __init__(self, url, upload_error_sleep=10, auth=None, form_params=None, headers=None):
+    def __init__(self, url, upload_error_sleep=10, auth=None, form_params=None, headers=None, request_kw=None):
         socket.setdefaulttimeout(15)
         self.url = url
         self.upload_error_sleep = upload_error_sleep
-        self.upload_params = None
-        if form_params is not None:
-            self.upload_params = form_params
+        self.upload_params = form_params
         self.headers = [{}, headers][headers is not None]
-        if auth is not None:
-            auth.add_header(self.headers)
+        self.auth = auth
+        self.request_kw=[{}, request_kw][request_kw is not None]
 
 
     def process(self, process_entry):
@@ -81,23 +61,16 @@ class UploadProcessor(Processor):
         for i in process_entry.data.config_delegate:
             data[i] = process_entry.data.config_delegate[i]
 
-        params = urllib.urlencode(data)
-
-        self.headers["Content-type"] = "application/x-www-form-urlencoded"
-        self.headers["Accept"] = "text/plain"
-        if _url.scheme == "https":
-            conn = httplib.HTTPSConnection(_url.hostname)
-        else:
-            conn = httplib.HTTPConnection(_url.hostname)
         try:
-            conn.request("POST", _url.path, body=params, headers=self.headers)
-            response = conn.getresponse()
-            self.logger.info("HTTP Response: %s %s" % (response.status, response.reason))
-
-            data = response.read()
+            r = requests.post(self.url, data=data, headers=self.headers, auth=self.auth, **self.request_kw)
+            
+            #self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
+            self.logger.info("HTTP Response: %s" % (r.status_code))
+            
+            data = r.raw.read() 
             self.logger.log(5, data)
-            conn.close()
-            if response.status == 200:
+            #r.connection.close()
+            if r.status_code == 200:
                 return True
             else:
                 self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
