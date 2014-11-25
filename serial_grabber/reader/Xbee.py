@@ -44,7 +44,7 @@ class DigiRadioReader(SerialReader):
                  stop_bits=serial.STOPBITS_ONE,
                  radio_class=ZigBee,
                  packet_filter=lambda a: True, **kwargs):
-        SerialReader.__init__(self, 0, port, baud, timeout, parity, stop_bits)
+        SerialReader.__init__(self, None, 0, port, baud, timeout, parity, stop_bits)
         self.radio_class = radio_class
         self.radio_args = kwargs
         self.packet_filter = packet_filter
