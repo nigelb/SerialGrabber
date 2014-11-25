@@ -44,7 +44,8 @@ class Reader:
     def __init__(self, transaction_extractor, startup_ignore_threshold_milliseconds):
         self.startup_ignore_threshold_milliseconds = startup_ignore_threshold_milliseconds
         self.transaction_extractor = transaction_extractor
-        self.transaction_extractor.set_callback(lambda stream_id, emit: self.handle_transaction(stream_id, emit))
+        if transaction_extractor:
+            self.transaction_extractor.set_callback(lambda stream_id, emit: self.handle_transaction(stream_id, emit))
 
 
     def __call__(self, *args, **kwargs):
@@ -181,3 +182,4 @@ class TransactionExtractor:
             emit = self.buffer[:end + len(self.stop_boundary)]
             self.buffer = self.buffer[end + len(self.stop_boundary):]
             self.callback(self.stream_id, emit)
+
