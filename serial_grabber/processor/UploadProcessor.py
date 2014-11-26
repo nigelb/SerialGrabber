@@ -62,7 +62,7 @@ class UploadProcessor(Processor):
             data[i] = process_entry.data.config_delegate[i]
 
         try:
-            r = requests.post(self.url, data=data, headers=self.headers, auth=self.auth, **self.request_kw)
+            r = requests.post(self.url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
             
             #self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
             self.logger.info("HTTP Response: %s" % (r.status_code))
