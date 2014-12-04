@@ -53,17 +53,31 @@ UploadProcessor
 
 .. autoclass:: serial_grabber.processor.UploadProcessor.UploadProcessor
 
-.. autoclass:: serial_grabber.processor.UploadProcessor.HTTPBasicAuthentication
+HTTP Basic Authentication:
 
 .. code-block:: python
 
-    from serial_grabber.processor.UploadProcessor import UploadProcessor, HTTPBasicAuthentication
+    from serial_grabber.processor.UploadProcessor import UploadProcessor
+    from requests.auth import HTTPBasicAuth
 
     processor = UploadProcessor("https://example.org/cgi-bin/data.py",
-        auth=HTTPBasicAuthentication("username", "password"),
+        auth=HTTPBasicAuth("username", "password"),
         form_params={'device':'Device-1'}
     )
 
+
+HTTP Digest Authentication with SSL verification disabled:
+
+.. code-block:: python
+
+    from serial_grabber.processor.UploadProcessor import UploadProcessor
+    from requests.auth import HTTPDigestAuth
+
+    processor = UploadProcessor("https://example.org/cgi-bin/data.py",
+        auth=HTTPDigestAuth("username", "password"),
+        form_params={'device':'Device-1'},
+        request_kw={'verify':False}    
+    )
 
 
 
