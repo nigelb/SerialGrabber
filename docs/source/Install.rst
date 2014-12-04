@@ -7,6 +7,7 @@ Dependencies
 SerialGrabber depends on these packages:
 
 * `pyserial`_
+* `requests`_
 
 
 From Source
