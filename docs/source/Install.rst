@@ -23,3 +23,4 @@ To install Serial Grabber run the following commands as ``root``:
 
 
 .. _pyserial: https://pypi.python.org/pypi/pyserial
+.. requests: https://pypi.python.org/pypi/requests
