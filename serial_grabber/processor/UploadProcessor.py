@@ -21,9 +21,11 @@ import logging
 import socket
 import time
 import requests
+from serial_grabber.poster_exceptions import BadDataException
 
 from serial_grabber.processor import Processor
 from urlparse import urlparse
+
 
 class UploadProcessor(Processor):
     """
@@ -47,11 +49,10 @@ class UploadProcessor(Processor):
         self.upload_params = form_params
         self.headers = [{}, headers][headers is not None]
         self.auth = auth
-        self.request_kw=[{}, request_kw][request_kw is not None]
+        self.request_kw = [{}, request_kw][request_kw is not None]
 
 
     def process(self, process_entry):
-        toRet = False
         _url = urlparse(self.url)
         data = {}
         if self.upload_params is not None:
@@ -63,21 +64,33 @@ class UploadProcessor(Processor):
 
         try:
             r = requests.post(self.url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
-            
-            #self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
+
+            # self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
             self.logger.info("HTTP Response: %s" % (r.status_code))
-            
-            data = r.raw.read() 
-            self.logger.log(5, data)
+
+            response = r.raw.read()
+            self.logger.log(5, response)
             #r.connection.close()
             if r.status_code == 200:
                 return True
+            elif r.status_code in [406]:
+                raise HTTPError(r.status_code, response)
             else:
                 self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
                 time.sleep(self.upload_error_sleep)
                 return False
+        except HTTPError, he:
+            raise BadDataException(he)
+
         except Exception, e:
             self.logger.exception(e)
-            self.logger.error("Unknown error: %s"%e.message)
+            self.logger.error("Unknown error: %s" % e.message)
             time.sleep(self.upload_error_sleep)
             return False
+
+
+class HTTPError(StandardError):
+    def __init__(self, code, message, *args, **kwargs):
+        StandardError.__init__(self, message, *args, **kwargs)
+        self.code = code
+        self.message = message

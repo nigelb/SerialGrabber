@@ -19,3 +19,6 @@
 
 
 class ConnectionException(Exception): pass
+
+
+class BadDataException(Exception): pass
