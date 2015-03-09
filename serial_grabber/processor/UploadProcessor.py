@@ -79,6 +79,7 @@ class UploadProcessor(Processor):
                 self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
                 time.sleep(self.upload_error_sleep)
                 return False
+
         except HTTPError, he:
             raise BadDataException(he)
 
