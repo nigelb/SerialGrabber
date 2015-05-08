@@ -43,7 +43,7 @@ class UploadProcessor(Processor):
                 this data will be moved into the archive.
     :param dict reject_http_code: A list of HTTP status codes indicating that the server rejected the data,
                 this data will be moved into the bad data archive.
-    :param dict format_url: If True then in the processing method the url will be set to: ``url.format(**process_entry[constants.url_parameters])``
+    :param dict format_url: If True then in the processing method the url will be set to: ``url.format(**process_entry[constants.url_parameters])`` which should be set by your transform.
 
     """
     logger = logging.getLogger("Uploader")
