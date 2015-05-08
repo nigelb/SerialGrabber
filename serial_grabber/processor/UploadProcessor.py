@@ -63,7 +63,6 @@ class UploadProcessor(Processor):
 
 
     def process(self, process_entry):
-        print process_entry
         data = {}
         if self.upload_params is not None:
             for i in self.upload_params:
@@ -75,8 +74,9 @@ class UploadProcessor(Processor):
         try:
             url = self.url
             if self.format_url:
-                print process_entry[constants.url_parameters]
+                self.logger.debug(process_entry[constants.url_parameters])
                 url = self.url.format(**process_entry[constants.url_parameters])
+                self.logger.debug(url)
             r = requests.post(url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
 
             # self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
