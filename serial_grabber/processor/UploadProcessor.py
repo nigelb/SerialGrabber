@@ -21,6 +21,7 @@ import logging
 import socket
 import time
 import requests
+from serial_grabber import constants
 from serial_grabber.poster_exceptions import BadDataException
 
 from serial_grabber.processor import Processor
@@ -37,12 +38,18 @@ class UploadProcessor(Processor):
     :type auth: serial_grabber.processor.UploadProcessor.HTTPBasicAuthentication or None
     :param dict form_params: Addition parameters to be added to the uploaded form.
     :param dict headers: Headers to add to the upload requests.
-    :param dict request_kw: Paramaters that are passed to the requests.post method call
+    :param dict request_kw: Parameters that are passed to the requests.post method call
+    :param dict success_http_code: A list of HTTP status codes indicating that the server accepted the data,
+                this data will be moved into the archive.
+    :param dict reject_http_code: A list of HTTP status codes indicating that the server rejected the data,
+                this data will be moved into the bad data archive.
+    :param dict format_url: If True then in the processing method the url will be set to: ``url.format(**process_entry[constants.url_parameters])``
 
     """
     logger = logging.getLogger("Uploader")
 
-    def __init__(self, url, upload_error_sleep=10, auth=None, form_params=None, headers=None, request_kw=None):
+    def __init__(self, url, upload_error_sleep=10, auth=None, form_params=None, headers=None, request_kw=None,
+                 success_http_codes=[200], reject_http_codes=[406], format_url=False):
         socket.setdefaulttimeout(15)
         self.url = url
         self.upload_error_sleep = upload_error_sleep
@@ -50,10 +57,13 @@ class UploadProcessor(Processor):
         self.headers = [{}, headers][headers is not None]
         self.auth = auth
         self.request_kw = [{}, request_kw][request_kw is not None]
+        self.success_http_codes = success_http_codes
+        self.reject_http_codes = reject_http_codes
+        self.format_url = format_url
 
 
     def process(self, process_entry):
-        _url = urlparse(self.url)
+        print process_entry
         data = {}
         if self.upload_params is not None:
             for i in self.upload_params:
@@ -63,17 +73,21 @@ class UploadProcessor(Processor):
             data[i] = process_entry.data.config_delegate[i]
 
         try:
-            r = requests.post(self.url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
+            url = self.url
+            if self.format_url:
+                print process_entry[constants.url_parameters]
+                url = self.url.format(**process_entry[constants.url_parameters])
+            r = requests.post(url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
 
             # self.logger.info("HTTP Response: %s %s" % (r.status_code, r.reason))
             self.logger.info("HTTP Response: %s" % (r.status_code))
 
             response = r.raw.read()
             self.logger.log(5, response)
-            #r.connection.close()
-            if r.status_code == 200:
+            # r.connection.close()
+            if r.status_code in self.success_http_codes:
                 return True
-            elif r.status_code in [406]:
+            elif r.status_code in self.reject_http_codes:
                 raise HTTPError(r.status_code, response)
             else:
                 self.logger.error("Upload Error, sleeping for %s seconds" % self.upload_error_sleep)
