@@ -18,7 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #Constants
-param = "data"
+data = "data"
+url_parameters = "url_parameters"
 timep = "time"
 url = "url"
 payload = "payload"
