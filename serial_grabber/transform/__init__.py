@@ -19,6 +19,7 @@
 
 
 class TransformException(Exception): pass
+class DebugTransformException(Exception): pass
 
 class Transform:
     def transform(self, process_entry):

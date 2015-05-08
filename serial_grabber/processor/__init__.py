@@ -22,6 +22,7 @@ import os, SerialGrabber_Settings
 import time
 import datetime
 from SerialGrabber_Storage import storage_cache
+from serial_grabber.transform import DebugTransformException
 from serial_grabber.util import config_helper, RollingFilename
 
 
@@ -57,6 +58,8 @@ class Processor:
                                 if self.process(config_helper(data)):
                                     self.counter.processed()
                                     storage_cache.decache(entry_path)
+                            except DebugTransformException, de:
+                                self.logger.debug("Debug exception: %s" % de)
                             except BaseException, e:
                                 self.logger.error("Failed to process data: %s moving to bad data archive" % e)
                                 self.logger.exception(e)
