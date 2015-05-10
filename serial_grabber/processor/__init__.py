@@ -92,7 +92,7 @@ class CompositeProcessor(Processor):
 
     :param processors: The list of Processors.
     :type processors: List of objects that implement serial_grabber.processor.Processor
-    :param composition_operation: The function that composes the Processor results.
+    :param composition_operation: The function that composes the Processor results, default: ``lambda a, b: a or b``.
     :type composition_operation: lambda a, b
     :param bool starting_value: The initial value passed to the composition_operation with the result from the first processor.
     """

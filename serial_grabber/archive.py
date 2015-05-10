@@ -83,7 +83,7 @@ class BaseArchive:
 class FileSystemArchive(BaseArchive):
     """
     A :py:class:`serial_grabber.archive.BaseArchive` implementation that moves the cache entry from the cache directory
-        to the archive directory.
+    to the archive directory.
 
     :param str archive_dir: The directory in which to store the archive files.
     """
@@ -106,7 +106,7 @@ class FileSystemArchive(BaseArchive):
 
 class DumpArchive(BaseArchive):
     """
-    A :py:class:`serial_grabber.archive.BaseArchive` implementation that dumps the cache entry data.
+    A :py:class:`serial_grabber.archive.BaseArchive` implementation that deletes the cache entry data from the cache.
     """
     def close(self):
         pass
