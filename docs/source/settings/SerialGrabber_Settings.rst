@@ -54,8 +54,11 @@ drop_carriage_return
 --------------------
 If this option is `True` then ``\r (0x0A)`` characters are removed from the data stream.
 
+.. _reader:
+
 reader
 ------
+
 An object that implements :class:`serial_grabber.reader.Reader`, see :doc:`../Reader`
 
 .. code-block:: python

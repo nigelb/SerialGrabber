@@ -8,7 +8,7 @@ Reader Thread
 -------------
 The Reader
 
-#. Reads the data from the configured source
+#. Reads the data from the configured source, see :ref:`reader` and :doc:`Reader`.
 #. Writes the data into the cache directory, see: :ref:`cache_dir`, and :doc:`Cache`
 
 Processor Thread
