@@ -16,8 +16,14 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import base64
+import pickle
+from serial_grabber import constants
 
-from serial_grabber.reader import Reader
+from serial_grabber.reader import Reader, LineTransactionExtractor
+import time
+import json
+
 
 class FileReader(Reader):
     """
@@ -42,5 +48,33 @@ class FileReader(Reader):
     def read_data(self):
         return self.stream.read(1)
 
+class JSONLineFileReader(Reader):
+    """
 
+    """
+    def __init__(self, filename, inter_record_delay=0):
+        Reader.__init__(self, LineTransactionExtractor(), 0)
+        self.filename = filename
+        self.inter_record_delay = inter_record_delay
+
+    def setup(self):
+        self.stream = open(self.filename, "rb")
+
+    def close(self):
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+
+    def read_data(self):
+        return self.stream.read(1)
+
+    def handle_transaction(self, stream_id, emit):
+        entry = json.loads(emit)
+        if constants.binary in entry and entry[constants.binary]:
+            entry[constants.payload] = pickle.loads(base64.b64decode(entry[constants.payload]))
+        self.storage_cache.cache(entry)
+        self.logger.info("End of Transaction")
+        self.counter.read()
+        self.counter.update()
+        time.sleep(self.inter_record_delay)
 

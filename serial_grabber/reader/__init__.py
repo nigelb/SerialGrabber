@@ -46,6 +46,7 @@ class Reader:
         self.transaction_extractor = transaction_extractor
         if transaction_extractor:
             self.transaction_extractor.set_callback(lambda stream_id, emit: self.handle_transaction(stream_id, emit))
+        self.storage_cache = storage_cache
 
 
     def __call__(self, *args, **kwargs):
@@ -94,7 +95,7 @@ class Reader:
     def handle_transaction(self, stream_id, emit):
         entry = make_payload(emit)
         entry['stream_id'] = stream_id
-        storage_cache.cache(entry)
+        self.storage_cache.cache(entry)
         self.logger.info("End of Transaction")
         self.counter.read()
         self.counter.update()
@@ -182,4 +183,21 @@ class TransactionExtractor:
             emit = self.buffer[:end + len(self.stop_boundary)]
             self.buffer = self.buffer[end + len(self.stop_boundary):]
             self.callback(self.stream_id, emit)
+
+class LineTransactionExtractor:
+    """
+
+    """
+    def __init__(self, callback=None):
+        self.buffer = ""
+        self.callback = callback
+
+    def set_callback(self, callback):
+            self.callback = callback
+
+    def write(self, data):
+        self.buffer += data
+        if data == '\n':
+            self.callback(None, self.buffer)
+            self.buffer = ""
 
