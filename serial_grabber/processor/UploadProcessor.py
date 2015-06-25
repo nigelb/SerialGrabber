@@ -61,8 +61,22 @@ class UploadProcessor(Processor):
         self.reject_http_codes = reject_http_codes
         self.format_url = format_url
 
-
     def process(self, process_entry):
+        if constants.multiple_uploads in process_entry and process_entry[constants.multiple_uploads]:
+            data = process_entry[constants.data]
+            payloads = process_entry[constants.data][constants.payload]
+
+            for entry in payloads:
+                for key in entry:
+                    data[key] = entry[key]
+                if not self._process(process_entry):
+                    return False
+            return True
+        else:
+            return self._process(process_entry)
+
+    def _process(self, process_entry):
+
         data = {}
         if self.upload_params is not None:
             for i in self.upload_params:
@@ -74,8 +88,8 @@ class UploadProcessor(Processor):
         try:
             url = self.url
             if self.format_url:
-                self.logger.debug(process_entry[constants.url_parameters])
-                url = self.url.format(**process_entry[constants.url_parameters])
+                self.logger.debug(process_entry[constants.data][constants.url_parameters])
+                url = self.url.format(**process_entry[constants.data][constants.url_parameters])
                 self.logger.debug(url)
             r = requests.post(url, data=data['payload'], headers=self.headers, auth=self.auth, **self.request_kw)
 
