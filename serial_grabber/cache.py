@@ -103,7 +103,8 @@ class FileSystemCache(Cache):
             try:
                 cache_entry = json.load(cache_file)
                 if constants.binary in cache_entry and cache_entry[constants.binary]:
-                    cache_entry[constants.payload] = pickle.loads(base64.b64decode(cache_entry[constants.payload]))
+                    # cache_entry[constants.payload] = pickle.loads(base64.b64decode(cache_entry[constants.payload]))
+                    cache_entry[constants.payload] = base64.b64decode(cache_entry[constants.payload])
                 if not (cache_entry.has_key(constants.timep)) and not (cache_entry.has_key(constants.payload)):
                     self.logger.error("Corrupted Cache Entry: %s de-caching." % cache_filename)
                     self.decache(cache_filename)
@@ -116,7 +117,8 @@ class FileSystemCache(Cache):
 
     def cache(self, payload):
         if constants.binary in payload and payload[constants.binary]:
-            payload[constants.payload] = base64.b64encode(pickle.dumps(payload[constants.payload]))
+            # payload[constants.payload] = base64.b64encode(pickle.dumps(payload[constants.payload]))
+            payload[constants.payload] = base64.b64encode(payload[constants.payload])
         cache_file_path = os.path.join(self.cache_dir, "%s-0.data" % payload[constants.timep])
         tmp_file_path = os.path.join(self.cache_dir, "%s-0.tmp" % payload[constants.timep])
         n = 1
