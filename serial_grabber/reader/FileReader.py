@@ -71,7 +71,8 @@ class JSONLineFileReader(Reader):
     def handle_transaction(self, stream_id, emit):
         entry = json.loads(emit)
         if constants.binary in entry and entry[constants.binary]:
-            entry[constants.payload] = pickle.loads(base64.b64decode(entry[constants.payload]))
+            # entry[constants.payload] = pickle.loads(base64.b64decode(entry[constants.payload]))
+            entry[constants.payload] = base64.b64decode(entry[constants.payload])
         self.storage_cache.cache(entry)
         self.logger.info("End of Transaction")
         self.counter.read()
