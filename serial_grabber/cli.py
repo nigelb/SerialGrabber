@@ -54,7 +54,7 @@ def start(logger, reader, processor, command):
         if reader:
             watchdog.start_thread(reader, (isRunning, c), "Runner")
         if processor:
-            watchdog.start_thread(processor, (isRunning, c), "Uploader")
+            watchdog.start_thread(processor, (isRunning, c), "Processor")
         if command and reader:
             watchdog.start_thread(command, (isRunning, c, reader.getCommandStream()), "Commander")
         while isRunning.running:
