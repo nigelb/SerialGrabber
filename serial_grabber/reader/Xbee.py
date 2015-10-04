@@ -184,6 +184,9 @@ class StreamRadioReader(DigiRadioReader):
             self.counter.update()
             if self.ack:
                 dest_addr = self.short_address[stream_id]
-                self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack)
+                if hasattr(self.ack, '__call__'):
+                    self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack())
+                else:
+                    self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack)
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
