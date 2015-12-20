@@ -2,7 +2,9 @@
 Cache
 =====
 
-To configure the Cache type in use see: :doc:`settings/SerialGrabber_Storage`.
+Once data has acquired by the :doc:`Reader` and cut into a transaction, the payload is inserted into the cache.
+
+The Cache settings can be configure in: :doc:`settings/SerialGrabber_Storage`.
 
 FileSystemCache
 ---------------
