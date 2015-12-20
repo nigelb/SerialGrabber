@@ -22,8 +22,8 @@ The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a
    DataLifeCycle
    Settings
    Reader
-   Processor
    Cache
+   Processor
    Archive
 
 Complex Examples
@@ -36,6 +36,7 @@ The following example are taken from some of our deployments.
 
    examples/Aquarium
    examples/EcoFest
+   examples/ThingSpeak
 
 
 Indices and tables
@@ -44,5 +45,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
 
