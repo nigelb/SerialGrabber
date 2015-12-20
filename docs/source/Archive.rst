@@ -1,7 +1,7 @@
 =======
 Archive
 =======
-Once a payload has been successfully processed by the configure processor the payload item is removed from the cache and
+Once a payload has been successfully processed by the configured processor (aee :doc:`DataLifeCycle`.) the payload item is removed from the cache and
 sent to the configured archive.
 
 The Archive settings can be set in: :doc:`settings/SerialGrabber_Storage`.
