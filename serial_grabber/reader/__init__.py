@@ -154,8 +154,9 @@ class Reader:
 
 class TransactionExtractor:
     """
-    A TransactionExtractor reads a stream and breaks it into transaction beginning at the *start_boundary* and ending at
-    the *stop_boundary*. Once it has create a transaction it calls the specified *callback*
+    A TransactionExtractor reads a stream and breaks it into transactions (also knows a payloads) beginning at the
+    *start_boundary* and ending at the *stop_boundary*. Once it has created a transaction it passes the payload to the
+    specified *callback*. Most :py:class:`serial.grabber.reader.Reader` implementations will set this callback.
 
     :param str stream_id: The id of the stream that this TransactionExtractor is attached to.
     :param str start_boundary: The string that specifies the beginning of the transaction.
