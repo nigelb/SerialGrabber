@@ -8,7 +8,8 @@ SerialGrabber Documentation
 
 We use SerialGrabber to read data from sensor devices, process this data and post it to an internet endpoint.
 
-The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a :doc:`Processor`, and archived by an :doc:`Archive`.
+The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a :doc:`Processor`, and archived by an :doc:`Archive`
+see :doc:`DataLifeCycle`.
 
 
 
