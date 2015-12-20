@@ -88,7 +88,7 @@ StreamRadioReader
                              stop_bits=serial.STOPBITS_ONE,
                              packet_filter=lambda packet: packet['id'] == 'rx',
                              escaped=True)
-
+.. _TransactionExtractor:
 ====================
 TransactionExtractor
 ====================
