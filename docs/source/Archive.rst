@@ -1,7 +1,11 @@
 =======
 Archive
 =======
-To configure the Archive type in use see: :doc:`settings/SerialGrabber_Storage`.
+Once a payload has been successfully processed by the configure processor the payload item is removed from the cache and
+sent to the configured archive.
+
+The Archive settings can be set in: :doc:`settings/SerialGrabber_Storage`.
+
 
 FileSystemArchive
 -----------------
