@@ -32,8 +32,8 @@ class CSVFileProcessor(ExternalFilenameProcessor):
     """
     logger = logging.getLogger("CSVFileProcessor")
 
-    def __init__(self, filename=None, permission=0644):
-        self.field_names = None
+    def __init__(self, filename=None, permission=0644, headers=None):
+        self.field_names = headers
         if filename:
             self.setOutputFileName(filename)
         self.permission = permission
@@ -48,6 +48,7 @@ class CSVFileProcessor(ExternalFilenameProcessor):
 
     def process(self, process_entry):
         if not self.field_names:
+            print process_entry.data.payload
             self.field_names = process_entry.data.payload.config_delegate.keys()
             self.field_names.sort()
         header = True
@@ -60,6 +61,7 @@ class CSVFileProcessor(ExternalFilenameProcessor):
             existing.writerow(process_entry.data.payload.config_delegate)
         if header:
             os.chmod(self.filename, self.permission)
+        return True
 
     def run(self):
         raise Exception("No!")
