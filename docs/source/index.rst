@@ -8,7 +8,8 @@ SerialGrabber Documentation
 
 We use SerialGrabber to read data from sensor devices, process this data and post it to an internet endpoint.
 
-The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a :doc:`Processor`, and archived by an :doc:`Archive`.
+The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a :doc:`Processor`, and archived by an :doc:`Archive`
+see :doc:`DataLifeCycle`.
 
 
 
@@ -22,8 +23,8 @@ The data is read using a :doc:`Reader`, cached by a :doc:`Cache`, processed by a
    DataLifeCycle
    Settings
    Reader
-   Processor
    Cache
+   Processor
    Archive
 
 Complex Examples
@@ -36,6 +37,7 @@ The following example are taken from some of our deployments.
 
    examples/Aquarium
    examples/EcoFest
+   examples/ThingSpeak
 
 
 Indices and tables
@@ -44,5 +46,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
 

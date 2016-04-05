@@ -148,6 +148,7 @@ class StreamRadioReader(DigiRadioReader):
     :param packet_filter: A function that takes one parameter, the parsed radio packet, and returns a bool specifying
        weather or not to keep the packet.
     :type packet_filter: lambda a: True
+    :param binary: Weather the data recieved needs to be base64 encoded by the cache (otherwise binary data may mess up the cache json)
     :param bool escaped: The radio is in API mode 2
     """
     def __init__(self,
@@ -157,12 +158,14 @@ class StreamRadioReader(DigiRadioReader):
                  timeout=60,
                  parity=serial.PARITY_NONE,
                  stop_bits=serial.STOPBITS_ONE,
-                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None, **kwargs):
+                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None, 
+                 binary=True, **kwargs):
         DigiRadioReader.__init__(self, port, baud, timeout, parity, stop_bits, radio_class, packet_filter, **kwargs)
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}
         self.ack = ack
+	self.binary = binary
 
     def handle_frame(self, frame):
         if frame['id'] == 'rx':
@@ -177,7 +180,7 @@ class StreamRadioReader(DigiRadioReader):
 
     def handle_transaction(self, stream_id, transaction):
         try:
-            entry = cache.make_payload(transaction, binary=True)
+            entry = cache.make_payload(transaction, binary=self.binary)
             entry['stream_id'] = " ".join([format(ord(x), "02x") for x in stream_id])
             cache.cache(entry)
             self.counter.read()

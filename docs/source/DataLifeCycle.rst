@@ -9,6 +9,7 @@ Reader Thread
 The Reader
 
 #. Reads the data from the configured source, see :ref:`reader` and :doc:`Reader`.
+#. Most readers use a :ref:`TransactionExtractor` to cut the stream up into discreet payloads.
 #. Writes the data into the cache directory, see: :ref:`cache_dir`, and :doc:`Cache`
 
 Processor Thread
