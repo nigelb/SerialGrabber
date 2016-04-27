@@ -30,14 +30,16 @@ import io
 # This if statement removes errors when building the documentation
 if 'api_responses' in ZigBee.__dict__:
     ZigBee.api_responses[b'\xa1'] = {'name': 'route_record_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa2'] = {'name': 'device_authenticated_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa3'] = {'name': 'many_to_one_route_request_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa4'] = {'name': 'register_joining_device_indicator', 'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa2'] = {'name': 'device_authenticated_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa3'] = {'name': 'many_to_one_route_request_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa4'] = {'name': 'register_joining_device_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
     ZigBee.api_responses[b'\xa5'] = {'name': 'join_notification_status', 'structure': [{'name': 'data', 'len': None}]}
 
 
 class DigiRadioReader(SerialReader):
-
     def __init__(self, port, baud,
                  timeout=60,
                  parity=serial.PARITY_NONE,
@@ -151,6 +153,7 @@ class StreamRadioReader(DigiRadioReader):
     :param binary: Weather the data recieved needs to be base64 encoded by the cache (otherwise binary data may mess up the cache json)
     :param bool escaped: The radio is in API mode 2
     """
+
     def __init__(self,
                  stream_transaction_factory,
                  port,
@@ -158,14 +161,14 @@ class StreamRadioReader(DigiRadioReader):
                  timeout=60,
                  parity=serial.PARITY_NONE,
                  stop_bits=serial.STOPBITS_ONE,
-                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None, 
+                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None,
                  binary=True, **kwargs):
         DigiRadioReader.__init__(self, port, baud, timeout, parity, stop_bits, radio_class, packet_filter, **kwargs)
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}
         self.ack = ack
-	self.binary = binary
+        self.binary = binary
 
     def handle_frame(self, frame):
         if frame['id'] == 'rx':
