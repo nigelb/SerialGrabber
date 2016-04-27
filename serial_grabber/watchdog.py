@@ -18,9 +18,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import logging
-from threading import Thread
 import time
 import SerialGrabber_Settings
+
+from multiprocessing import Process, Queue
+
+from serial_grabber.util import register_worker_signal_handler
+
 
 class running:
     def __init__(self, running):
@@ -56,12 +60,12 @@ class Watchdog:
         self.thread_args = {}
         self.threads = {}
         self.isRunning = isRunning
-        self.watchdog_thread = Thread(target=self.run)
+        self.watchdog_thread = Process(target=self.run)
         self.watchdog_thread.start()
 
     def start_thread(self, func, args, name):
         self.thread_args[func] = args
-        thread = Thread(target=func, args=args, name=name)
+        thread = Process(target=func, args=args, name=name)
         thread.start()
         time.sleep(1)
         self.threads[func] = thread
@@ -70,13 +74,14 @@ class Watchdog:
     def join(self):
         for func in self.threads:
             self.threads[func].join()
-        self.watchdog_thread.join()
+        # self.watchdog_thread.join()
         self.logger.info("Joined all threads.")
 
 
     def run(self):
         self.logger.info("Watchdog started.")
-        while self.isRunning.running:
+        register_worker_signal_handler(self.logger)
+        while self.isRunning.value == 1:
             for func in self.threads:
                 thread = self.threads[func]
                 if not thread.isAlive():
@@ -84,7 +89,7 @@ class Watchdog:
                         name = thread.getName()
                         self.logger.error("The thread: %s has stopped, restarting..."%name)
                         thread.join()
-                        thread = Thread(target = func, args=self.thread_args[func], name=name)
+                        thread = Process(target = func, args=self.thread_args[func], name=name)
                         thread.start()
                         self.threads[func] = thread
                         self.logger.info("Started Thread: %s"%name)

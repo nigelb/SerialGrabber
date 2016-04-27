@@ -20,8 +20,11 @@ import signal
 import time
 
 from SerialGrabber_Storage import storage_cache
+from ctypes import c_int
+from multiprocessing import Process, Queue, Value
 from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.util import config_helper
+
 
 from serial_grabber.watchdog import running, counter, Watchdog
 
@@ -37,7 +40,7 @@ class status:
 def register_handler(running, watchdog, reader, processor, command):
     def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
-        running.running = False
+        running.value = 0
         if command:
             command.stop()
         watchdog.join()
@@ -51,7 +54,9 @@ def register_handler(running, watchdog, reader, processor, command):
 def start(logger, reader, processor, command):
     try:
         si = status(logger)
-        isRunning = running(True)
+        # isRunning = running(True)
+        isRunning = Value(c_int, 1)
+
         c = counter(si)
 
         params = config_helper({
@@ -67,14 +72,15 @@ def start(logger, reader, processor, command):
             processor.populate_parameters(params)
 
         watchdog = Watchdog(isRunning)
-        register_handler(isRunning, watchdog, reader, processor, command)
+
         if reader:
             watchdog.start_thread(reader, (isRunning, c, params), "Runner")
         if processor:
             watchdog.start_thread(ProcessorManager(processor), (isRunning, c, params), "Processor")
         if command and reader:
             watchdog.start_thread(command, (isRunning, c, params), "Commander")
-        while isRunning.running:
+        register_handler(isRunning, watchdog, reader, processor, command)
+        while isRunning.value == 1:
             time.sleep(1)
     finally:
         storage_cache.close_cache()
