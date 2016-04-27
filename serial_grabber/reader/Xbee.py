@@ -35,9 +35,12 @@ import logging
 # This if statement removes errors when building the documentation
 if 'api_responses' in ZigBee.__dict__:
     ZigBee.api_responses[b'\xa1'] = {'name': 'route_record_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa2'] = {'name': 'device_authenticated_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa3'] = {'name': 'many_to_one_route_request_indicator', 'structure': [{'name': 'data', 'len': None}]}
-    ZigBee.api_responses[b'\xa4'] = {'name': 'register_joining_device_indicator', 'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa2'] = {'name': 'device_authenticated_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa3'] = {'name': 'many_to_one_route_request_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
+    ZigBee.api_responses[b'\xa4'] = {'name': 'register_joining_device_indicator',
+                                     'structure': [{'name': 'data', 'len': None}]}
     ZigBee.api_responses[b'\xa5'] = {'name': 'join_notification_status', 'structure': [{'name': 'data', 'len': None}]}
 
 
@@ -169,6 +172,7 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
     :param binary: Weather the data recieved needs to be base64 encoded by the cache (otherwise binary data may mess up the cache json)
     :param bool escaped: The radio is in API mode 2
     """
+
     def __init__(self,
                  stream_transaction_factory,
                  serial_connection,
