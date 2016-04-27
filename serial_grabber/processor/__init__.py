@@ -86,6 +86,7 @@ class ProcessorManager:
                         break
             self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.processor_sleep)
+        self.logger.info("Shutting Down...")
 
 
 class Processor:

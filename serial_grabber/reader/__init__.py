@@ -88,6 +88,7 @@ class Reader:
                 traceback.print_exc()
             if self.stream is None:
                 time.sleep(SerialGrabber_Settings.reader_error_sleep)
+        self.logger.info("Shutting Down...")
 
     def read_data(self):
         raise Exception("Not Implemented")

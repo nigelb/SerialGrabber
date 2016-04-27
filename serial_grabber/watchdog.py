@@ -96,3 +96,4 @@ class Watchdog:
                     except:
                         self.logger.error("An error occurred when trying to restart the thread.")
             time.sleep(SerialGrabber_Settings.watchdog_sleep)
+        self.logger.info("Shutting Down...")
