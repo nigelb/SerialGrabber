@@ -21,9 +21,10 @@ import logging
 import os, SerialGrabber_Settings
 import time
 import datetime
+
 from SerialGrabber_Storage import storage_cache
 from serial_grabber.transform import DebugTransformException
-from serial_grabber.util import config_helper, RollingFilename
+from serial_grabber.util import config_helper, RollingFilename, register_worker_signal_handler
 
 
 class Processor:
@@ -31,14 +32,16 @@ class Processor:
 
     def __call__(self, *args, **kwargs):
         try:
+            register_worker_signal_handler(self.logger)
             self.logger.info("Processor Thread Started.")
             self.isRunning, self.counter = args
             self.run()
         except BaseException, e:
             self.logger.exception(e)
 
+
     def run(self):
-        while self.isRunning.running:
+        while self.isRunning.value == 1:
             order, c_entries = storage_cache.list_cache()
             if c_entries:
                 for entry in order:
@@ -67,7 +70,7 @@ class Processor:
                                 storage_cache.decache(entry_path, type="bad_data")
                         else:
                             self.logger.debug("File is to new. Leaving for next round.")
-                    if not self.isRunning.running:
+                    if self.isRunning.value != 1:
                         self.logger.error("Stopped Running during entry iteration, breaking.")
                         break
             self.logger.log(5, "Processor Sleeping.")

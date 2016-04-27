@@ -27,7 +27,7 @@ import datetime
 from serial import SerialException
 from serial_grabber.constants import current_matcher
 from serial_grabber.cache import make_payload
-from serial_grabber.util import config_helper, get_millis
+from serial_grabber.util import config_helper, get_millis, register_worker_signal_handler
 
 
 class Reader:
@@ -50,10 +50,15 @@ class Reader:
 
 
     def __call__(self, *args, **kwargs):
-        self.logger.info("Reader Thread Started.")
-        self.isRunning, self.counter = args
-        self.stream = None
-        self.run()
+        try:
+            register_worker_signal_handler(self.logger)
+            self.logger.info("Reader Thread Started.")
+            self.isRunning, self.counter = args
+            self.stream = None
+            self.run()
+        except BaseException, e:
+            self.logger.exception(e)
+
 
     def getCommandStream(self):
         return None
@@ -66,7 +71,7 @@ class Reader:
 
     def run(self):
         start = get_millis()
-        while self.isRunning.running:
+        while self.isRunning.value == 1:
             try:
                 if self.stream is None:
                     self.setup()

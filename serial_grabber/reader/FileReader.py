@@ -41,7 +41,7 @@ class FileReader(Reader):
         self.stream = open(self.filename, "rb")
 
     def close(self):
-        if self.stream:
+        if 'stream' in self.__dict__ and self.stream:
             self.stream.close()
             self.stream = None
 

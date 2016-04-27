@@ -18,6 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import datetime, time
 
+import signal
+
 
 class config_helper:
     def __init__(self, config):
@@ -112,3 +114,8 @@ class RollingFilename:
     def calculate_output_name(self, pattern, ts):
         v = self.ts_transform((int((ts - self.boundary) / self.chunk_size) * self.chunk_size) + self.boundary)
         return pattern.format(ts=v, ext=self.file_extension)
+
+def register_worker_signal_handler(logger):
+    def signal_handler(signal, frame):
+        logger.info("Ctrl+C Pressed...");
+    signal.signal(signal.SIGINT, signal_handler)
