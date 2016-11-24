@@ -192,9 +192,15 @@ class LoggingProcessor(Processor):
     """
     logger = logging.getLogger("LoggingProcessor")
 
+    def __init__(self, ack=True):
+        """
+        :param bool ack: should the entry be acknowledged
+        """
+        self.ack = ack
+
     def process(self, process_entry):
         self.logger.info("Got: %s" % str(process_entry))
-        return False
+        return self.ack
 
 # class TransactionFilter:
 #     def __init__(self):
