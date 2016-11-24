@@ -158,14 +158,14 @@ class StreamRadioReader(DigiRadioReader):
                  timeout=60,
                  parity=serial.PARITY_NONE,
                  stop_bits=serial.STOPBITS_ONE,
-                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None, 
+                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None,
                  binary=True, **kwargs):
         DigiRadioReader.__init__(self, port, baud, timeout, parity, stop_bits, radio_class, packet_filter, **kwargs)
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}
         self.ack = ack
-	self.binary = binary
+        self.binary = binary
 
     def handle_frame(self, frame):
         if frame['id'] == 'rx':
