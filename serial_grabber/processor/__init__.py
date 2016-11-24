@@ -89,12 +89,18 @@ class Processor:
     logger = logging.getLogger("Processor")
 
     def process(self, process_entry):
+        """
+        Process the entry and returns whether the entry was actually processed
+        :return: was entry processed
+        :rtype: bool
+        """
         raise Exception("Reader method \"process\" not implemented.")
 
 
 class ExternalFilenameProcessor(Processor):
     def setOutputFileName(self, filename):
         self.filename = filename
+
 
 class TransactionFilteringProcessor(Processor):
     def setTransactionFilter(self, filter):
@@ -141,7 +147,6 @@ class TransformProcessor(Processor):
     def __init__(self, transform, processor):
         self.transform = transform
         self.processor = processor
-
 
     def process(self, process_entry):
         transformed_entry = self.transform.transform(process_entry)
