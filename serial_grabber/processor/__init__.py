@@ -26,10 +26,21 @@ from serial_grabber.transform import DebugTransformException
 from serial_grabber.util import config_helper, RollingFilename
 
 
-class Processor:
-    logger = logging.getLogger("Processor")
+class ProcessorManager:
+    """
+    Runs the processor by reading from the storage and passing the payloads
+    to the contained processor.
+    """
+    logger = logging.getLogger("ProcessorManager")
+
+    def __init__(self, processor):
+        self._processor = processor
 
     def __call__(self, *args, **kwargs):
+        """
+        Starts the processor thread, passing in the isRunning flag which is used
+        for termination
+        """
         try:
             self.logger.info("Processor Thread Started.")
             self.isRunning, self.counter = args
@@ -55,7 +66,7 @@ class Processor:
                                     "entry": entry
                                 }
 
-                                if self.process(config_helper(data)):
+                                if self._processor.process(config_helper(data)):
                                     self.counter.processed()
                                     storage_cache.decache(entry_path)
                             except DebugTransformException, de:
@@ -72,6 +83,10 @@ class Processor:
                         break
             self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.processor_sleep)
+
+
+class Processor:
+    logger = logging.getLogger("Processor")
 
     def process(self, process_entry):
         raise Exception("Reader method \"process\" not implemented.")
