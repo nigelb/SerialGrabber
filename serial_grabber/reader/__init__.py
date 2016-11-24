@@ -185,6 +185,7 @@ class TransactionExtractor:
             self.buffer = self.buffer[end + len(self.stop_boundary):]
             self.callback(self.stream_id, emit)
 
+
 class LineTransactionExtractor:
     """
 
@@ -201,4 +202,3 @@ class LineTransactionExtractor:
         if data == '\n':
             self.callback(None, self.buffer)
             self.buffer = ""
-

@@ -35,7 +35,7 @@ class MqttCommander(Commander):
         self._mqtt = mqtt.Client()
         self._mqtt.username_pw_set(auth[0], auth[1])
         self._mqtt.on_connect = self.on_connect
-        self._mqtt.on_message = on_message
+        self._mqtt.on_message = self.on_message
 
         self._mqtt_host = host
         self._mqtt_port = port
