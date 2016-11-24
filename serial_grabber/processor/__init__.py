@@ -184,6 +184,18 @@ class RollingFilenameProcessor(RollingFilename, Processor):
         self.output_processor.process(__process_entry)
 
 
+class LoggingProcessor(Processor):
+    """
+    This processor simply logs the payload. Mainly useful for debugging, but
+    it returns False, so it can be used to observe a CompositeProcessor
+    pipeline.
+    """
+    logger = logging.getLogger("LoggingProcessor")
+
+    def process(self, process_entry):
+        self.logger.info("Got: %s" % str(process_entry))
+        return False
+
 # class TransactionFilter:
 #     def __init__(self):
 #         pass
