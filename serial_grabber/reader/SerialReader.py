@@ -25,12 +25,88 @@ from serial_grabber.reader import Reader
 from serial.serialutil import SerialException
 
 
-class _Stream:
-    def __init__(self, stream):
-        self.stream = stream
+class SerialConnection:
+    """
+    Base class for all serial connections.
+    """
 
-    def write(self, *args, **kwargs):
-        return self.stream.write(*args, **kwargs)
+    def connect(self):
+        raise NotImplementedError("connect is required")
+
+    def read(self):
+        """
+        Single byte reading method
+        """
+        raise NotImplementedError("read is required")
+
+    def write(self, data):
+        """
+        Writes data to the serial connection
+        """
+        raise NotImplementedError("write is required")
+
+    def close(self):
+        """
+        Closes the connection.
+        """
+        raise NotImplementedError("close is required")
+
+    def is_connected(self):
+        """
+        Returns whether the serial connection is currently open
+        """
+        raise NotImplementedError("is_connected is required")
+
+
+class SerialPort(SerialConnection):
+    def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE,
+                 stop_bits=serial.STOPBITS_ONE):
+        """
+        :param str port: The serial port to use, eg: /dev/ttyUSB0
+        :param int baud: The baud rate to use, eg: 115200
+        :param int timeout: eg: 60
+        :param int parity: eg: serial.PARITY_NONE
+        :param int stop_bits: eg: serial.STOPBITS_ONE
+        """
+        self.port = port
+        self.baud = baud
+        self.timeout = timeout
+        self.parity = parity
+        self.stop_bits = stop_bits
+        self.con = None
+
+    def connect(self):
+        try:
+            self.con = serial.Serial(self.port, self.baud,
+                                     timeout=self.timeout,
+                                     parity=self.parity,
+                                     stopbits=self.stop_bits)
+        except OSError, e:
+            time.sleep(2)
+            raise ConnectionException("Port: " + self.port + " does not exists.", e)
+
+        # These are not the droids you are looking for....
+        os.system("/bin/stty -F %s %s" % (self.port, self.baud))
+
+    def is_connected(self):
+        return self.con is not None and self.con.isOpen()
+
+    def close(self):
+        if self.con is not None:
+            self.con.close()
+            self.con = None
+
+    def write(self, data):
+        if self.con is None:
+            raise ValueError("There is no currently open connection")
+        self.con.write(data)
+
+    def read(self):
+        try:
+            return self.stream.read()
+        except SerialException, se:
+            self.close()
+            raise se
 
 
 class SerialReader(Reader):
@@ -40,73 +116,44 @@ class SerialReader(Reader):
     :param transaction_extractor: The transaction extractor used to parse the input stream.
     :type transaction_extractor: :py:class:`serial.grabber.reader.TransactionExtractor`
     :param int startup_ignore_threshold_milliseconds: The interval that input is ignored for at startup
-    :param str port: The serial port to use, eg: /dev/ttyUSB0
-    :param int baud: The baud rate to use, eg: 115200
-    :param int timeout: eg: 60
-    :param int parity: eg: serial.PARITY_NONE
-    :param int stop_bits: eg: serial.STOPBITS_ONE
     """
-    def __init__(self, transaction_extractor, startup_ignore_threshold_milliseconds, port, baud, timeout=60, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE):
+    def __init__(self, transaction_extractor,
+                 startup_ignore_threshold_milliseconds, serial_connection):
         Reader.__init__(self, transaction_extractor, startup_ignore_threshold_milliseconds)
-        self.port = port
-        self.baud = baud
-        self.timeout = timeout
-        self.parity = parity
-        self.stop_bits = stop_bits
-
-    def connect(self):
-        try:
-            ser = serial.Serial(self.port, self.baud,
-                                timeout=self.timeout,
-                                parity=self.parity,
-                                stopbits=self.stop_bits
-            )
-        except OSError, e:
-            time.sleep(2)
-            raise ConnectionException("Port: " + self.port + " does not exists.", e)
-
-        #These are not the droids you are looking for....
-        os.system("/bin/stty -F %s %s"%(self.port, self.baud))
-        return ser
+        self.serial_connection = serial_connection
 
     def try_connect(self):
         logger = logging.getLogger("SerialConnection")
-        con = None
         try:
-            con = self.connect()
-            if con is not None: return con
+            self.serial_connection.connect()
+            if self.serial_connection.is_connected():
+                self.stream = self.serial_connection
+                return
         except serial.SerialException, se:
             time.sleep(2)
-            con = None
             logger.error(se)
             logger.error("Closing port and re-opening it.")
             try:
-                if con is not None and con.isOpen():
-                    con.close()
+                if self.serial_connection.is_open():
+                    self.serial_connection.close()
+                    self.stream = None
             except Exception, e:
                 pass
-        if con is None:
-            raise poster_exceptions.ConnectionException("Could not connect to port: %s" % self.port)
+        if not self.serial_connection.is_connected():
+            raise poster_exceptions.ConnectionException(
+                "Could not connect to port: %s" % self.port)
 
     def setup(self):
-        if self.stream is not None:
-            self.stream.close()
-        self.stream = self.try_connect()
+        if self.serial_connection.is_connected():
+            self.serial_connection.close()
+        self.try_connect()
 
     def close(self):
-        if self.stream:
-            self.stream.close()
-            self.stream = None
+        self.serial_connection.close()
+        self.stream = None
 
     def getCommandStream(self):
-        return _Stream(self.stream)
+        return self.stream
 
     def read_data(self):
-        try:
-            return self.stream.read()
-        except SerialException, se:
-            self.stream.close()
-            self.stream = None
-            raise se
-
-
+        return self.stream.read()

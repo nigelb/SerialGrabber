@@ -38,13 +38,10 @@ if 'api_responses' in ZigBee.__dict__:
 
 class DigiRadioReader(SerialReader):
 
-    def __init__(self, port, baud,
-                 timeout=60,
-                 parity=serial.PARITY_NONE,
-                 stop_bits=serial.STOPBITS_ONE,
+    def __init__(self, serial_connection,
                  radio_class=ZigBee,
                  packet_filter=lambda a: True, **kwargs):
-        SerialReader.__init__(self, None, 0, port, baud, timeout, parity, stop_bits)
+        SerialReader.__init__(self, None, 0, serial_connection)
         self.radio_class = radio_class
         self.radio_args = kwargs
         self.packet_filter = packet_filter
@@ -138,11 +135,7 @@ class StreamRadioReader(DigiRadioReader):
     :param stream_transaction_factory: The function that creates a :py:class:`serial.grabber.reader.TransactionExtractor`
         with the specified stream_id
     :type stream_transaction_factory: fn(stream_id)
-    :param str port: The serial port to use, eg: /dev/ttyUSB0
-    :param int baud: The baud rate to use, eg: 115200
-    :param int timeout: eg: 60
-    :param int parity: eg: serial.PARITY_NONE
-    :param int stop_bits: eg: serial.STOPBITS_ONE
+    :param SerialConnection serial_connection: A serial connection object
     :param radio_class: The implementation to use, eg: xbee.zigbee.ZigBee
     :type radio_class: xbee.base.XBeeBase
     :param packet_filter: A function that takes one parameter, the parsed radio packet, and returns a bool specifying
@@ -152,15 +145,11 @@ class StreamRadioReader(DigiRadioReader):
     :param bool escaped: The radio is in API mode 2
     """
     def __init__(self,
-                 stream_transaction_factory,
-                 port,
-                 baud,
-                 timeout=60,
-                 parity=serial.PARITY_NONE,
-                 stop_bits=serial.STOPBITS_ONE,
+                 stream_transaction_factory, serial_connection,
                  radio_class=ZigBee, packet_filter=lambda a: True, ack=None,
                  binary=True, **kwargs):
-        DigiRadioReader.__init__(self, port, baud, timeout, parity, stop_bits, radio_class, packet_filter, **kwargs)
+        DigiRadioReader.__init__(self, serial_connection, radio_class,
+                                 packet_filter, **kwargs)
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}

@@ -18,48 +18,59 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-from serial_grabber.reader import Reader
+from serial_grabber.reader.SerialReader import SerialConnection
 import socket
+import logging
 
-class TCPReader(Reader):
-    """
-    A reader that connects to the specified hostname:port for its input.
 
-    :param transaction_extractor: The transaction extractor used to parse the input stream.
-    :type transaction_extractor: :py:class:`serial.grabber.reader.TransactionExtractor`
-    :param str hostname: The hostname to connect to
-    :param int port: The port to connect to
+class TcpConnection(SerialConnection):
     """
-    def __init__(self, transaction_extractor, hostname, port):
-        Reader.__init__(self, transaction_extractor, 0)
+    A TCP socket server that accepts a single connection. This is mainly
+    used for development.
+    """
+    logger = logging.getLogger("TcpConnection")
+
+    def __init__(self, hostname, port):
+        """
+        :param str hostname: The hostname to listen on
+        :param int port: The port to listen on
+        """
         self.hostname = hostname
         self.port = port
+        self.con = None
 
-    def getCommandStream(self):
-        return self
+    def connect(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(60)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.hostname, self.port))
+        self.logger.info("Waiting for connection on %s:%d" %
+                         (self.hostname, self.port))
+        self.sock.listen(0)
+        clientsocket, address = self.sock.accept()
+        self.logger.info("Connection from %s" % str(address))
+        self.con = clientsocket
+
+    def is_connected(self):
+        return self.con is not None
 
     def close(self):
-        self.soc.close()
-        del self.soc
-        self.stream = None
-
-    def setup(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.hostname, self.port))
-        self.soc = s
-        self.stream = self
+        self.logger.info("Closing connection")
+        if self.con is not None:
+            self.con.close()
+            self.con = None
 
     def read(self):
-        return self.soc.recv(1)
-
-    def readline(self):
-        data = []
-        while True:
-            dat = self.soc.recv(1)
-            if dat:
-                if dat == "\n":
-                    return "".join(data)
-                data.append(dat)
+        """
+        Read from the TCP connection, but but make sure to always return
+        a non None value
+        """
+        try:
+            return self.con.recv(1)
+        except socket.error as e:
+            if e.errno == 35:
+                return ''
+            raise e
 
     def write(self, data):
-        self.soc.sendall(data)
+        self.sock.sendall(data)
