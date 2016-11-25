@@ -19,11 +19,11 @@
 
 import serial
 from serial_grabber.reader import TransactionExtractor
-from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.processor.UploadProcessor import UploadProcessor
 from serial_grabber.processor import CompositeProcessor
 from serial_grabber.mqtt import MqttCommander
+from serial_grabber.connections import SerialConnection
 
 # Serial Settings
 timeout = 1
@@ -50,11 +50,8 @@ transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
 
 reader = SerialReader(transaction,
                       1000,
-                      port,
-                      baud,
-                      timeout=timeout,
-                      parity=parity,
-                      stop_bits=stop_bits)
+                      SerialConnection(port, baud, timeout=timeout,
+                                       parity=parity, stop_bits=stop_bits))
 
 commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth)
 
