@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import time
 from xbee.zigbee import ZigBee
 from serial_grabber.connections import TcpClient
 
@@ -60,7 +61,12 @@ class FakeXbee(object):
 
     def run(self):
         self._setup()
-        self._radio.join()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+        self._radio.halt()
 
 
 def main():
@@ -69,7 +75,7 @@ def main():
     parser.add_argument('sg_port', type=int, help="Serial grabber port")
 
     args = parser.parse_args()
-    import manhole; manhole.install()
+
     FakeXbee(args.sg_address, args.sg_port).run()
 
 if __name__ == '__main__':
