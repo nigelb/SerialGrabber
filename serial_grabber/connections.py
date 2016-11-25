@@ -184,6 +184,7 @@ class TcpServer(TcpConnection):
         clientsocket, address = self.sock.accept()
         self.logger.info("Connection from %s" % str(address))
         self.con = clientsocket
+        self.con.setblocking(False)
 
 
 class TcpClient(TcpConnection):
