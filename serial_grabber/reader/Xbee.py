@@ -26,6 +26,7 @@ from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
 from xbee import ZigBee
 import io
+import logging
 
 # This if statement removes errors when building the documentation
 if 'api_responses' in ZigBee.__dict__:
@@ -37,6 +38,7 @@ if 'api_responses' in ZigBee.__dict__:
 
 
 class DigiRadioReader(SerialReader):
+    logger = logging.getLogger('DigiRadioReader')
 
     def __init__(self, serial_connection,
                  radio_class=ZigBee,
@@ -54,22 +56,25 @@ class DigiRadioReader(SerialReader):
         while self.isRunning.running:
             try:
                 if self.radio is None:
+                    print "setting up radio"
                     self.setup()
                     continue
                 else:
                     if not self.radio.isAlive():
+                        print "radio is dead"
                         self.radio = None
                 time.sleep(1)
             except SerialException, se:
                 self.close()
-
+                print "Really dead", str(se)
                 return
             except Exception, e:
                 self.counter.error()
                 import traceback
 
                 traceback.print_exc()
-            if self.stream is None: time.sleep(SerialGrabber_Settings.reader_error_sleep)
+            if self.stream is None:
+                time.sleep(SerialGrabber_Settings.reader_error_sleep)
 
     def setup(self):
         SerialReader.setup(self)
@@ -84,11 +89,17 @@ class DigiRadioReader(SerialReader):
             if self.packet_filter(frame):
                 cb(frame)
 
+        def error_callback(e):
+            self.logger.exception("Exception from radio: %s" % str(e))
+
+        self.radio._error_callback = error_callback
+
         self.radio._callback = filtered_callback
         self.radio._thread_continue = True
         self.radio.setDaemon(True)
         self.radio.start()
         self.radio.send("at", command="AI")
+        print "Radio started"
 
     def close(self):
         SerialReader.close(self)

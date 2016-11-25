@@ -41,7 +41,7 @@ class TcpConnection(SerialConnection):
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(60)
+        self.sock.settimeout(30)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.hostname, self.port))
         self.logger.info("Waiting for connection on %s:%d" %
@@ -73,4 +73,7 @@ class TcpConnection(SerialConnection):
             raise e
 
     def write(self, data):
-        self.sock.sendall(data)
+        self.con.sendall(data)
+
+    def inWaiting(self):
+        return 1

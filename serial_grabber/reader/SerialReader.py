@@ -57,6 +57,14 @@ class SerialConnection:
         """
         raise NotImplementedError("is_connected is required")
 
+    def inWaiting(self):
+        """
+        This method returns the numbering of bytes in the incoming buffer.
+        It is required by the XBee module, as it is normally provided by
+        pySerial
+        """
+        raise NotImplementedError("inWaiting is required")
+
 
 class SerialPort(SerialConnection):
     def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE,
@@ -107,6 +115,9 @@ class SerialPort(SerialConnection):
         except SerialException, se:
             self.close()
             raise se
+
+    def inWaiting(self):
+        return self.stream.inWaiting()
 
 
 class SerialReader(Reader):
