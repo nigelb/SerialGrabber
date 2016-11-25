@@ -13,10 +13,7 @@ def api_responses_as_commands():
         response = ZigBee.api_responses[id_]
         ret[response['name']] = [{'name': 'id',
                                   'len': 1,
-                                  'default': id_},
-                                 {'name': 'frame_id',
-                                  'len': 1,
-                                  'default': b'\x01'}] + response['structure']
+                                  'default': id_}] + response['structure']
     return ret
 
 
@@ -47,7 +44,7 @@ class FakeXbee(object):
         self._con.connect()
         self._radio = ZigBeeDevice(self._con, callback=self._handle_frame,
                                    error_callback=self._handle_error)
-        print self._radio.api_responses
+        print ZigBeeDevice.api_commands
 
     def _handle_frame(self, frame):
         if frame['command'] == 'AI':
@@ -57,13 +54,16 @@ class FakeXbee(object):
         print frame
 
     def _handle_error(self, e):
-        print str(e)
+        print "Error", str(e)
 
     def run(self):
         self._setup()
         try:
             while True:
                 time.sleep(1)
+                self._radio.send('rx', source_addr_long=b'01234567',
+                                 source_addr=b'12', options=b'\x00',
+                                 rf_data=b'HELLO')
         except KeyboardInterrupt:
             pass
         self._radio.halt()

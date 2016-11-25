@@ -56,12 +56,10 @@ class DigiRadioReader(SerialReader):
         while self.isRunning.running:
             try:
                 if self.radio is None:
-                    print "setting up radio"
                     self.setup()
                     continue
                 else:
                     if not self.radio.isAlive():
-                        print "radio is dead"
                         self.radio = None
                 time.sleep(1)
             except SerialException, se:
@@ -99,7 +97,6 @@ class DigiRadioReader(SerialReader):
         self.radio.setDaemon(True)
         self.radio.start()
         self.radio.send("at", command="AI")
-        print "Radio started"
 
     def close(self):
         SerialReader.close(self)
