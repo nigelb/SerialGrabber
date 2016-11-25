@@ -24,16 +24,20 @@ class FileAppenderProcessor(Processor):
     Append the contents of the transactions payload to *output_file*.
 
     :param string output_file: The name of the file to append to.
+    :param string entry_delimiter: This value will be written to the file after each payload. None will disable this function.
     """
 
-    def __init__(self, output_file):
+    def __init__(self, output_file, entry_delimiter="\n"):
         self.output_file = output_file
+        self.entry_delimiter = entry_delimiter
 
     def process(self, process_entry):
         try:
             with open(self.output_file, "a+b") as out_f:
                 # print cache_entry.data
                 out_f.write(process_entry.data.payload)
+                if self.entry_delimiter is not None:
+                    out_f.write(self.entry_delimiter)
             return True
         except:
             import traceback
