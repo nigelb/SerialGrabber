@@ -21,7 +21,6 @@ import serial
 import SerialGrabber_Settings
 from SerialGrabber_Storage import storage_cache as cache
 import time
-from serial_grabber.reader import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
 from xbee import ZigBee

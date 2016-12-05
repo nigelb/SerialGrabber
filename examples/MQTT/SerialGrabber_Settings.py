@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import serial
-from serial_grabber.reader import TransactionExtractor
+from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.processor.UploadProcessor import UploadProcessor
 from serial_grabber.processor import CompositeProcessor

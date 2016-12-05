@@ -19,7 +19,7 @@
 
 import serial
 
-from serial_grabber.reader import TransactionExtractor
+from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.FileReader import FileReader
 from serial_grabber.processor import TransformProcessor
 from serial_grabber.processor.UploadProcessor import UploadProcessor
