@@ -34,7 +34,7 @@ setup(name='SerialGrabber',
     entry_points={
         "console_scripts": [
             "serial_grabber = serial_grabber.SerialGrabber:main",
-            "fake_xbee = serial_grabber.fake:main",
+            "fake_buoy = serial_grabber.fake:main",
         ]
     },
     data_files=[

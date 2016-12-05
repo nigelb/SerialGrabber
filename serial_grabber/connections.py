@@ -154,7 +154,7 @@ class TcpConnection(SerialConnection):
         a non None value
         """
         try:
-            c = self.con.recv(1)
+            c = self.con.recv(1024)
             return c
         except socket.error as e:
             if e.errno == 35:

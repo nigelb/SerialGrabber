@@ -19,7 +19,7 @@
 
 from serial_grabber.reader import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
-from serial_grabber.reader.TCP import TcpConnection
+from serial_grabber.connections import TcpServer
 from serial_grabber.processor import LoggingProcessor
 
 # Serial Settings
@@ -37,7 +37,7 @@ drop_carriage_return = True
 
 transaction = TransactionExtractor("default", "BEGIN DATA", "END DATA")
 
-tcp = TcpConnection(hostname, port)
+tcp = TcpServer(hostname, port)
 
 reader = SerialReader(transaction, 1000, tcp)
 

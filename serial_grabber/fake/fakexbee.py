@@ -1,10 +1,7 @@
 # Fake XBee
 
-import argparse
-import sys
 import time
 from xbee.zigbee import ZigBee
-from serial_grabber.connections import TcpClient
 
 
 def api_responses_as_commands():
@@ -35,12 +32,10 @@ class FakeXbee(object):
     Fake XBee using a TCP connection.
     """
 
-    def __init__(self, address, port):
-        self._address = address
-        self._port = port
+    def __init__(self, con):
+        self._con = con
 
     def _setup(self):
-        self._con = TcpClient(self._address, self._port)
         self._con.connect()
         self._radio = ZigBeeDevice(self._con, callback=self._handle_frame,
                                    error_callback=self._handle_error)
@@ -67,16 +62,3 @@ class FakeXbee(object):
         except KeyboardInterrupt:
             pass
         self._radio.halt()
-
-
-def main():
-    parser = argparse.ArgumentParser("Fake XBee module")
-    parser.add_argument('sg_address', help="Serial grabber address")
-    parser.add_argument('sg_port', type=int, help="Serial grabber port")
-
-    args = parser.parse_args()
-
-    FakeXbee(args.sg_address, args.sg_port).run()
-
-if __name__ == '__main__':
-    sys.exit(main())
