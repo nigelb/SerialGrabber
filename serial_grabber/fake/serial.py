@@ -2,10 +2,13 @@
 
 import time
 from serial_grabber.extractors import TransactionExtractor
+import logging
 
-
-MODE_RUN = 'run'
+MODE_LIVE = 'live'
 MODE_MAINTENANCE = 'maintenance'
+
+
+logger = logging.getLogger(__name__)
 
 
 class FakeSerial(object):
@@ -23,7 +26,7 @@ class FakeSerial(object):
         self._con.connect()
         self._extractor = TransactionExtractor(0, 'BEGIN', 'END',
                                                self._handle_payload)
-        self._mode = MODE_RUN
+        self._mode = MODE_LIVE
         self._timeout = None
         self._last_data = None
 
@@ -31,7 +34,6 @@ class FakeSerial(object):
         lines = payload.split('\n')
         line = lines[1]
         parts = line.split(' ')
-        print parts
         if parts[0] == 'MODE':
             self._cmd_mode(parts[1])
 
@@ -42,9 +44,11 @@ class FakeSerial(object):
         if mode == MODE_MAINTENANCE:
             self._mode = MODE_MAINTENANCE
             self._timeout = time.time() + 60
-        elif mode == MODE_RUN:
-            self._mode = MODE_RUN
+            logger.info('Mode -> maintenance timeout at %d' % (self._timeout, ))
+        elif mode == MODE_LIVE:
+            self._mode = MODE_LIVE
             self._timeout = None
+            logger.info('Mode -> live')
         else:
             self._send_error('INVALID MODE')
             return
@@ -55,12 +59,14 @@ class FakeSerial(object):
         """
         Perform work based on the current mode of the system
         """
-        if self._mode == MODE_RUN:
+        if self._mode == MODE_LIVE:
             if self._last_data is None or time.time() - self._last_data > 10:
+                logger.info('Sending sample data')
                 self._send_data()
         elif self._mode == MODE_MAINTENANCE:
             if time.time() > self._timeout:
-                self._cmd_mode(MODE_RUN)
+                logger.info('Timed out of maintenance mode')
+                self._cmd_mode(MODE_LIVE)
                 return
 
     def _send(self, message_type, data):
@@ -103,6 +109,7 @@ DO: 597, %S: 0,14"""
         """
         Sends the hello message.
         """
+        logger.info('Sending HELLO with identifier %s' % self._identifier)
         self._send('NOTIFY',
                    'HELLO: identifier: %s, version: 0.99' % self._identifier)
 
@@ -116,7 +123,7 @@ DO: 597, %S: 0,14"""
                 self._extractor.write(self._con.read())
 
                 self._process()
-                time.sleep(1)
+                time.sleep(0.5)
         except KeyboardInterrupt:
             pass
         self._con.close()
