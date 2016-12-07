@@ -3,7 +3,11 @@
 import argparse
 import sys
 from serial_grabber.connections import TcpClient
-from serial_grabber.fake.fakexbee import FakeXbee
+try:
+    from serial_grabber.fake.fakexbee import FakeXbee
+    xbee_support = True
+except:
+    xbee_support = False
 from serial_grabber.fake.serial import FakeSerial
 
 
@@ -19,7 +23,10 @@ def main():
     con = TcpClient(args.sg_address, args.sg_port)
 
     if args.type == 'xbee':
-        FakeXbee(con).run()
+        if xbee_support:
+            FakeXbee(con).run()
+        else:
+            print "XBee support not available"
     elif args.type == 'serial':
         FakeSerial(con).run()
 
