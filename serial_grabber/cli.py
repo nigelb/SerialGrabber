@@ -59,7 +59,7 @@ def start(logger, reader, processor, command):
         if processor:
             watchdog.start_thread(ProcessorManager(processor), (isRunning, c), "Processor")
         if command and reader:
-            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream()), "Commander")
+            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream), "Commander")
         while isRunning.running:
             time.sleep(1)
     finally:
