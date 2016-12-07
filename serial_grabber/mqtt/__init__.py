@@ -30,8 +30,8 @@ class MqttCommander(Commander):
 
     logger = logging.getLogger("MqttCommander")
 
-    def __init__(self, host, port, auth, master_topic="maintenance",
-                 nodes_topic="nodes", data_topic="data", send_data=False,
+    def __init__(self, host, port, auth, master_topic="master/maintenance",
+                 nodes_topic="nodes", data_topic="master/data", send_data=False,
                  platform_identifier='default_platform'):
         # Setup the basic MQTT config
         self._mqtt = mqtt.Client()
