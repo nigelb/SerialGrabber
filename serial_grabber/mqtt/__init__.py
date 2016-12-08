@@ -106,7 +106,11 @@ class MqttCommander(Commander):
             direct = True
         payload = json.loads(msg.payload)
         # dispatch
-        getattr(self, '_cmd_' + payload['request'])(msg.topic, payload, direct)
+        if hasattr(self, '_cmd_' + payload['request']):
+            getattr(self, '_cmd_' + payload['request'])(
+                msg.topic, payload, direct)
+        else:
+            logger.warn("No command handler for %s" % payload['request'])
 
     def _cmd_ping(self, topic, payload, direct):
         nodes = []
@@ -196,6 +200,7 @@ class MqttProcessor(Processor):
     Commander to send on the message bus. Other messages are ignored, and
     should be dealt with by another processor
     """
+    logger = logging.getLogger('MqttProcessor')
 
     def __init__(self, mqtt_commander, send_data):
         self._commander = mqtt_commander
@@ -231,6 +236,7 @@ class MqttProcessor(Processor):
             self._commander.send_data(stream_id, ts, data)
             return True
         else:
+            self.logger.info("Got unrecognised message: %s" % lines[1])
             return False
 
 
