@@ -42,7 +42,7 @@ Fake buoy
 
 The fake buoy is also started from within the SerialGrabber virtualenv, pointing to the listening *SerialGrabber* instance, and specifying the ``serial`` protocol (as opposed to Xbee)::
 
-        fake_buoy localhost 8099 serial
+        fake_buoy tcp localhost 8099 serial
 
 
 Sending Commands
