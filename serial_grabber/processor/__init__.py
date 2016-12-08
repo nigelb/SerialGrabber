@@ -26,10 +26,21 @@ from serial_grabber.transform import DebugTransformException
 from serial_grabber.util import config_helper, RollingFilename
 
 
-class Processor:
-    logger = logging.getLogger("Processor")
+class ProcessorManager:
+    """
+    Runs the processor by reading from the storage and passing the payloads
+    to the contained processor.
+    """
+    logger = logging.getLogger("ProcessorManager")
+
+    def __init__(self, processor):
+        self._processor = processor
 
     def __call__(self, *args, **kwargs):
+        """
+        Starts the processor thread, passing in the isRunning flag which is used
+        for termination
+        """
         try:
             self.logger.info("Processor Thread Started.")
             self.isRunning, self.counter = args
@@ -55,7 +66,7 @@ class Processor:
                                     "entry": entry
                                 }
 
-                                if self.process(config_helper(data)):
+                                if self._processor.process(config_helper(data)):
                                     self.counter.processed()
                                     storage_cache.decache(entry_path)
                             except DebugTransformException, de:
@@ -73,13 +84,23 @@ class Processor:
             self.logger.log(5, "Processor Sleeping.")
             time.sleep(SerialGrabber_Settings.processor_sleep)
 
+
+class Processor:
+    logger = logging.getLogger("Processor")
+
     def process(self, process_entry):
+        """
+        Process the entry and returns whether the entry was actually processed
+        :return: was entry processed
+        :rtype: bool
+        """
         raise Exception("Reader method \"process\" not implemented.")
 
 
 class ExternalFilenameProcessor(Processor):
     def setOutputFileName(self, filename):
         self.filename = filename
+
 
 class TransactionFilteringProcessor(Processor):
     def setTransactionFilter(self, filter):
@@ -127,7 +148,6 @@ class TransformProcessor(Processor):
         self.transform = transform
         self.processor = processor
 
-
     def process(self, process_entry):
         transformed_entry = self.transform.transform(process_entry)
         if transformed_entry:
@@ -163,6 +183,24 @@ class RollingFilenameProcessor(RollingFilename, Processor):
             self.output_processor.setOutputFileName(os.path.join(self.output_dir, op))
         self.output_processor.process(__process_entry)
 
+
+class LoggingProcessor(Processor):
+    """
+    This processor simply logs the payload. Mainly useful for debugging, but
+    it returns False, so it can be used to observe a CompositeProcessor
+    pipeline.
+    """
+    logger = logging.getLogger("LoggingProcessor")
+
+    def __init__(self, ack=True):
+        """
+        :param bool ack: should the entry be acknowledged
+        """
+        self.ack = ack
+
+    def process(self, process_entry):
+        self.logger.info("Got: %s" % str(process_entry))
+        return self.ack
 
 # class TransactionFilter:
 #     def __init__(self):

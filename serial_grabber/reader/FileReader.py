@@ -20,7 +20,8 @@ import base64
 import pickle
 from serial_grabber import constants
 
-from serial_grabber.reader import Reader, LineTransactionExtractor
+from serial_grabber.reader import Reader
+from serial_grabber.extractors import LineTransactionExtractor
 import time
 import json
 
