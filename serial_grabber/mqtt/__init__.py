@@ -17,6 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import time
 import logging
 import datetime
 import json
@@ -24,6 +25,8 @@ import json
 from serial_grabber.commander import Commander
 from serial_grabber.processor import Processor
 import paho.mqtt.client as mqtt
+from socket import error
+import SerialGrabber_Settings
 
 
 class MqttCommander(Commander):
@@ -49,6 +52,8 @@ class MqttCommander(Commander):
         self._platform_identifier = platform_identifier
 
         self.processor = MqttProcessor(self, send_data)
+        self.connected = False
+        self._node_identifiers = {}
 
     def __call__(self, *args, **kwargs):
         """
@@ -57,18 +62,36 @@ class MqttCommander(Commander):
         """
         try:
             self.logger.info("Commander Thread Started.")
-            self.isRunning, self.counter, self.command = args
+            self.isRunning, self.counter, self.getCommandStream = args
             self.run()
         except BaseException, e:
-            self.logger.exception(e)
+            pass
+            # self.logger.exception(e)
 
-    def run(self):
-        self._node_identifiers = {}
+    def _connect(self):
         self._mqtt.connect(self._mqtt_host, self._mqtt_port)
         self._mqtt.subscribe(self._nodes_topic)
         self._mqtt.subscribe(self._nodes_topic + '/#')
+        self.connected = True
+
+    def _disconnect(self):
+        self._mqtt.disconnect()
+        self.connected = False
+
+    def run(self):
+        self._node_identifiers = {}
+
         while self.isRunning.running:
-            self._mqtt.loop()
+            try:
+                if not self.connected:
+                    self._connect()
+                self._mqtt.loop()
+            except:
+                if self.connected:
+                    self._mqtt.disconnect()
+                time.sleep(SerialGrabber_Settings.commander_error_sleep)
+
+
         self._mqtt.disconnect()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -117,7 +140,7 @@ class MqttCommander(Commander):
         for stream_id in self._node_identifiers:
             nodes.append({'nodeIdentifier': self._node_identifiers[stream_id]})
 
-        self.send_response(None, datetime.datetime.utcnow(), 'status', nodes)
+        return self.send_response(None, datetime.datetime.utcnow(), 'status', nodes)
 
     def _cmd_mode(self, topic, payload, direct):
         """
@@ -128,7 +151,7 @@ class MqttCommander(Commander):
             return
         _, node_identifier = topic.split('/')
 
-        self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
+        return self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
 
     def send_data(self, stream_id, timestamp, data):
         """
@@ -139,7 +162,7 @@ class MqttCommander(Commander):
             "platformIdentifier": self._platform_identifier,
             "timestamp": timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             "data": data}
-        self._mqtt.publish(self._data_topic, json.dumps(payload))
+        return self._mqtt.publish(self._data_topic, json.dumps(payload))
 
     def send_notify(self, stream_id, timestamp, notify_type, payload):
         payload = {
@@ -151,7 +174,7 @@ class MqttCommander(Commander):
         if stream_id is not None:
             payload["nodeIdentifier"] = self._node_identifiers[stream_id]
 
-        self._mqtt.publish(self._master_topic, json.dumps(payload))
+        return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
     def send_response(self, stream_id, timestamp, response_type, payload):
         payload = {
@@ -163,7 +186,7 @@ class MqttCommander(Commander):
         if stream_id is not None:
             payload["nodeIdentifier"] = self._node_identifiers[stream_id]
 
-        self._mqtt.publish(self._master_topic, json.dumps(payload))
+        return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
     def send_to_node(self, node_identifier, payload):
         """
@@ -183,7 +206,7 @@ END""" % payload
             return
 
         self.logger.info("Sending to node %s: %s" % (stream_id, payload))
-        self.command().write(payload)
+        self.getCommandStream(stream_id=node_identifier).write(payload)
 
     def update_node_identifier(self, stream_id, node_identifier):
         """
@@ -220,21 +243,21 @@ class MqttProcessor(Processor):
                 self._commander.update_node_identifier(
                     entry['data']['stream_id'], data['identifier'])
 
-            self._commander.send_notify(entry['data']['stream_id'], ts,
+            rc, mid = self._commander.send_notify(entry['data']['stream_id'], ts,
                                         notify_type, data)
-            return True
+            return rc == mqtt.MQTT_ERR_SUCCESS
         elif lines[1] == 'RESPONSE':
             notify_type, data = parse_notify(lines[2])
-            self._commander.send_response(entry['data']['stream_id'], ts,
+            rc, mid = self._commander.send_response(entry['data']['stream_id'], ts,
                                           notify_type, data)
 
-            return True
+            return rc == mqtt.MQTT_ERR_SUCCESS
         elif self._send_data and lines[1] == 'DATA':
             # send data
             stream_id = entry['data']['stream_id']
             data = entry['data']['payload']
-            self._commander.send_data(stream_id, ts, data)
-            return True
+            rc, mid = self._commander.send_data(stream_id, ts, data)
+            return rc == mqtt.MQTT_ERR_SUCCESS
         else:
             self.logger.info("Got unrecognised message: %s" % lines[1])
             return False
