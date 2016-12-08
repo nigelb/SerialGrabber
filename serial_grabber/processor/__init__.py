@@ -107,6 +107,21 @@ class TransactionFilteringProcessor(Processor):
         self.filter = filter
 
 
+class CompositeProcessorIgnoreResult(Exception):
+    pass
+
+
+class IgnoreResultProcessor(Processor):
+    def __init__(self, processor):
+        self.processor = processor
+
+    def process(self, process_entry):
+        try:
+            self.processor.process(process_entry)
+        finally:
+            raise CompositeProcessorIgnoreResult()
+
+
 class CompositeProcessor(Processor):
     """
     Allows processing by multiple processors.
@@ -127,9 +142,12 @@ class CompositeProcessor(Processor):
     def process(self, process_entry):
         toRet = self.starting_value
         for pcs in self.processors:
-            v = pcs.process(process_entry)
-            if v is None: v = False
-            toRet = self.operation(toRet, v)
+            try:
+                v = pcs.process(process_entry)
+                if v is None: v = False
+                toRet = self.operation(toRet, v)
+            except CompositeProcessorIgnoreResult, e:
+                pass
         return toRet
 
 
@@ -168,6 +186,7 @@ class RollingFilenameProcessor(RollingFilename, Processor):
     :param output_processor: The processor to process the chunk.
     :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
     """
+
     def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor):
         RollingFilename.__init__(self, boundary, period_ms, file_extension)
         self.output_dir = output_dir

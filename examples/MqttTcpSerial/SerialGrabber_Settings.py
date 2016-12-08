@@ -20,7 +20,7 @@
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer
-from serial_grabber.processor import LoggingProcessor, CompositeProcessor
+from serial_grabber.processor import LoggingProcessor, CompositeProcessor, IgnoreResultProcessor
 from serial_grabber.mqtt import MqttCommander
 
 # Serial Settings
@@ -38,6 +38,7 @@ cache_collision_avoidance_delay = 1
 processor_sleep = 1
 watchdog_sleep = 1
 
+commander_error_sleep = 1
 reader_error_sleep = 1
 
 drop_carriage_return = True
@@ -50,6 +51,6 @@ reader = SerialReader(transaction, 1000, tcp)
 
 commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth, send_data=True)
 
-logging_processor = LoggingProcessor()
+logging_processor = IgnoreResultProcessor(LoggingProcessor())
 
 processor = CompositeProcessor([commander.processor, logging_processor])
