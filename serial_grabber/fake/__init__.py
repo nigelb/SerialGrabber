@@ -9,7 +9,7 @@ try:
     xbee_support = True
 except:
     xbee_support = False
-from serial_grabber.fake.serial import FakeSerial
+from serial_grabber.fake.fakeserial import FakeSerial
 
 
 def setup_logging():
