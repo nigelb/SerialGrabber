@@ -24,8 +24,14 @@ import time
 import socket
 import logging
 import select
+import errno
 from serial_grabber.poster_exceptions import ConnectionException
 from serial.serialutil import SerialException
+
+SOCKET_ERRORS = [errno.EWOULDBLOCK]
+
+if hasattr(errno, 'EDEADLOCK'):
+    SOCKET_ERRORS.append(errno.EDEADLOCK)
 
 
 class SerialConnection:
@@ -157,7 +163,7 @@ class TcpConnection(SerialConnection):
             c = self.con.recv(1024)
             return c
         except socket.error as e:
-            if e.errno == 35:
+            if e.errno in SOCKET_ERRORS:
                 return ''
             raise e
 
