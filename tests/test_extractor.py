@@ -35,3 +35,22 @@ class TestExtractor(unittest.TestCase):
         self.assertEquals("BEGIN", transaction[0])
         self.assertEquals("Something", transaction[1])
         self.assertEquals("END", transaction[2])
+
+    def test_multiple_transactions(self):
+        transactions = []
+
+        def store_transaction(stream_id, transaction):
+            transactions.append(transaction)
+
+        ext = TransactionExtractor('default', 'BEGIN', 'END', store_transaction)
+
+        ext.write("""BEGIN
+STEP1
+END
+BEGIN
+STEP2
+END
+""")
+        self.assertEquals(2, len(transactions))
+        self.assertTrue('STEP1' in transactions[0])
+        self.assertTrue('STEP2' in transactions[1])

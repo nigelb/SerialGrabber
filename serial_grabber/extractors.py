@@ -41,14 +41,17 @@ class TransactionExtractor:
 
     def write(self, data):
         self.buffer += data
-        start = self.buffer.find(self.start_boundary)
-        if start >= 0:
-            self.buffer = self.buffer[start:]
-        end = self.buffer.find(self.stop_boundary, len(self.start_boundary))
-        if end > 0:
-            emit = self.buffer[:end + len(self.stop_boundary)]
-            self.buffer = self.buffer[end + len(self.stop_boundary):]
-            self.callback(self.stream_id, emit)
+        while True:
+            start = self.buffer.find(self.start_boundary)
+            if start >= 0:
+                self.buffer = self.buffer[start:]
+            end = self.buffer.find(self.stop_boundary, len(self.start_boundary))
+            if end > 0:
+                emit = self.buffer[:end + len(self.stop_boundary)]
+                self.buffer = self.buffer[end + len(self.stop_boundary):]
+                self.callback(self.stream_id, emit)
+            else:
+                break
 
 
 class LineTransactionExtractor:
