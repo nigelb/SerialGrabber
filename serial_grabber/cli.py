@@ -18,9 +18,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import signal
 import time
+
 from SerialGrabber_Storage import storage_cache
 
 from serial_grabber.watchdog import running, counter, Watchdog
+
+from serial_grabber.processor import ProcessorManager
 
 class status:
     def __init__(self, logger):
@@ -54,9 +57,9 @@ def start(logger, reader, processor, command):
         if reader:
             watchdog.start_thread(reader, (isRunning, c), "Runner")
         if processor:
-            watchdog.start_thread(processor, (isRunning, c), "Processor")
+            watchdog.start_thread(ProcessorManager(processor), (isRunning, c), "Processor")
         if command and reader:
-            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream()), "Commander")
+            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream), "Commander")
         while isRunning.running:
             time.sleep(1)
     finally:

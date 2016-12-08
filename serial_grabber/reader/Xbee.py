@@ -21,11 +21,11 @@ import serial
 import SerialGrabber_Settings
 from SerialGrabber_Storage import storage_cache as cache
 import time
-from serial_grabber.reader import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
 from xbee import ZigBee
 import io
+import logging
 
 # This if statement removes errors when building the documentation
 if 'api_responses' in ZigBee.__dict__:
@@ -37,14 +37,12 @@ if 'api_responses' in ZigBee.__dict__:
 
 
 class DigiRadioReader(SerialReader):
+    logger = logging.getLogger('DigiRadioReader')
 
-    def __init__(self, port, baud,
-                 timeout=60,
-                 parity=serial.PARITY_NONE,
-                 stop_bits=serial.STOPBITS_ONE,
+    def __init__(self, serial_connection,
                  radio_class=ZigBee,
                  packet_filter=lambda a: True, **kwargs):
-        SerialReader.__init__(self, None, 0, port, baud, timeout, parity, stop_bits)
+        SerialReader.__init__(self, None, 0, serial_connection)
         self.radio_class = radio_class
         self.radio_args = kwargs
         self.packet_filter = packet_filter
@@ -65,14 +63,15 @@ class DigiRadioReader(SerialReader):
                 time.sleep(1)
             except SerialException, se:
                 self.close()
-
+                print "Really dead", str(se)
                 return
             except Exception, e:
                 self.counter.error()
                 import traceback
 
                 traceback.print_exc()
-            if self.stream is None: time.sleep(SerialGrabber_Settings.reader_error_sleep)
+            if self.stream is None:
+                time.sleep(SerialGrabber_Settings.reader_error_sleep)
 
     def setup(self):
         SerialReader.setup(self)
@@ -86,6 +85,11 @@ class DigiRadioReader(SerialReader):
         def filtered_callback(frame):
             if self.packet_filter(frame):
                 cb(frame)
+
+        def error_callback(e):
+            self.logger.exception("Exception from radio: %s" % str(e))
+
+        self.radio._error_callback = error_callback
 
         self.radio._callback = filtered_callback
         self.radio._thread_continue = True
@@ -138,11 +142,7 @@ class StreamRadioReader(DigiRadioReader):
     :param stream_transaction_factory: The function that creates a :py:class:`serial.grabber.reader.TransactionExtractor`
         with the specified stream_id
     :type stream_transaction_factory: fn(stream_id)
-    :param str port: The serial port to use, eg: /dev/ttyUSB0
-    :param int baud: The baud rate to use, eg: 115200
-    :param int timeout: eg: 60
-    :param int parity: eg: serial.PARITY_NONE
-    :param int stop_bits: eg: serial.STOPBITS_ONE
+    :param SerialConnection serial_connection: A serial connection object
     :param radio_class: The implementation to use, eg: xbee.zigbee.ZigBee
     :type radio_class: xbee.base.XBeeBase
     :param packet_filter: A function that takes one parameter, the parsed radio packet, and returns a bool specifying
@@ -152,20 +152,16 @@ class StreamRadioReader(DigiRadioReader):
     :param bool escaped: The radio is in API mode 2
     """
     def __init__(self,
-                 stream_transaction_factory,
-                 port,
-                 baud,
-                 timeout=60,
-                 parity=serial.PARITY_NONE,
-                 stop_bits=serial.STOPBITS_ONE,
-                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None, 
+                 stream_transaction_factory, serial_connection,
+                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None,
                  binary=True, **kwargs):
-        DigiRadioReader.__init__(self, port, baud, timeout, parity, stop_bits, radio_class, packet_filter, **kwargs)
+        DigiRadioReader.__init__(self, serial_connection, radio_class,
+                                 packet_filter, **kwargs)
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}
         self.ack = ack
-	self.binary = binary
+        self.binary = binary
 
     def handle_frame(self, frame):
         if frame['id'] == 'rx':

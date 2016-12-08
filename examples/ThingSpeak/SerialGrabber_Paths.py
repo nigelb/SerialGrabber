@@ -16,28 +16,16 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-import glob
 
-from setuptools import setup, find_packages
+import os
 
-setup(name='SerialGrabber',
-    version='0.0.1',
-    description='SerialGrabber reads data from a serial port and processes it with the configured processor.',
-    author='NigelB',
-    author_email='nigel.blair@gmail.com',
-    packages=find_packages(),
-    zip_safe=False,
-    install_requires=["pyserial", "requests", "paho-mqtt"],
-    extras_require = {
-        'XBee': ["xbee"]
-    },
-    entry_points={
-        "console_scripts": [
-            "serial_grabber = serial_grabber.SerialGrabber:main",
-            "fake_buoy = serial_grabber.fake:main",
-        ]
-    },
-    data_files=[
-        ("/etc/SerialGrabber", glob.glob("example_config/*")),
-    ]
-)
+#Directories
+data_logger_dir = None
+if "APPDATA" in os.environ:
+    data_logger_dir = os.path.join(os.environ["APPDATA"], "datalogger")
+else:
+    data_logger_dir = os.path.join(os.path.expanduser("~"), ".datalogger")
+
+cache_dir = os.path.join(data_logger_dir, "cache")
+archive_dir = os.path.join(data_logger_dir, "archive")
+
