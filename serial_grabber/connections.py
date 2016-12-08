@@ -120,13 +120,13 @@ class SerialPort(SerialConnection):
 
     def read(self):
         try:
-            return self.stream.read()
+            return self.con.read()
         except SerialException, se:
             self.close()
             raise se
 
     def inWaiting(self):
-        return self.stream.inWaiting()
+        return self.con.inWaiting()
 
 
 class TcpConnection(SerialConnection):
