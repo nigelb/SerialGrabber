@@ -110,7 +110,7 @@ class MqttCommander(Commander):
             getattr(self, '_cmd_' + payload['request'])(
                 msg.topic, payload, direct)
         else:
-            logger.warn("No command handler for %s" % payload['request'])
+            self.logger.warn("No command handler for %s" % payload['request'])
 
     def _cmd_ping(self, topic, payload, direct):
         nodes = []
