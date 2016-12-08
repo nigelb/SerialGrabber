@@ -65,8 +65,7 @@ class MqttCommander(Commander):
             self.isRunning, self.counter, self.getCommandStream = args
             self.run()
         except BaseException, e:
-            pass
-            # self.logger.exception(e)
+            self.logger.exception(e)
 
     def _connect(self):
         self._mqtt.connect(self._mqtt_host, self._mqtt_port)
