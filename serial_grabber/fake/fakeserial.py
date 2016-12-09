@@ -83,8 +83,6 @@ class FakeSerial(object):
 END
 """
         wrapped = payload_wrapper % (payload, len(payload))
-        print wrapped
-        print ""
         count = 0
         while count < retry:
             self._con.write(wrapped)
