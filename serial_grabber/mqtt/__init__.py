@@ -29,6 +29,14 @@ from socket import error
 import SerialGrabber_Settings
 
 
+def auto_disconnect(func):
+    def func_wrapper(self, *args, **kwargs):
+        rc, mid = func(self, *args, **kwargs)
+        if rc != mqtt.MQTT_ERR_SUCCESS:
+            self._disconnect()
+        return (rc, mid)
+    return func_wrapper
+
 class MqttCommander(Commander):
 
     logger = logging.getLogger("MqttCommander")
@@ -152,6 +160,7 @@ class MqttCommander(Commander):
 
         return self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
 
+    @auto_disconnect
     def send_data(self, stream_id, timestamp, data):
         """
         Format and send a data payload for the given data.
@@ -163,6 +172,7 @@ class MqttCommander(Commander):
             "data": data}
         return self._mqtt.publish(self._data_topic, json.dumps(payload))
 
+    @auto_disconnect
     def send_notify(self, stream_id, timestamp, notify_type, payload):
         payload = {
             "notify": notify_type,
@@ -175,6 +185,7 @@ class MqttCommander(Commander):
 
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
+    @auto_disconnect
     def send_response(self, stream_id, timestamp, response_type, payload):
         payload = {
             "response": response_type,
@@ -187,6 +198,7 @@ class MqttCommander(Commander):
 
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
+    @auto_disconnect
     def send_to_node(self, node_identifier, payload):
         """
         Send a command to the node. The payload will be wrapped as required.
@@ -227,6 +239,10 @@ class MqttProcessor(Processor):
     def __init__(self, mqtt_commander, send_data):
         self._commander = mqtt_commander
         self._send_data = send_data
+
+    def can_process(self):
+        print self._commander.connected
+        return self._commander.connected
 
     def process(self, entry):
         """
