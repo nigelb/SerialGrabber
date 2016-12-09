@@ -51,7 +51,7 @@ class ProcessorManager:
     def run(self):
         while self.isRunning.running:
             order, c_entries = storage_cache.list_cache()
-            if c_entries:
+            if c_entries and self._processor.can_process():
                 for entry in order:
                     parts = entry.split("-")
                     cache_time = float(parts[0].split(".")[0])
@@ -95,6 +95,15 @@ class Processor:
         :rtype: bool
         """
         raise Exception("Reader method \"process\" not implemented.")
+
+    def can_process(self):
+        """
+        Some processors can determine weather processing can be accomplished, for example
+         do not bother processing if there is no network connectivity.
+        :return: can processing be accomplished
+        :rtype: bool
+        """
+        return True
 
 
 class ExternalFilenameProcessor(Processor):
