@@ -189,3 +189,6 @@ class StreamRadioReader(DigiRadioReader):
                     self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack)
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
+
+    def getCommandStream(self, stream_id="default"):
+        return

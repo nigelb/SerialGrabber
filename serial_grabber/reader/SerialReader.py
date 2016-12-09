@@ -66,7 +66,7 @@ class SerialReader(Reader):
         self.serial_connection.close()
         self.stream = None
 
-    def getCommandStream(self):
+    def getCommandStream(self, stream_id="default"):
         return self.stream
 
     def read_data(self):
