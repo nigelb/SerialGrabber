@@ -241,7 +241,6 @@ class MqttProcessor(Processor):
         self._send_data = send_data
 
     def can_process(self):
-        print self._commander.connected
         return self._commander.connected
 
     def process(self, entry):
