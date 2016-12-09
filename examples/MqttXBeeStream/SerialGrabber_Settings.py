@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import serial
 
+from MqttXBee import XBeeMessageVerifier
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer, SerialPort
@@ -56,8 +57,9 @@ commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth, send_data=True)
 
 reader = StreamRadioReader(create_stream, stream,
                            # packet_filter=packet_filter,
-                           ack="OK",
+                           # ack="OK",
                            # ack=time_ack,
+                           message_verifier=XBeeMessageVerifier(),
                            escaped=True)
 
 logging_processor = IgnoreResultProcessor(LoggingProcessor())
