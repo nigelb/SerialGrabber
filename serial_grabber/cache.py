@@ -131,6 +131,7 @@ class FileSystemCache(Cache):
             json.dump(payload, cache_file)
         shutil.move(tmp_file_path, cache_file_path)
         self.logger.debug("Wrote cache file: %s" % cache_file_path)
+        return cache_file_path
 
     def decache(self, cache_file, type="archive"):
         if self.archive.archive(cache_file, type):
