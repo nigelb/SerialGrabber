@@ -18,9 +18,11 @@ class FakeSerial(object):
     This implementation is not threadsafe.
     """
 
-    def __init__(self, con):
+    def __init__(self, con, ack="OK", ack_timeout=5):
         self._con = con
         self._identifier = 'default_buoy'
+        self._ack_timeout = ack_timeout
+        self._ack = ack
 
     def _setup(self):
         self._con.connect()
@@ -69,16 +71,27 @@ class FakeSerial(object):
                 self._cmd_mode(MODE_LIVE)
                 return
 
-    def _send(self, message_type, data):
+    def _send(self, message_type, data, retry=5):
         """
         Sends the payload wrapped in the appropriate headers
         """
-        payload = """BEGIN
+        payload = """%s
+%s"""%(message_type, data)
+        payload_wrapper = """BEGIN
 %s
 %s
 END
 """
-        self._con.write(payload % (message_type, data))
+        wrapped = payload_wrapper % (payload, len(payload))
+        print wrapped
+        print ""
+        count = 0
+        while count < retry:
+            self._con.write(wrapped)
+            if self.read_ack():
+                break
+            count+=1
+        return count < retry
 
     def _send_data(self):
         """
@@ -121,9 +134,16 @@ DO: 597, %S: 0,14"""
         try:
             while True:
                 self._extractor.write(self._con.read())
-
                 self._process()
                 time.sleep(0.5)
         except KeyboardInterrupt:
             pass
         self._con.close()
+
+    def read_ack(self):
+        start = time.time()
+        data = ""
+        while self._ack not in data and time.time() - start < self._ack_timeout:
+            data += self._con.read()
+        logger.debug("Ack found: %s"%self._ack in data)
+        return self._ack in data
