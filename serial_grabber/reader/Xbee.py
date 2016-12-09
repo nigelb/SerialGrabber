@@ -20,6 +20,7 @@
 import serial
 import SerialGrabber_Settings
 from SerialGrabber_Storage import storage_cache as cache
+from SerialGrabber_Storage import storage_archive
 import time
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
@@ -135,6 +136,18 @@ class PacketRadioReader(DigiRadioReader):
                 self.logger.info("Packet dropped by packet filter.")
 
 
+class MessageVerifier:
+    """
+    A is passed to a StreamRadioReader. Each transaction extracted by the Transaction extractor is
+    passed to verify_message which validates the message and returns a response to be sent back
+    over the radio.
+    """
+    def __init__(self, ack=None):
+        self.ack = ack
+
+    def verify_message(self, transaction):
+        return True, self.ack
+
 class StreamRadioReader(DigiRadioReader):
     """
     Reads Digi Xbee/ZigBee API mode packets from the configured serial port, converts the packets into a stream for each MAC Address and passes the stream onto a :py:class:`serial.grabber.reader.TransactionExtractor`
@@ -152,15 +165,18 @@ class StreamRadioReader(DigiRadioReader):
     :param bool escaped: The radio is in API mode 2
     """
     def __init__(self,
-                 stream_transaction_factory, serial_connection,
-                 radio_class=ZigBee, packet_filter=lambda a: True, ack=None,
+                 stream_transaction_factory,
+                 serial_connection,
+                 message_verifier=MessageVerifier(),
+                 radio_class=ZigBee,
+                 packet_filter=lambda a: True,
                  binary=True, **kwargs):
         DigiRadioReader.__init__(self, serial_connection, radio_class,
                                  packet_filter, **kwargs)
+        self.message_verifier = message_verifier
         self.stream_transaction_factory = stream_transaction_factory
         self.streams = {}
         self.short_address = {}
-        self.ack = ack
         self.binary = binary
 
     def handle_frame(self, frame):
@@ -176,19 +192,24 @@ class StreamRadioReader(DigiRadioReader):
 
     def handle_transaction(self, stream_id, transaction):
         try:
+            isValid, response = self.message_verifier.verify_message(transaction)
             entry = cache.make_payload(transaction, binary=self.binary)
             entry['stream_id'] = " ".join([format(ord(x), "02x") for x in stream_id])
-            cache.cache(entry)
-            self.counter.read()
-            self.counter.update()
-            if self.ack:
-                dest_addr = self.short_address[stream_id]
-                if hasattr(self.ack, '__call__'):
-                    self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack())
-                else:
-                    self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=self.ack)
+            path = cache.cache(entry)
+            if isValid:
+                self.counter.read()
+                self.counter.update()
+            else:
+                storage_archive.archive(path, name="invalid")
+                self.counter.invalid()
+                self.counter.update()
+
+            dest_addr = self.short_address[stream_id]
+            self.radio.send("tx", dest_addr_long=stream_id, dest_addr=dest_addr, data=response)
+
+
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
 
     def getCommandStream(self, stream_id="default"):
-        return
+        return None
