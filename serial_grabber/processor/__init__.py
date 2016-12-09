@@ -130,6 +130,12 @@ class IgnoreResultProcessor(Processor):
         finally:
             raise CompositeProcessorIgnoreResult()
 
+    def can_process(self):
+        try:
+            self.processor.can_process()
+        finally:
+            raise CompositeProcessorIgnoreResult()
+
 
 class CompositeProcessor(Processor):
     """
@@ -158,6 +164,18 @@ class CompositeProcessor(Processor):
             except CompositeProcessorIgnoreResult, e:
                 pass
         return toRet
+
+    def can_process(self):
+        toRet = self.starting_value
+        for pcs in self.processors:
+            try:
+                v = pcs.can_process()
+                if v is None: v = False
+                toRet = self.operation(toRet, v)
+            except CompositeProcessorIgnoreResult, e:
+                pass
+        return toRet
+
 
 
 class TransformProcessor(Processor):
