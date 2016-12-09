@@ -31,6 +31,7 @@ class counter:
         self._read = 0
         self._error = 0
         self._posted = 0
+        self._invalid = 0
         self.si = si
 
     def read(self):
@@ -42,8 +43,11 @@ class counter:
     def processed(self):
         self._posted += 1
 
+    def invalid(self):
+        self._invalid += 1
+
     def update(self):
-        self.si.set_tooltip("Read Count: %s, Process Count: %s, Error Count: %s" % (self._read, self._posted, self._error))
+        self.si.set_tooltip("Read Count: %s, Process Count: %s, Error Count: %s, Invalid Count: %s" % (self._read, self._posted, self._error, self._invalid))
 
 class Watchdog:
     logger = logging.getLogger("Watchdog")
