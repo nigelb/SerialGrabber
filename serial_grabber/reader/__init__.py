@@ -48,7 +48,6 @@ class Reader:
             self.transaction_extractor.set_callback(lambda stream_id, emit: self.handle_transaction(stream_id, emit))
         self.storage_cache = storage_cache
 
-
     def __call__(self, *args, **kwargs):
         self.logger.info("Reader Thread Started.")
         self.isRunning, self.counter = args
