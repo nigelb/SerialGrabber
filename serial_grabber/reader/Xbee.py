@@ -18,10 +18,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import serial
+from multiprocessing import Pipe
+
 import SerialGrabber_Settings
 from SerialGrabber_Storage import storage_cache as cache
 from SerialGrabber_Storage import storage_archive
 import time
+
+from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
 from xbee import ZigBee
@@ -148,7 +152,8 @@ class MessageVerifier:
     def verify_message(self, transaction):
         return True, self.ack
 
-class StreamRadioReader(DigiRadioReader):
+
+class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
     """
     Reads Digi Xbee/ZigBee API mode packets from the configured serial port, converts the packets into a stream for each MAC Address and passes the stream onto a :py:class:`serial.grabber.reader.TransactionExtractor`
 
@@ -213,3 +218,11 @@ class StreamRadioReader(DigiRadioReader):
 
     def getCommandStream(self, stream_id="default"):
         return None
+
+    def populate_parameters(self, paramaters):
+        paramaters.command_stream = Pipe()
+        paramaters.command_type = XBeeStream
+
+class XBeeStream:
+    def __init__(self, remote_xbee_mac_address):
+        self.remote_xbee_mac_address = remote_xbee_mac_address

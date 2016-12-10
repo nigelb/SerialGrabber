@@ -43,7 +43,7 @@ class ProcessorManager:
         """
         try:
             self.logger.info("Processor Thread Started.")
-            self.isRunning, self.counter = args
+            self.isRunning, self.counter, self.parameters = args
             self.run()
         except BaseException, e:
             self.logger.exception(e)

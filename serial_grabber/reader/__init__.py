@@ -50,7 +50,7 @@ class Reader:
 
     def __call__(self, *args, **kwargs):
         self.logger.info("Reader Thread Started.")
-        self.isRunning, self.counter = args
+        self.isRunning, self.counter, self.parameters = args
         self.stream = None
         self.run()
 

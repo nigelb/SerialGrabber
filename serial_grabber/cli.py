@@ -20,6 +20,8 @@ import signal
 import time
 
 from SerialGrabber_Storage import storage_cache
+from serial_grabber.commander import MultiProcessParameterFactory
+from serial_grabber.util import config_helper
 
 from serial_grabber.watchdog import running, counter, Watchdog
 
@@ -51,15 +53,27 @@ def start(logger, reader, processor, command):
         si = status(logger)
         isRunning = running(True)
         c = counter(si)
+        params = config_helper({
+            "counter": c,
+            "running": isRunning
+        })
+
+        if issubclass(command.__class__, MultiProcessParameterFactory):
+            command.populate_parameters(params)
+        if issubclass(reader.__class__, MultiProcessParameterFactory):
+            print reader
+            reader.populate_parameters(params)
+        if issubclass(processor.__class__, MultiProcessParameterFactory):
+            processor.populate_parameters(params)
 
         watchdog = Watchdog(isRunning)
         register_handler(isRunning, watchdog, reader, processor, command)
         if reader:
-            watchdog.start_thread(reader, (isRunning, c), "Runner")
+            watchdog.start_thread(reader, (isRunning, c, params), "Runner")
         if processor:
-            watchdog.start_thread(ProcessorManager(processor), (isRunning, c), "Processor")
+            watchdog.start_thread(ProcessorManager(processor), (isRunning, c, params), "Processor")
         if command and reader:
-            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream), "Commander")
+            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream, params), "Commander")
         while isRunning.running:
             time.sleep(1)
     finally:

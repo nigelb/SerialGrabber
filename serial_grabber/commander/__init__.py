@@ -20,3 +20,7 @@
 class Commander:
     def stop(self):
         pass
+
+class MultiProcessParameterFactory:
+    def populate_parameters(self, paramaters):
+        raise NotImplementedError("Class extends MultiProcessParameterFactory but does not implement populate_parameters.")
