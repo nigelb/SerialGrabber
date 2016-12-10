@@ -118,9 +118,9 @@ class SerialPort(SerialConnection):
             raise ValueError("There is no currently open connection")
         self.con.write(data)
 
-    def read(self):
+    def read(self, size=1):
         try:
-            return self.con.read()
+            return self.con.read(size=size)
         except SerialException, se:
             self.close()
             raise se
