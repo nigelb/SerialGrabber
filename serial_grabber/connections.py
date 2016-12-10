@@ -42,7 +42,7 @@ class SerialConnection:
     def connect(self):
         raise NotImplementedError("connect is required")
 
-    def read(self):
+    def read(self, size=1):
         """
         Single byte reading method
         """
@@ -154,13 +154,13 @@ class TcpConnection(SerialConnection):
             self.con.close()
             self.con = None
 
-    def read(self):
+    def read(self, size=1024):
         """
         Read from the TCP connection, but but make sure to always return
         a non None value
         """
         try:
-            c = self.con.recv(1024)
+            c = self.con.recv(size)
             return c
         except socket.error as e:
             if e.errno in SOCKET_ERRORS:
