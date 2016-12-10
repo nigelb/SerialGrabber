@@ -53,6 +53,7 @@ def start(logger, reader, processor, command):
         si = status(logger)
         isRunning = running(True)
         c = counter(si)
+
         params = config_helper({
             "counter": c,
             "running": isRunning
@@ -61,7 +62,6 @@ def start(logger, reader, processor, command):
         if issubclass(command.__class__, MultiProcessParameterFactory):
             command.populate_parameters(params)
         if issubclass(reader.__class__, MultiProcessParameterFactory):
-            print reader
             reader.populate_parameters(params)
         if issubclass(processor.__class__, MultiProcessParameterFactory):
             processor.populate_parameters(params)
@@ -73,7 +73,7 @@ def start(logger, reader, processor, command):
         if processor:
             watchdog.start_thread(ProcessorManager(processor), (isRunning, c, params), "Processor")
         if command and reader:
-            watchdog.start_thread(command, (isRunning, c, reader.getCommandStream, params), "Commander")
+            watchdog.start_thread(command, (isRunning, c, params), "Commander")
         while isRunning.running:
             time.sleep(1)
     finally:

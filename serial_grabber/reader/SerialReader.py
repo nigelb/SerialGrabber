@@ -19,11 +19,14 @@
 
 import logging
 import serial, os, os.path, time
+from multiprocessing import Pipe
+
 from serial_grabber import poster_exceptions
+from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.reader import Reader
 
 
-class SerialReader(Reader):
+class SerialReader(Reader, MultiProcessParameterFactory):
     """
     A reader that connects to the specified serial port for its input.
 
@@ -66,8 +69,9 @@ class SerialReader(Reader):
         self.serial_connection.close()
         self.stream = None
 
-    def getCommandStream(self, stream_id="default"):
-        return self.stream
-
     def read_data(self):
         return self.stream.read()
+
+    def populate_parameters(self, paramaters):
+        paramaters.command_stream = Pipe()
+        paramaters.command_type = "Serial"

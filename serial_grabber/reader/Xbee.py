@@ -216,9 +216,6 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
 
-    def getCommandStream(self, stream_id="default"):
-        return None
-
     def populate_parameters(self, paramaters):
         paramaters.command_stream = Pipe()
         paramaters.command_type = XBeeStream
