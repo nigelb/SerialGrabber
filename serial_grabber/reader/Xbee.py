@@ -60,7 +60,7 @@ class DigiRadioReader(SerialReader):
         # config = config_helper({})
         # config.counter = self.counter
         self.radio = None
-        while self.isRunning.running:
+        while self.isRunning.value == 1:
             try:
                 if self.radio is None:
                     self.setup()
