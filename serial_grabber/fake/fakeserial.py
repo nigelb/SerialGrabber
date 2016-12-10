@@ -142,6 +142,6 @@ DO: 597, %S: 0,14"""
         start = time.time()
         data = ""
         while self._ack not in data and time.time() - start < self._ack_timeout:
-            data += self._con.read()
+            data += self._con.read(1)
         logger.debug("Ack found: %s"%self._ack in data)
         return self._ack in data
