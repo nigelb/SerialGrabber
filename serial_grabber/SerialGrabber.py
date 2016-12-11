@@ -51,6 +51,8 @@ def main():
 
     #Setup up the logging
     FORMAT = '%(asctime)-15s %(levelname)-7s %(name)s %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
+    if 'PYTHON_DEV_ENVIRONMENT' in os.environ and os.environ['PYTHON_DEV_ENVIRONMENT'] == '1':
+        FORMAT = '%(asctime)-15s %(levelname)-7s %(name)s File "%(pathname)s", line %(lineno)d, in %(funcName)s - %(message)s'
     log_file =  os.path.join(SerialGrabber_Paths.data_logger_dir, "datalogger.log")
 
 #    logging.basicConfig(format=FORMAT,level=logging.INFO, filename=log_file)
@@ -77,6 +79,7 @@ def main():
     SerialGrabber_UI.ui.start(logger, reader, processor, commander)
 
 if __name__ == "__main__":
+    import os
     main()
 
 
