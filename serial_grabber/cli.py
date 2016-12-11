@@ -41,11 +41,11 @@ def register_handler(running, watchdog, reader, processor, command):
     def signal_handler(signal, frame):
         print 'You pressed Ctrl+C!'
         running.value = 0
-        if command:
-            command.stop()
+        # if command:
+        #     command.stop()
         watchdog.join()
-        if reader:
-            reader.close()
+        # if reader:
+        #     reader.close()
 
 
         exit(0)

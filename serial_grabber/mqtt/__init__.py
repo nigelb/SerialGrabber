@@ -21,12 +21,19 @@ import time
 import logging
 import datetime
 import json
+from ctypes import c_int
+from multiprocessing import Value, Pipe
 
-from serial_grabber.commander import Commander
+import os
+
+from pipe_proxy import PipeProxy, expose_object
+from serial_grabber.commander import Commander, MultiProcessParameterFactory
 from serial_grabber.processor import Processor
 import paho.mqtt.client as mqtt
 from socket import error
 import SerialGrabber_Settings
+
+from util import register_worker_signal_handler
 
 
 def auto_disconnect(func):
@@ -37,7 +44,7 @@ def auto_disconnect(func):
         return (rc, mid)
     return func_wrapper
 
-class MqttCommander(Commander):
+class MqttCommander(Commander, MultiProcessParameterFactory):
 
     logger = logging.getLogger("MqttCommander")
 
@@ -60,7 +67,7 @@ class MqttCommander(Commander):
         self._platform_identifier = platform_identifier
 
         self.processor = MqttProcessor(self, send_data)
-        self.connected = False
+        self.connected = Value(c_int, 1)
         self._node_identifiers = {}
 
     def __call__(self, *args, **kwargs):
@@ -69,8 +76,9 @@ class MqttCommander(Commander):
         for termination, and the command stream
         """
         try:
-            self.logger.info("Commander Thread Started.")
-            self.isRunning, self.counter, self.getCommandStream, self.parameters = args
+            register_worker_signal_handler(self.logger)
+            self.logger.info("Commander Thread Started: %s"%os.getpid())
+            self.isRunning, self.counter, self.parameters = args
             self.run()
         except BaseException, e:
             self.logger.exception(e)
@@ -79,22 +87,24 @@ class MqttCommander(Commander):
         self._mqtt.connect(self._mqtt_host, self._mqtt_port)
         self._mqtt.subscribe(self._nodes_topic)
         self._mqtt.subscribe(self._nodes_topic + '/#')
-        self.connected = True
+        self.connected.value = True
 
     def _disconnect(self):
         self._mqtt.disconnect()
-        self.connected = False
+        self.connected.value = False
 
     def run(self):
         self._node_identifiers = {}
-
-        while self.isRunning.running:
+        expose_object(self.parameters["mqtt_pipe"][0], self)
+        self._command_stream = PipeProxy(self.parameters['command_stream'][1])
+        while self.isRunning.value:
             try:
-                if not self.connected:
+                if not self.connected.value:
                     self._connect()
                 self._mqtt.loop()
-            except:
-                if self.connected:
+                time.sleep(0.1)
+            except Exception as e:
+                if self.connected.value:
                     self._mqtt.disconnect()
                 time.sleep(SerialGrabber_Settings.commander_error_sleep)
 
@@ -217,7 +227,7 @@ END""" % payload
             return
 
         self.logger.info("Sending to node %s: %s" % (stream_id, payload))
-        self.getCommandStream(stream_id=node_identifier).write(payload)
+        self._command_stream.write(payload, stream_id=node_identifier)
 
     def update_node_identifier(self, stream_id, node_identifier):
         """
@@ -226,6 +236,10 @@ END""" % payload
         """
         self.logger.info('Node %s on stream %s' % (node_identifier, stream_id))
         self._node_identifiers[stream_id] = node_identifier
+
+    def populate_parameters(self, paramaters):
+        paramaters["mqtt_connected"] = self.connected
+        paramaters["mqtt_pipe"] = Pipe()
 
 
 class MqttProcessor(Processor):
@@ -237,11 +251,15 @@ class MqttProcessor(Processor):
     logger = logging.getLogger('MqttProcessor')
 
     def __init__(self, mqtt_commander, send_data):
-        self._commander = mqtt_commander
+        self._commander = None
         self._send_data = send_data
 
     def can_process(self):
-        return self._commander.connected
+        try:
+            return self.paramaters['mqtt_connected'].value == 1
+        except:
+            pass
+        return False
 
     def process(self, entry):
         """
@@ -249,14 +267,16 @@ class MqttProcessor(Processor):
         """
         lines = entry['data']['payload'].split('\n')
         ts = datetime.datetime.utcfromtimestamp(entry['data']['time']/1000.0)
-
+        if self._commander is None:
+            self._commander = PipeProxy(self.paramaters['mqtt_pipe'][1])
         if lines[1] == 'NOTIFY':
             notify_type, data = parse_notify(lines[2])
             if notify_type == 'HELLO':
                 # Update the current identifier
-                self._commander.update_node_identifier(
-                    entry['data']['stream_id'], data['identifier'])
-
+                self._commander.update_node_identifier(entry['data']['stream_id'], data['identifier'])
+                # self.paramaters['mqtt_pipe'][1].send(("update_node_identifier", entry['data']['stream_id'], data['identifier']))
+                # self.paramaters['mqtt_pipe'][1].send(("send_notify", entry['data']['stream_id'], ts,
+                #                                    notify_type, data))
             rc, mid = self._commander.send_notify(entry['data']['stream_id'], ts,
                                         notify_type, data)
             return rc == mqtt.MQTT_ERR_SUCCESS

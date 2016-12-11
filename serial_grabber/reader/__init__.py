@@ -22,6 +22,7 @@ from collections import OrderedDict
 import logging
 import time
 import SerialGrabber_Settings
+import os
 from SerialGrabber_Storage import storage_cache
 import datetime
 from serial import SerialException
@@ -51,7 +52,7 @@ class Reader:
     def __call__(self, *args, **kwargs):
         try:
             register_worker_signal_handler(self.logger)
-            self.logger.info("Reader Thread Started.")
+            self.logger.info("Reader Thread Started: %s"%os.getpid())
             self.isRunning, self.counter, self.parameters = args
             self.stream = None
             self.run()
@@ -88,6 +89,7 @@ class Reader:
                 traceback.print_exc()
             if self.stream is None:
                 time.sleep(SerialGrabber_Settings.reader_error_sleep)
+        self.close()
         self.logger.info("Shutting Down...")
 
     def read_data(self):

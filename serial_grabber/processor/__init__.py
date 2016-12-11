@@ -44,8 +44,9 @@ class ProcessorManager:
         """
         try:
             register_worker_signal_handler(self.logger)
-            self.logger.info("Processor Thread Started.")
+            self.logger.info("Processor Thread Started: %s"%os.getpid())
             self.isRunning, self.counter, self.parameters = args
+            self._processor.set_paramaters(self.parameters)
             self.run()
         except BaseException, e:
             self.logger.exception(e)
@@ -108,6 +109,9 @@ class Processor:
         :rtype: bool
         """
         return True
+
+    def set_paramaters(self, paramaters):
+        self.paramaters = paramaters
 
 
 class ExternalFilenameProcessor(Processor):
@@ -180,6 +184,9 @@ class CompositeProcessor(Processor):
                 pass
         return toRet
 
+    def set_paramaters(self, paramaters):
+        for pcs in self.processors:
+            pcs.set_paramaters(paramaters)
 
 
 class TransformProcessor(Processor):

@@ -19,9 +19,11 @@
 
 import logging
 import time
+from ctypes import c_int
+
 import SerialGrabber_Settings
 
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 
 from serial_grabber.util import register_worker_signal_handler
 
@@ -32,26 +34,26 @@ class running:
 
 class counter:
     def __init__(self, si):
-        self._read = 0
-        self._error = 0
-        self._posted = 0
-        self._invalid = 0
+        self._read = Value(c_int, 0)
+        self._error = Value(c_int, 0)
+        self._posted = Value(c_int, 0)
+        self._invalid = Value(c_int, 0)
         self.si = si
 
     def read(self):
-        self._read += 1
+        self._read.value += 1
 
     def error(self):
-        self._error += 1
+        self._error.value += 1
 
     def processed(self):
-        self._posted += 1
+        self._posted.value += 1
 
     def invalid(self):
-        self._invalid += 1
+        self._invalid.value += 1
 
     def update(self):
-        self.si.set_tooltip("Read Count: %s, Process Count: %s, Error Count: %s, Invalid Count: %s" % (self._read, self._posted, self._error, self._invalid))
+        self.si.set_tooltip("Read Count: %s, Process Count: %s, Error Count: %s, Invalid Count: %s" % (self._read.value, self._posted.value, self._error.value, self._invalid.value))
 
 class Watchdog:
     logger = logging.getLogger("Watchdog")
