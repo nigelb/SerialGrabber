@@ -117,5 +117,5 @@ class RollingFilename:
 
 def register_worker_signal_handler(logger):
     def signal_handler(signal, frame):
-        logger.info("Ctrl+C Pressed...");
+        logger.info("Ctrl+C Pressed...")
     signal.signal(signal.SIGINT, signal_handler)
