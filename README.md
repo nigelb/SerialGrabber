@@ -36,3 +36,15 @@ Commandline:
 	
 	
 	#> serial_grabber --config-dir /etc/SerialGrabber
+
+
+Serial Port Forwarding
+----------------------
+On the machine with the port you would like to forward:
+
+    stty -F /dev/ttyttyUSB0 115200
+    socat  open:/dev/ttyUSB0  tcp-listen:9999
+
+On the machine you would like to access the port:
+
+    socat tcp:localhost:9999 pty,raw,link=<serialport>
