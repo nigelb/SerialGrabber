@@ -8,7 +8,7 @@ import threading
 
 class MqttClient(object):
     def __init__(self, host, port, auth, master_topic="master/maintenance",
-                 data_topic="master/data"):
+                 data_topic="master/data", node_topic='nodes'):
         """
         Create the MQTT connection.
         :param:str host:MQTT host
@@ -26,22 +26,18 @@ class MqttClient(object):
         self._mqtt_port = port
         self._master_topic = master_topic
         self._data_topic = data_topic
+        self._node_topic = node_topic
 
         self._stopping = threading.Event()
 
-    def connect(self):
+    def _connect(self):
         """
         Connect to the message bus
         """
         self._con.connect(self._mqtt_host, self._mqtt_port)
 
-    def listen(self):
-        self.connect()
-        self._con.subscribe(self._master_topic)
-        self._con.subscribe(self._data_topic)
-        self._stopping.clear()
-        while not self._stopping.isSet():
-            self._con.loop()
+    def _disconnect(self):
+        self._con.disconnect()
 
     def _print(self, msg):
         print "At " + datetime.datetime.now().strftime('%H:%M:%S')
@@ -78,18 +74,69 @@ class MqttClient(object):
         else:
             self._print("Got stray message on " + msg.topic)
 
+    def _print_success(self, operation, success):
+        if success:
+            print "FAILED TO: " + operation
+        else:
+            print "SUCCEEDED: " + operation
+
     def _print_message(self, payload):
         payload = json.loads(payload)
 
         self._print(str(payload))
 
     def _print_data(self, payload):
+        """
+        Formats and prints a data payload
+        """
         payload = json.loads(payload)
         msg = "Got data from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
         msg = msg % payload
         for line in payload['data'].split('\n'):
             msg += '\t%s\n' % line
         self._print(msg)
+
+    def _send_broadcast(self, operation, cmd):
+        self._connect()
+        m = self._con.publish(self._node_topic,
+                              json.dumps(cmd), 2)
+        self._disconnect()
+        self._print_success(operation,
+                            m.is_published())
+
+    def _send_to_node(self, operation, node_identifier, cmd):
+        self._connect()
+        m = self._con.publish(self._node_topic + '/' + node_identifier,
+                              json.dumps(cmd), 2)
+        self._disconnect()
+        self._print_success(operation,
+                            m.is_published())
+
+    def listen(self):
+        """
+        Listen to incoming messages from the nodes
+        """
+        self._connect()
+        self._con.subscribe(self._master_topic)
+        self._con.subscribe(self._data_topic)
+        self._stopping.clear()
+        while not self._stopping.isSet():
+            self._con.loop()
+
+    def cmd_ping(self):
+        """
+        Issues the mode change command to a node
+        """
+        cmd = {'request': 'ping'}
+        self._send_broadcast('Send ping', cmd)
+
+    def cmd_mode(self, node_identifier, mode):
+        """
+        Issues the mode change command to a node
+        """
+        cmd = {'request': 'mode', 'mode': mode}
+        self._send_to_node("Send mode change to %s" % node_identifier,
+                           node_identifier, cmd)
 
 
 def main():
@@ -100,6 +147,10 @@ def main():
     parser.add_argument('-p', help="MQTT password")
     subparsers = parser.add_subparsers(dest='action')
     subparsers.add_parser('listen', help="Listen for messages from the buoy")
+    subparsers.add_parser('ping', help="Issue a broadcast ping")
+    mode_parser = subparsers.add_parser('mode', help="Perform a mode change")
+    mode_parser.add_argument('node_identifier')
+    mode_parser.add_argument('mode')
 
     args = parser.parse_args()
 
@@ -107,6 +158,10 @@ def main():
 
     if args.action == 'listen':
         con.listen()
+    elif args.action == 'ping':
+        con.cmd_ping()
+    elif args.action == 'mode':
+        con.cmd_mode(args.node_identifier, args.mode)
 
     return 0
 
