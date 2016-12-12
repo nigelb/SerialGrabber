@@ -25,7 +25,7 @@ from SerialGrabber_Storage import storage_cache as cache
 from SerialGrabber_Storage import storage_archive
 import time
 
-from pipe_proxy import expose_object
+from serial_grabber.pipe_proxy import expose_object
 from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
