@@ -77,7 +77,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
         """
         try:
             register_worker_signal_handler(self.logger)
-            self.logger.info("Commander Thread Started: %s"%os.getpid())
+            self.logger.info("Commander Thread Started.")
             self.isRunning, self.counter, self.parameters = args
             self.run()
         except BaseException, e:
@@ -107,7 +107,6 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
                 if self.connected.value:
                     self._mqtt.disconnect()
                 time.sleep(SerialGrabber_Settings.commander_error_sleep)
-
 
         self._mqtt.disconnect()
 
@@ -273,17 +272,15 @@ class MqttProcessor(Processor):
             notify_type, data = parse_notify(lines[2])
             if notify_type == 'HELLO':
                 # Update the current identifier
-                self._commander.update_node_identifier(entry['data']['stream_id'], data['identifier'])
-                # self.paramaters['mqtt_pipe'][1].send(("update_node_identifier", entry['data']['stream_id'], data['identifier']))
-                # self.paramaters['mqtt_pipe'][1].send(("send_notify", entry['data']['stream_id'], ts,
-                #                                    notify_type, data))
-            rc, mid = self._commander.send_notify(entry['data']['stream_id'], ts,
-                                        notify_type, data)
+                self._commander.update_node_identifier(
+                    entry['data']['stream_id'], data['identifier'])
+            rc, mid = self._commander.send_notify(
+                entry['data']['stream_id'], ts, notify_type.lower(), data)
             return rc == mqtt.MQTT_ERR_SUCCESS
         elif lines[1] == 'RESPONSE':
-            notify_type, data = parse_notify(lines[2])
-            rc, mid = self._commander.send_response(entry['data']['stream_id'], ts,
-                                          notify_type, data)
+            response_type, data = parse_notify(lines[2])
+            rc, mid = self._commander.send_response(
+                entry['data']['stream_id'], ts, response_type.lower(), data)
 
             return rc == mqtt.MQTT_ERR_SUCCESS
         elif self._send_data and lines[1] == 'DATA':

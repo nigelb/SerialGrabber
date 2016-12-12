@@ -82,8 +82,17 @@ class MqttClient(object):
 
     def _print_message(self, payload):
         payload = json.loads(payload)
+        if 'response' in payload:
+            msg = "Got response to %(response)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
+        else:
+            msg = "Got notification of %(notify)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
 
-        self._print(str(payload))
+        msg = msg % payload
+
+        for part in payload['body']:
+            msg += '\t%s=%s\n' % (part, str(payload['body'][part]))
+
+        self._print(msg)
 
     def _print_data(self, payload):
         """
@@ -97,6 +106,9 @@ class MqttClient(object):
         self._print(msg)
 
     def _send_broadcast(self, operation, cmd):
+        """
+        Sends a broadcast command and prints the success of the send
+        """
         self._connect()
         m = self._con.publish(self._node_topic,
                               json.dumps(cmd), 2)
@@ -105,6 +117,9 @@ class MqttClient(object):
                             m.is_published())
 
     def _send_to_node(self, operation, node_identifier, cmd):
+        """
+        Sends a command to a node, and the prints the success of the send
+        """
         self._connect()
         m = self._con.publish(self._node_topic + '/' + node_identifier,
                               json.dumps(cmd), 2)
