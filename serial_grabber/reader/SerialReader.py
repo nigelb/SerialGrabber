@@ -21,6 +21,7 @@ import logging
 import serial, os, os.path, time
 from multiprocessing import Pipe
 
+from serial_grabber.pipe_proxy import expose_object
 from serial_grabber import poster_exceptions
 from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.reader import Reader
@@ -64,6 +65,11 @@ class SerialReader(Reader, MultiProcessParameterFactory):
         if self.serial_connection.is_connected():
             self.serial_connection.close()
         self.try_connect()
+        self.setup_command_stream()
+
+    def setup_command_stream(self):
+        self.command_stream = SerialCommandStream(self.serial_connection)
+        expose_object(self.parameters['command_stream'][0], self.command_stream)
 
     def close(self):
         self.serial_connection.close()
@@ -75,3 +81,11 @@ class SerialReader(Reader, MultiProcessParameterFactory):
     def populate_parameters(self, paramaters):
         paramaters.command_stream = Pipe()
         paramaters.command_type = "Serial"
+
+class SerialCommandStream:
+    def __init__(self, stream):
+        self.stream = stream
+
+    def write(self, data, stream_id="default"):
+        # print data, self.stream
+        self.stream.write(data.encode("ascii"))

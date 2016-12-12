@@ -21,6 +21,7 @@ import serial
 from multiprocessing import Pipe
 
 import SerialGrabber_Settings
+import struct
 from SerialGrabber_Storage import storage_cache as cache
 from SerialGrabber_Storage import storage_archive
 import time
@@ -221,20 +222,27 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
         except Exception, e:
             self.logger.exception("Error handling transaction from: %s %%s" % stream_id, e)
 
-    def __call__(self, *args, **kwargs):
-        DigiRadioReader.__call__(self, *args, **kwargs)
-        self.xbee_stream = XBeeStream(self.radio)
-        expose_object(self.parameters['command_stream'][0], self.xbee_stream)
+    def setup(self):
+        DigiRadioReader.setup(self)
 
+    def setup_command_stream(self):
+        self.xbee_stream = XBeeStream(self)
+        expose_object(self.parameters['command_stream'][0], self.xbee_stream)
 
     def populate_parameters(self, paramaters):
         paramaters.command_stream = Pipe()
         paramaters.command_type = XBeeStream
 
 class XBeeStream:
-    def __init__(self, radio):
-        self.radio = radio
+    def __init__(self, reader):
+        self.reader = reader
 
-    def write(self, data, stream_id="default"):
-        self.radio.send("tx", dest_addr_long=stream_id, data=data, frame_id=10)
+    def write(self, data, stream_id="FF FF FF FF FF FF FF"):
+        address = []
+        for i in stream_id.split(" "):
+            address.append(int(i, 16))
+        address = struct.pack("BBBBBBBB", *address)
+        self.reader.radio.send("tx", dest_addr='\xff\xfe', dest_addr_long=address, data=data.encode("ascii"))
 
+    def __str__(self):
+        return 'XBeeStream'

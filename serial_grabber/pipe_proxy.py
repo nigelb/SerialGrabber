@@ -20,12 +20,17 @@
 def expose_object(endpoint, object):
     from threading import Thread
     def handler(endpoint, object):
-        while True:
-            call = endpoint.recv()
-            param = getattr(object, call[0])
-            if hasattr(param, "__call__"):
-                param = param.__call__( *call[1], **call[2])
-            endpoint.send(param)
+            while True:
+                try:
+                    call = endpoint.recv()
+                    param = getattr(object, call[0])
+                    if hasattr(param, "__call__"):
+                        param = param.__call__( *call[1], **call[2])
+                    endpoint.send(param)
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+
     handler = Thread(target=handler, args=(endpoint, object))
     handler.setDaemon(True)
     handler.start()

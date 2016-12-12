@@ -207,7 +207,6 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
 
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
-    @auto_disconnect
     def send_to_node(self, node_identifier, payload):
         """
         Send a command to the node. The payload will be wrapped as required.
@@ -226,7 +225,11 @@ END""" % payload
             return
 
         self.logger.info("Sending to node %s: %s" % (stream_id, payload))
-        self._command_stream.write(payload, stream_id=node_identifier)
+        self.logger.info(self._command_stream.__class__)
+        try:
+            self._command_stream.write(payload, stream_id=stream_id)
+        except Exception as e:
+            print e
 
     def update_node_identifier(self, stream_id, node_identifier):
         """
