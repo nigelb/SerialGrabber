@@ -35,8 +35,8 @@ class SerialReader(Reader, MultiProcessParameterFactory):
     :param int startup_ignore_threshold_milliseconds: The interval that input is ignored for at startup
     """
     def __init__(self, transaction_extractor,
-                 startup_ignore_threshold_milliseconds, serial_connection):
-        Reader.__init__(self, transaction_extractor, startup_ignore_threshold_milliseconds)
+                 startup_ignore_threshold_milliseconds, serial_connection, *args, **kwargs):
+        Reader.__init__(self, transaction_extractor, startup_ignore_threshold_milliseconds, *args, **kwargs)
         self.serial_connection = serial_connection
 
     def try_connect(self):

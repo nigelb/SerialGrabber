@@ -24,6 +24,7 @@ import time
 import SerialGrabber_Settings
 import os
 from SerialGrabber_Storage import storage_cache
+from SerialGrabber_Storage import storage_archive
 import datetime
 from serial import SerialException
 from serial_grabber.constants import current_matcher
@@ -42,7 +43,8 @@ class Reader:
     """
     logger = logging.getLogger("Reader")
 
-    def __init__(self, transaction_extractor, startup_ignore_threshold_milliseconds):
+    def __init__(self, transaction_extractor, startup_ignore_threshold_milliseconds, message_verifier=None):
+        self.message_verifier = message_verifier
         self.startup_ignore_threshold_milliseconds = startup_ignore_threshold_milliseconds
         self.transaction_extractor = transaction_extractor
         if transaction_extractor:
@@ -98,8 +100,16 @@ class Reader:
     def handle_transaction(self, stream_id, emit):
         entry = make_payload(emit)
         entry['stream_id'] = stream_id
-        self.storage_cache.cache(entry)
+        if self.message_verifier is not None:
+            isValid, response = self.message_verifier.verify_message(emit)
+        path = self.storage_cache.cache(entry)
+        if isValid:
+            self.counter.read()
+            self.counter.update()
+        else:
+            storage_archive.archive(path, name="invalid")
+            self.counter.invalid()
+            self.counter.update()
+        self.stream.write(response)
         self.logger.info("End of Transaction")
-        self.counter.read()
-        self.counter.update()
 

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
+from Verifier import MessageVerifier
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer
@@ -47,7 +47,7 @@ transaction = TransactionExtractor("default", "BEGIN", "END")
 
 tcp = TcpServer(hostname, port)
 
-reader = SerialReader(transaction, 1000, tcp)
+reader = SerialReader(transaction, 1000, tcp, message_verifier=MessageVerifier())
 
 commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth, send_data=True)
 
