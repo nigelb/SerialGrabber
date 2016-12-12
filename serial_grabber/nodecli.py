@@ -111,7 +111,7 @@ class MqttClient(object):
         """
         self._connect()
         m = self._con.publish(self._node_topic,
-                              json.dumps(cmd), 2)
+                              json.dumps(cmd), 1)
         self._disconnect()
         self._print_success(operation,
                             m.is_published())
@@ -122,7 +122,7 @@ class MqttClient(object):
         """
         self._connect()
         m = self._con.publish(self._node_topic + '/' + node_identifier,
-                              json.dumps(cmd), 2)
+                              json.dumps(cmd), 1)
         self._disconnect()
         self._print_success(operation,
                             m.is_published())
