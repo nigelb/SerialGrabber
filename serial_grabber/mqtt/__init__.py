@@ -70,7 +70,7 @@ class MqttCommander(Commander):
         """
         try:
             self.logger.info("Commander Thread Started.")
-            self.isRunning, self.counter, self.getCommandStream, self.parameters = args
+            self.isRunning, self.counter, self.parameters = args
             self.run()
         except BaseException, e:
             self.logger.exception(e)
