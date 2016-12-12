@@ -98,7 +98,6 @@ class MqttCommander(Commander):
                     self._mqtt.disconnect()
                 time.sleep(SerialGrabber_Settings.commander_error_sleep)
 
-
         self._mqtt.disconnect()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -257,13 +256,13 @@ class MqttProcessor(Processor):
                 self._commander.update_node_identifier(
                     entry['data']['stream_id'], data['identifier'])
 
-            rc, mid = self._commander.send_notify(entry['data']['stream_id'], ts,
-                                        notify_type, data)
+            rc, mid = self._commander.send_notify(
+                entry['data']['stream_id'], ts, notify_type.lower(), data)
             return rc == mqtt.MQTT_ERR_SUCCESS
         elif lines[1] == 'RESPONSE':
-            notify_type, data = parse_notify(lines[2])
-            rc, mid = self._commander.send_response(entry['data']['stream_id'], ts,
-                                          notify_type, data)
+            response_type, data = parse_notify(lines[2])
+            rc, mid = self._commander.send_response(
+                entry['data']['stream_id'], ts, response_type.lower(), data)
 
             return rc == mqtt.MQTT_ERR_SUCCESS
         elif self._send_data and lines[1] == 'DATA':
