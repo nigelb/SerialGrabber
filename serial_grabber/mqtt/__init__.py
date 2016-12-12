@@ -26,14 +26,14 @@ from multiprocessing import Value, Pipe
 
 import os
 
-from pipe_proxy import PipeProxy, expose_object
+from serial_grabber.pipe_proxy import PipeProxy, expose_object
 from serial_grabber.commander import Commander, MultiProcessParameterFactory
 from serial_grabber.processor import Processor
 import paho.mqtt.client as mqtt
 from socket import error
 import SerialGrabber_Settings
 
-from util import register_worker_signal_handler
+from serial_grabber.util import register_worker_signal_handler
 
 
 def auto_disconnect(func):
