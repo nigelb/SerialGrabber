@@ -131,7 +131,13 @@ DO: 597, %S: 0,14"""
         self._send_hello()
         try:
             while True:
-                self._extractor.write(self._con.read())
+
+                d = ' '
+                while len(d) > 0:
+                    d = self._con.read()
+                    if len(d) > 0:
+                        logger.debug("Recieved Data: %s"%d)
+                        self._extractor.write(d)
                 self._process()
                 time.sleep(0.5)
         except KeyboardInterrupt:
@@ -143,5 +149,5 @@ DO: 597, %S: 0,14"""
         data = ""
         while self._ack not in data and time.time() - start < self._ack_timeout:
             data += self._con.read(1)
-        logger.debug("Ack found: %s"%self._ack in data)
+        logger.debug("Ack found: %s"%(self._ack in data))
         return self._ack in data
