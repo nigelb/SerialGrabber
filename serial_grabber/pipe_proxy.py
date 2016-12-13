@@ -28,10 +28,16 @@ STATUS_EXCEPTION="EXC"
 def expose_object(endpoint, object):
     from threading import Thread
     logger = logging.getLogger(str(object))
+
     def handler(endpoint, object):
-            while True:
+            running = True
+            while running:
                 try:
                     call = endpoint.recv()
+                    if call[0] == "__close__":
+                        running = False
+                        endpoint.send({STATUS: STATUS_OK, VALUE:None})
+                        return
                     param = getattr(object, call[0])
                     if hasattr(param, "__call__"):
                         param = param.__call__( *call[1], **call[2])
