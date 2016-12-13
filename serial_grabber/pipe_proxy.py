@@ -58,10 +58,6 @@ class RemoteException(Exception):
         self.exception = exception
         self.traceback = traceback
 
-
-
-
-
 class ProxyCall:
     def __init__(self, endpoint, name):
         self.name = name
