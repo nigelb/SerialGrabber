@@ -28,4 +28,5 @@ else:
 
 cache_dir = os.path.join(data_logger_dir, "cache")
 archive_dir = os.path.join(data_logger_dir, "archive")
+node_map_dir = os.path.join(data_logger_dir, "nodes")
 
