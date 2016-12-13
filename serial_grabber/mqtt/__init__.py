@@ -32,6 +32,7 @@ from serial_grabber.processor import Processor
 import paho.mqtt.client as mqtt
 from socket import error
 import SerialGrabber_Settings
+import SerialGrabber_Paths
 
 from serial_grabber.util import register_worker_signal_handler
 
@@ -70,6 +71,17 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
         self.connected = Value(c_int, 1)
         self._node_identifiers = {}
 
+    def load_node_map(self):
+        if hasattr(SerialGrabber_Paths, 'node_map_dir') and os.path.exists(SerialGrabber_Paths.node_map_dir):
+            nodes = os.listdir(SerialGrabber_Paths.node_map_dir)
+            nodes.sort()
+            for node in nodes:
+                with(open(os.path.join(SerialGrabber_Paths.node_map_dir, node), 'rb')) as nd:
+                    self._node_identifiers[node] = nd.read()
+                    self.logger.info("Loaded %s: %s"%(node, self._node_identifiers[node]))
+
+
+
     def __call__(self, *args, **kwargs):
         """
         Starts the processor thread, passing in the isRunning flag which is used
@@ -79,6 +91,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
             register_worker_signal_handler(self.logger)
             self.logger.info("Commander Thread Started.")
             self.isRunning, self.counter, self.parameters = args
+            self.load_node_map()
             self.run()
         except BaseException, e:
             self.logger.exception(e)
@@ -238,6 +251,13 @@ END""" % payload
         """
         self.logger.info('Node %s on stream %s' % (node_identifier, stream_id))
         self._node_identifiers[stream_id] = node_identifier
+        if hasattr(SerialGrabber_Paths, 'node_map_dir'):
+            if not os.path.exists(SerialGrabber_Paths.node_map_dir):
+                os.makedirs(SerialGrabber_Paths.node_map_dir)
+            with open(os.path.join(SerialGrabber_Paths.node_map_dir, node_identifier), 'wb') as np:
+                np.write(stream_id)
+
+
 
     def populate_parameters(self, paramaters):
         paramaters["mqtt_connected"] = self.connected
