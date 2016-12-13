@@ -15,10 +15,19 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+from StringIO import StringIO
 
+import logging
+
+STATUS="STATUS"
+VALUE="VALUE"
+EXCEPTION="EXCEPTION"
+STATUS_OK="OK"
+STATUS_EXCEPTION="EXC"
 
 def expose_object(endpoint, object):
     from threading import Thread
+    logger = logging.getLogger(str(object))
     def handler(endpoint, object):
             while True:
                 try:
@@ -26,14 +35,26 @@ def expose_object(endpoint, object):
                     param = getattr(object, call[0])
                     if hasattr(param, "__call__"):
                         param = param.__call__( *call[1], **call[2])
-                    endpoint.send(param)
+                    endpoint.send({STATUS: STATUS_OK, VALUE:param})
                 except Exception as e:
                     import traceback
-                    traceback.print_exc()
+                    file=StringIO()
+                    traceback.print_exc(file=file)
+                    endpoint.send({STATUS: STATUS_EXCEPTION, EXCEPTION:e, VALUE:file.getvalue()})
+                    file.close()
 
     handler = Thread(target=handler, args=(endpoint, object))
     handler.setDaemon(True)
     handler.start()
+
+class RemoteException(Exception):
+    def __init__(self, exception, traceback):
+        self.exception = exception
+        self.traceback = traceback
+
+
+
+
 
 class ProxyCall:
     def __init__(self, endpoint, name):
@@ -42,7 +63,12 @@ class ProxyCall:
 
     def __call__(self, *args, **kwargs):
         self.endpoint.send((self.name, args, kwargs))
-        return self.endpoint.recv()
+        result = self.endpoint.recv()
+        if result[STATUS] == STATUS_OK:
+            return result[VALUE]
+        if result[STATUS] == STATUS_EXCEPTION:
+            raise RemoteException(result[EXCEPTION], result[VALUE])
+
 
 class PipeProxy:
     def __init__(self, endpoint):
