@@ -36,6 +36,17 @@ class MyTestCase(unittest.TestCase):
             self.assertTrue(re)
         test.__close__()
 
+    def test_unknown_method(self):
+
+        left, right = Pipe()
+        expose_object(left, TestClass())
+        test = PipeProxy(right)
+        try:
+            print test.not_a_method()
+        except RemoteException as re:
+            self.assertTrue(type(re.exception) == AttributeError)
+        test.__close__()
+
 
 if __name__ == '__main__':
     unittest.main()
