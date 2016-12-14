@@ -33,6 +33,7 @@ def main():
 
     try:
         import SerialGrabber_Paths
+        import SerialGrabber_Settings, SerialGrabber_UI
     except ImportError, e:
         import traceback
         traceback.print_exc()
@@ -57,7 +58,7 @@ def main():
 #    logging.basicConfig(format=FORMAT,level=logging.INFO, filename=log_file)
     logging.basicConfig(format=FORMAT,level=logging.INFO)
 
-    import SerialGrabber_Settings, SerialGrabber_UI
+
 
 #    hdlr = logging.StreamHandler(sys.stderr)
 #    hdlr.setFormatter(logging.Formatter(FORMAT))
