@@ -19,9 +19,12 @@ from StringIO import StringIO
 
 import logging
 
+import os
+
 STATUS="STATUS"
 VALUE="VALUE"
 EXCEPTION="EXCEPTION"
+PID="PID"
 STATUS_OK="OK"
 STATUS_EXCEPTION="EXC"
 
@@ -46,7 +49,7 @@ def expose_object(endpoint, object):
                     import traceback
                     file=StringIO()
                     traceback.print_exc(file=file)
-                    endpoint.send({STATUS: STATUS_EXCEPTION, EXCEPTION:e, VALUE:file.getvalue()})
+                    endpoint.send({STATUS: STATUS_EXCEPTION, EXCEPTION: e, VALUE: file.getvalue(), PID: os.getpid()})
                     file.close()
 
     handler = Thread(target=handler, args=(endpoint, object))
@@ -54,9 +57,14 @@ def expose_object(endpoint, object):
     handler.start()
 
 class RemoteException(Exception):
-    def __init__(self, exception, traceback):
+    def __init__(self, exception, traceback, pid):
         self.exception = exception
         self.traceback = traceback
+        self.pid = pid
+
+    def __str__(self):
+        return "%s in prosess: %s: %s:\r\n%s"%(type(self.exception).__name__, self.pid, self.exception.__str__(), self.traceback)
+
 
 class ProxyCall:
     def __init__(self, endpoint, name):
@@ -69,7 +77,7 @@ class ProxyCall:
         if result[STATUS] == STATUS_OK:
             return result[VALUE]
         if result[STATUS] == STATUS_EXCEPTION:
-            raise RemoteException(result[EXCEPTION], result[VALUE])
+            raise RemoteException(result[EXCEPTION], result[VALUE], result[PID])
 
 
 class PipeProxy:
