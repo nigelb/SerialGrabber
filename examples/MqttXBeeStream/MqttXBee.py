@@ -25,6 +25,7 @@ from serial_grabber.reader.Xbee import MessageVerifier
 class XBeeMessageVerifier(MessageVerifier):
     logger = logging.getLogger("MessageVerifier")
     def verify_message(self, transaction):
+        self.logger.info(transaction)
         try:
             data = transaction.split("\n")
             if int(data[-2]) == len("\n".join(data[1:-2])):

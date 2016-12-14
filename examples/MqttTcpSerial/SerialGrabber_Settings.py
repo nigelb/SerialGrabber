@@ -35,7 +35,7 @@ mqtt_auth = ('system', 'manager')
 
 # Settings
 cache_collision_avoidance_delay = 1
-processor_sleep = 1
+processor_sleep = 0.1
 watchdog_sleep = 1
 
 commander_error_sleep = 1

@@ -39,7 +39,7 @@ mqtt_auth = ('system', 'manager')
 
 # Settings
 cache_collision_avoidance_delay = 1
-processor_sleep = 1
+processor_sleep = 0.1
 watchdog_sleep = 1
 
 commander_error_sleep = 1
@@ -51,7 +51,7 @@ def create_stream(stream_id):
     print " ".join([format(ord(x), "02x") for x in stream_id])
     return TransactionExtractor(stream_id, "BEGIN", "END")
 
-stream = SerialPort(timeout = 1, port = "/dev/ttyUSB0", baud = 115200, parity = serial.PARITY_NONE, stop_bits = 1)
+stream = SerialPort(timeout = 1, port = "/dev/ttyUSB1", baud = 115200, parity = serial.PARITY_NONE, stop_bits = 1)
 
 commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth, send_data=True)
 
