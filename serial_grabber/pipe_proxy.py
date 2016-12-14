@@ -63,7 +63,7 @@ class RemoteException(Exception):
         self.pid = pid
 
     def __str__(self):
-        return "%s in prosess: %s: %s:\r\n%s"%(type(self.exception).__name__, self.pid, self.exception.__str__(), self.traceback)
+        return "%s in process: %s: %s:\r\n%s"%(type(self.exception).__name__, self.pid, self.exception.__str__(), self.traceback)
 
 
 class ProxyCall:
