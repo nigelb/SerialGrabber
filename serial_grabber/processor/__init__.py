@@ -72,6 +72,7 @@ class ProcessorManager:
 
                                 if self._processor.process(config_helper(data)):
                                     self.counter.processed()
+                                    self.counter.update()
                                     storage_cache.decache(entry_path)
                             except DebugTransformException, de:
                                 self.logger.debug("Debug exception: %s" % de)
@@ -79,6 +80,7 @@ class ProcessorManager:
                                 self.logger.error("Failed to process data: %s moving to bad data archive" % e)
                                 self.logger.exception(e)
                                 self.counter.error()
+                                self.counter.update()
                                 storage_cache.decache(entry_path, type="bad_data")
                         else:
                             self.logger.debug("File is to new. Leaving for next round.")
