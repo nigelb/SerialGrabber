@@ -68,7 +68,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
         self._platform_identifier = platform_identifier
 
         self.processor = MqttProcessor(self, send_data)
-        self.connected = Value(c_int, 1)
+        self.connected = Value(c_int, 0)
         self._node_identifiers = {}
 
     def load_node_map(self):
@@ -310,8 +310,12 @@ class MqttProcessor(Processor):
             # send data
             stream_id = entry['data']['stream_id']
             data = entry['data']['payload']
-            rc, mid = self._commander.send_data(stream_id, ts, data)
-            return rc == mqtt.MQTT_ERR_SUCCESS
+            try:
+                rc, mid = self._commander.send_data(stream_id, ts, data)
+                return rc == mqtt.MQTT_ERR_SUCCESS
+            except Exception as e:
+                print e
+
         else:
             self.logger.info("Got unrecognised message: %s" % lines[1])
             return False
