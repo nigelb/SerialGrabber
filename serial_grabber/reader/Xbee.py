@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+from ctypes import c_int
 
 import serial
-from multiprocessing import Pipe
+from multiprocessing import Pipe, Value, Lock
 
 import SerialGrabber_Settings
 import struct
@@ -26,7 +27,7 @@ from SerialGrabber_Storage import storage_cache as cache
 from SerialGrabber_Storage import storage_archive
 import time
 
-from serial_grabber.pipe_proxy import expose_object
+from serial_grabber.pipe_proxy import expose_object, PipeProxy
 from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
@@ -158,6 +159,11 @@ class MessageVerifier:
         return True, self.ack
 
 
+class ResponseHandler:
+    def handle_response_frame(self, frame):
+        raise NotImplemented()
+
+
 class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
     """
     Reads Digi Xbee/ZigBee API mode packets from the configured serial port, converts the packets into a stream for each MAC Address and passes the stream onto a :py:class:`serial.grabber.reader.TransactionExtractor`
@@ -200,6 +206,14 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
             self.streams[frame['source_addr_long']].write(frame['rf_data'])
         else:
             self.logger.info(frame)
+            if frame['id'] == 'tx_status':
+                for hndlr in self.response_handlers:
+                    hndlr.handle_response_frame({
+                        'response_id': frame['frame_id'],
+                        'status': frame['deliver_status'] == '\x00',
+                        'retries': struct.unpack('B', frame['retries'])[0]
+                    })
+
 
     def handle_transaction(self, stream_id, transaction):
         try:
@@ -228,21 +242,36 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
     def setup_command_stream(self):
         self.xbee_stream = XBeeStream(self)
         expose_object(self.parameters['command_stream'][0], self.xbee_stream)
+        self.response_handlers = []
+        for resp_hdlr in self.parameters.send_response_observers:
+            self.response_handlers.append(PipeProxy(resp_hdlr))
 
-    def populate_parameters(self, paramaters):
+
+def populate_parameters(self, paramaters):
         paramaters.command_stream = Pipe()
         paramaters.command_type = XBeeStream
 
 class XBeeStream:
     def __init__(self, reader):
         self.reader = reader
+        self.lock = Lock()
+        self.ids = range(10, 256)
+        self.pos = 0
 
-    def write(self, data, stream_id="FF FF FF FF FF FF FF"):
+    def write(self, data, stream_id="FF FF FF FF FF FF FF", response_id='\x01'):
         address = []
         for i in stream_id.split(" "):
             address.append(int(i, 16))
         address = struct.pack("BBBBBBBB", *address)
-        self.reader.radio.send("tx", dest_addr='\xff\xfe', dest_addr_long=address, data=data.encode("ascii"))
+        self.reader.radio.send("tx", dest_addr='\xff\xfe', dest_addr_long=address, frame_id=response_id, data=data.encode("ascii"))
+
+    def get_next_idenifier(self):
+        self.lock.acquire()
+        ps = self.pos
+        self.pos = (self.pos + 1) % len(self.ids)
+        self.lock.release()
+        return struct.pack("B", self.ids[ps])
+
 
     def __str__(self):
         return 'XBeeStream'

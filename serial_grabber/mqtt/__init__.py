@@ -22,7 +22,7 @@ import logging
 import datetime
 import json
 from ctypes import c_int
-from multiprocessing import Value, Pipe
+from multiprocessing import Value, Pipe, Queue, Lock
 
 import os
 
@@ -33,7 +33,9 @@ import paho.mqtt.client as mqtt
 from socket import error
 import SerialGrabber_Settings
 import SerialGrabber_Paths
+import SerialGrabber_Storage
 
+from serial_grabber.reader.Xbee import ResponseHandler
 from serial_grabber.util import register_worker_signal_handler
 
 
@@ -45,11 +47,11 @@ def auto_disconnect(func):
         return (rc, mid)
     return func_wrapper
 
-class MqttCommander(Commander, MultiProcessParameterFactory):
+class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
 
     logger = logging.getLogger("MqttCommander")
 
-    def __init__(self, host, port, auth, master_topic="master/maintenance",
+    def __init__(self, host, port, auth, message_cache=None, master_topic="master/maintenance",
                  nodes_topic="nodes", data_topic="master/data", send_data=False,
                  platform_identifier='default_platform'):
         # Setup the basic MQTT config
@@ -57,6 +59,10 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
         self._mqtt.username_pw_set(auth[0], auth[1])
         self._mqtt.on_connect = self.on_connect
         self._mqtt.on_message = self.on_message
+        self._message_cache = message_cache
+        if message_cache is None:
+            self._message_cache = SerialGrabber_Storage.message_cache
+
 
         self._mqtt_host = host
         self._mqtt_port = port
@@ -70,6 +76,8 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
         self.processor = MqttProcessor(self, send_data)
         self.connected = Value(c_int, 0)
         self._node_identifiers = {}
+        self.responses = {}
+        self.response_lock = Lock()
 
     def load_node_map(self):
         if hasattr(SerialGrabber_Paths, 'node_map_dir') and os.path.exists(SerialGrabber_Paths.node_map_dir):
@@ -109,6 +117,8 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
     def run(self):
         self._node_identifiers = {}
         expose_object(self.parameters["mqtt_pipe"][0], self)
+        expose_object(self.response_pipe, self)
+
         self._command_stream = PipeProxy(self.parameters['command_stream'][1])
         while self.isRunning.value:
             try:
@@ -180,7 +190,8 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
             return
         _, node_identifier = topic.split('/')
 
-        return self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
+        # return self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
+        return self.queue_to_node(node_identifier, payload)
 
     @auto_disconnect
     def send_data(self, stream_id, timestamp, data):
@@ -220,7 +231,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory):
 
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
-    def send_to_node(self, node_identifier, payload):
+    def send_to_node(self, node_identifier, payload, response_id):
         """
         Send a command to the node. The payload will be wrapped as required.
         """
@@ -238,9 +249,10 @@ END""" % payload
             return
 
         self.logger.info("Sending to node %s: %s" % (stream_id, payload))
-        self.logger.info(self._command_stream.__class__)
         try:
-            self._command_stream.write(payload, stream_id=stream_id)
+
+
+            self._command_stream.write(payload, stream_id=stream_id, response_id=response_id)
         except Exception as e:
             print e
 
@@ -258,10 +270,60 @@ END""" % payload
                 np.write(stream_id)
 
 
+    def asemble_message(self, node_identifier, payload):
+        if payload['request'] ==  'mode':
+            return 'MODE %s' % payload['mode']
+
+    def send_next_queued_message(self, node_identifier):
+        """
+        Requests the Commander to send the next queued message to the node with specified identity.
+        :param node_identifier: The node in question
+        :return:
+        """
+        order, entries = self._message_cache.list_cache(node_identifier)
+        print entries
+        if len(order) > 0:
+            entry =  self._message_cache.read_cache(node_identifier, entries[order[0]])
+            message = self.asemble_message(node_identifier, entry['payload'])
+            id = self._command_stream.get_next_idenifier()
+            self.send_to_node(node_identifier, message, id)
+            self.response_lock.acquire()
+            if id in self.responses:
+                self.response_lock.release()
+                raise Exception("Response ID already in use: %i"%id)
+            self.responses[id] = [node_identifier, entries[order[0]], time.time()]
+            self.response_lock.release()
+
+
+
 
     def populate_parameters(self, paramaters):
         paramaters["mqtt_connected"] = self.connected
         paramaters["mqtt_pipe"] = Pipe()
+        if 'send_response_observers' not in paramaters:
+            paramaters.send_response_observers = []
+        p = Pipe()
+        self.response_pipe = p[0]
+        paramaters.send_response_observers.append(p[1])
+
+
+    def queue_to_node(self, node_identifier, payload):
+        try:
+            payload = self._message_cache.make_payload(payload, node_identifier)
+            print payload
+            self._message_cache.cache(node_identifier, payload)
+        except Exception as e:
+            self.logger.error(e)
+
+    def handle_response_frame(self, frame):
+        print "Handled: ", frame
+        self.response_lock.acquire()
+        if frame['response_id'] in self.responses:
+            node_identifier, cache_file, to = self.responses[frame['response_id']]
+            self._message_cache.decache(node_identifier, cache_file, type="messages")
+            del self.responses[frame['response_id']]
+        self.response_lock.release()
+
 
 
 class MqttProcessor(Processor):
@@ -300,12 +362,14 @@ class MqttProcessor(Processor):
             rc, mid = self._commander.send_notify(
                 entry['data']['stream_id'], ts, notify_type.lower(), data)
             return rc == mqtt.MQTT_ERR_SUCCESS
+
         elif lines[1] == 'RESPONSE':
             response_type, data = parse_notify(lines[2])
             rc, mid = self._commander.send_response(
                 entry['data']['stream_id'], ts, response_type.lower(), data)
 
             return rc == mqtt.MQTT_ERR_SUCCESS
+
         elif self._send_data and lines[1] == 'DATA':
             # send data
             stream_id = entry['data']['stream_id']
@@ -315,6 +379,16 @@ class MqttProcessor(Processor):
                 return rc == mqtt.MQTT_ERR_SUCCESS
             except Exception as e:
                 print e
+
+        elif self._send_data and lines[1] == 'RETRIEVE':
+            notify_type, data = parse_notify(lines[2])
+            # Request next queued message for node
+            if notify_type == "MESSAGE":
+                try:
+                    self._commander.send_next_queued_message(data['identifier'])
+                    return True
+                except Exception as e:
+                    self.logger.error(e.__str__())
 
         else:
             self.logger.info("Got unrecognised message: %s" % lines[1])

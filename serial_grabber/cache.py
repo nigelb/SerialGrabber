@@ -71,6 +71,27 @@ class Cache:
         raise Exception("Not Implemented")
 
 
+class NamespacedCache:
+
+    def list_cache(self, namespace):
+        raise Exception("Not Implemented")
+
+    def read_cache(self, namespace, cache_filename):
+        raise Exception("Not Implemented")
+
+    def make_payload(self, data, namespace, binary=False):
+        raise Exception("Not Implemented")
+
+    def cache(self, namespace, payload):
+        raise Exception("Not Implemented")
+
+    def decache(self, namespace, cache_file, type="archive"):
+        raise Exception("Not Implemented")
+
+    def close_cache(self, namespace):
+        raise Exception("Not Implemented")
+
+
 class FileSystemCache(Cache):
     """
     An implementation of :py:class:`serial_grabber.cache.Cache` that stores the cache entries on the local filesystem.
@@ -140,6 +161,43 @@ class FileSystemCache(Cache):
                 self.logger.error("Archiver did not remove file, deleting: %s" % os.path.basename(cache_file))
                 os.remove(cache_file)
 
-
     def close_cache(self):
         self.archive.close()
+
+    def make_cache_dir(self):
+        if not os.path.exists(self.cache_dir):
+            os.makedirs(self.cache_dir)
+
+
+class FactoryNamespacedCache(NamespacedCache):
+    def __init__(self, basepath, cache_factory, archive_factory):
+        self.cache_factory = cache_factory
+        self.archive_factory = archive_factory
+        self.basepath = basepath
+        self.caches = {}
+
+    def get_cache(self, namespace):
+        if namespace not in self.caches:
+            self.caches[namespace] = self.cache_factory(self.basepath, namespace, self.archive_factory(self.basepath, namespace))
+        self.caches[namespace].make_cache_dir()
+        return self.caches[namespace]
+
+    def list_cache(self, namespace):
+        return self.get_cache(namespace).list_cache()
+
+    def make_payload(self, data, namespace, binary=False):
+        return self.get_cache(namespace).make_payload(data, binary)
+
+    def cache(self, namespace, payload):
+        return self.get_cache(namespace).cache(payload)
+
+    def read_cache(self, namespace, cache_filename):
+        return self.get_cache(namespace).read_cache(cache_filename)
+
+    def decache(self, namespace, cache_file, type="archive"):
+        return self.get_cache(namespace).decache(cache_file, type)
+
+    def close_cache(self, namespace):
+        return self.get_cache(namespace).close_cache(namespace)
+
+

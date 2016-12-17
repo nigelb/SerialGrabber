@@ -141,6 +141,8 @@ class JSONLineArchive(BaseArchive):
 
     def archive(self, to_archive, name="archive"):
         try:
+            if not os.path.exists(self.archive_dir):
+                os.makedirs(self.archive_dir)
             with open(os.path.join(self.archive_dir, self.get_name(name)), "ab") as _output:
                 with open(to_archive, "rb") as _input:
                     _output.write(_input.read())
