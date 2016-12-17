@@ -33,3 +33,5 @@ storage_archive = JSONLineArchive(
 )
 
 storage_cache = FileSystemCache(SerialGrabber_Paths.cache_dir, storage_archive)
+
+message_cache = FactoryNamespacedCache(SerialGrabber_Paths.message_cache_dir, cache_factory, archive_factory)
