@@ -294,6 +294,8 @@ END""" % payload
                 raise Exception("Response ID already in use: %i"%id)
             self.responses[id] = [node_identifier, entries[order[0]], time.time()]
             self.response_lock.release()
+        else:
+            self.send_to_node(node_identifier, "QUEUE %s\nLENGTH 0"%int(time.time()*1000), '\x01')
 
 
 
