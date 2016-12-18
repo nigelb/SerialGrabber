@@ -272,7 +272,8 @@ END""" % payload
 
     def asemble_message(self, node_identifier, payload):
         if payload['request'] ==  'mode':
-            return 'MODE %s' % payload['mode']
+            return 'MODE\nMODE %s' % payload['mode']
+
 
     def send_next_queued_message(self, node_identifier):
         """
@@ -281,7 +282,7 @@ END""" % payload
         :return:
         """
         order, entries = self._message_cache.list_cache(node_identifier)
-        print entries
+        self.logger.info("%s messages in the queue."%len(order))
         if len(order) > 0:
             entry =  self._message_cache.read_cache(node_identifier, entries[order[0]])
             message = self.asemble_message(node_identifier, entry['payload'])
