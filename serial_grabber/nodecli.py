@@ -83,8 +83,12 @@ class MqttClient(object):
 
     def _print_message(self, payload):
         payload = json.loads(payload)
+        if 'tx_id' not in payload:
+            payload['tx_id'] = ""
+        else:
+            payload['tx_id'] = "(%s)"%payload['tx_id']
         if 'response' in payload:
-            msg = "Got response to %(response)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
+            msg = "Got response to %(response)s%(tx_id)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
         else:
             msg = "Got notification of %(notify)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
 
