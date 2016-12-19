@@ -4,6 +4,7 @@ import paho.mqtt.client as mqtt
 import datetime
 import json
 import threading
+import time
 
 
 class MqttClient(object):
@@ -149,7 +150,7 @@ class MqttClient(object):
         """
         Issues the mode change command to a node
         """
-        cmd = {'request': 'mode', 'mode': mode}
+        cmd = {'request': 'mode', 'mode': mode, 'tx_id': int(time.time()*1000)}
         self._send_to_node("Send mode change to %s" % node_identifier,
                            node_identifier, cmd)
 

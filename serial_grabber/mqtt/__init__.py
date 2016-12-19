@@ -272,7 +272,7 @@ END""" % payload
 
     def asemble_message(self, node_identifier, payload):
         if payload['request'] ==  'mode':
-            return 'MODE\nMODE %s' % payload['mode']
+            return 'MODE {tx_id}\nMODE {mode}' .format(**payload)
 
 
     def send_next_queued_message(self, node_identifier):
