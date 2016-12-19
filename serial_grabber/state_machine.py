@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # SerialGrabber reads data from a serial port and processes it with the
 # configured processor.
 # Copyright (C) 2012  NigelB
@@ -16,29 +16,8 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-import glob
 
-from setuptools import setup, find_packages
 
-setup(name='SerialGrabber',
-    version='0.0.1',
-    description='SerialGrabber reads data from a serial port and processes it with the configured processor.',
-    author='NigelB',
-    author_email='nigel.blair@gmail.com',
-    packages=find_packages(),
-    zip_safe=False,
-    install_requires=["pyserial", "requests", "paho-mqtt", "filelock"],
-    extras_require = {
-        'XBee': ["xbee"]
-    },
-    entry_points={
-        "console_scripts": [
-            "serial_grabber = serial_grabber.SerialGrabber:main",
-            "fake_node = serial_grabber.fake:main",
-            "node_cli = serial_grabber.nodecli:main"
-        ]
-    },
-    data_files=[
-        ("/etc/SerialGrabber", glob.glob("example_config/*")),
-    ]
-)
+class StateMachine:
+    def handle_response(self, response):
+        pass

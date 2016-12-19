@@ -18,8 +18,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import logging
+from fysom import Fysom
 
 from serial_grabber.reader.Xbee import MessageVerifier
+from serial_grabber.state_machine import StateMachine
 
 
 class XBeeMessageVerifier(MessageVerifier):
@@ -37,3 +39,23 @@ class XBeeMessageVerifier(MessageVerifier):
             self.logger.error("Could not convert %s to an integer."%data[-2])
             return False, "NA"
 
+name="name"
+src="src"
+dst="dst"
+fsm = Fysom({
+    "initial": "live",
+    "events":[
+        {name:"maintenance_request", src:"live", dst: "maintenance_request"},
+        {name:"maintenance_response", src:"maintenance_request", dst: "maintenance_response"},
+
+        {name:"calibrate_request", src:"maintenance_response", dst: "calibrate_request"},
+        {name:"calibrate_response", src:"calibrate_request", dst: "calibrate_response"},
+
+
+    ]
+})
+
+class XBeeStateMachine(StateMachine):
+    logger = logging.getLogger("XBeeStateMachine")
+    def handle_response(self, response):
+        self.logger.info(response)

@@ -36,6 +36,7 @@ import SerialGrabber_Paths
 import SerialGrabber_Storage
 
 from serial_grabber.reader.Xbee import ResponseHandler
+from serial_grabber.state_machine import StateMachine
 from serial_grabber.util import register_worker_signal_handler
 
 
@@ -53,8 +54,9 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
 
     def __init__(self, host, port, auth, message_cache=None, master_topic="master/maintenance",
                  nodes_topic="nodes", data_topic="master/data", send_data=False,
-                 platform_identifier='default_platform'):
+                 platform_identifier='default_platform', state_machine=StateMachine()):
         # Setup the basic MQTT config
+        self._state_machine = state_machine
         self._mqtt = mqtt.Client()
         self._mqtt.username_pw_set(auth[0], auth[1])
         self._mqtt.on_connect = self.on_connect
@@ -76,8 +78,12 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         self.processor = MqttProcessor(self, send_data)
         self.connected = Value(c_int, 0)
         self._node_identifiers = {}
+        self._nodes_loaded = Value(c_int, 0)
         self.responses = {}
         self.response_lock = Lock()
+
+        self.node_state = {}
+        self.node_state_lock = Lock()
 
     def load_node_map(self):
         if hasattr(SerialGrabber_Paths, 'node_map_dir') and os.path.exists(SerialGrabber_Paths.node_map_dir):
@@ -85,10 +91,16 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
             nodes.sort()
             for node in nodes:
                 with(open(os.path.join(SerialGrabber_Paths.node_map_dir, node), 'rb')) as nd:
-                    self._node_identifiers[node] = nd.read()
-                    self.logger.info("Loaded %s: %s"%(node, self._node_identifiers[node]))
+                    stream_id = nd.read()
+                    self._node_identifiers[stream_id] = node
+                    self.logger.info("Loaded %s: %s"%(stream_id, self._node_identifiers[stream_id]))
+        self._nodes_loaded.value = 1
 
+    def get_node_identifier(self, stream_id):
+        while self._nodes_loaded.value == 0:
+            time.sleep(1)
 
+        return self._node_identifiers[stream_id]
 
     def __call__(self, *args, **kwargs):
         """
@@ -115,7 +127,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         self.connected.value = False
 
     def run(self):
-        self._node_identifiers = {}
+        # self._node_identifiers = {}
         expose_object(self.parameters["mqtt_pipe"][0], self)
         expose_object(self.response_pipe, self)
 
@@ -228,7 +240,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         }
         if stream_id is not None:
             payload["nodeIdentifier"] = self._node_identifiers[stream_id]
-
+        self._state_machine.handle_response(payload)
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
     def send_to_node(self, node_identifier, payload, response_id):
@@ -352,10 +364,14 @@ class MqttProcessor(Processor):
         """
         Process the entry and check if it is a response
         """
+
         lines = entry['data']['payload'].split('\n')
+        stream_id = entry['data']['stream_id']
         ts = datetime.datetime.utcfromtimestamp(entry['data']['time']/1000.0)
         if self._commander is None:
             self._commander = PipeProxy(self.paramaters['mqtt_pipe'][1])
+
+        node_identifier = self._commander.get_node_identifier(stream_id)
         if lines[1] == 'NOTIFY':
             notify_type, data = parse_notify(lines[2])
             if notify_type == 'HELLO':
@@ -393,6 +409,11 @@ class MqttProcessor(Processor):
                 except Exception as e:
                     self.logger.error(e.__str__())
 
+        # elif self._send_data and lines[1] == 'MODE':
+        #     _, mode = map(lambda a: a.strip(), lines[2].split())
+        #     print _, mode, node_identifier
+        #     return True
+
         else:
             self.logger.info("Got unrecognised message: %s" % lines[1])
             return False
@@ -409,3 +430,4 @@ def parse_notify(payload):
         p = p.split(':')
         data[p[0].strip()] = p[1].strip()
     return notify_type, data
+
