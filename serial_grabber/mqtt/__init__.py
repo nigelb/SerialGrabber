@@ -294,7 +294,7 @@ END""" % payload
         :return:
         """
         order, entries = self._message_cache.list_cache(node_identifier)
-        self.logger.info("%s messages in the queue."%len(order))
+        self.logger.info("%s messages in the queue." % len(order))
         if len(order) > 0:
             entry =  self._message_cache.read_cache(node_identifier, entries[order[0]])
             message = self.asemble_message(node_identifier, entry['payload'])
@@ -303,11 +303,11 @@ END""" % payload
             self.response_lock.acquire()
             if id in self.responses:
                 self.response_lock.release()
-                raise Exception("Response ID already in use: %i"%id)
+                raise Exception("Response ID already in use: %i" % id)
             self.responses[id] = [node_identifier, entries[order[0]], time.time()]
             self.response_lock.release()
         else:
-            self.send_to_node(node_identifier, "QUEUE %s\nLENGTH 0"%int(time.time()*1000), '\x01')
+            self.send_to_node(node_identifier, "QUEUE %s\nLENGTH 0" % int(time.time()*1000), '\x01')
 
 
 
@@ -338,7 +338,6 @@ END""" % payload
             self._message_cache.decache(node_identifier, cache_file, type="messages")
             del self.responses[frame['response_id']]
         self.response_lock.release()
-
 
 
 class MqttProcessor(Processor):
@@ -407,7 +406,7 @@ class MqttProcessor(Processor):
                     self._commander.send_next_queued_message(data['identifier'])
                     return True
                 except Exception as e:
-                    self.logger.error(e.__str__())
+                    self.logger.exception("Error processing RETRIEVE MESSAGE")
 
         # elif self._send_data and lines[1] == 'MODE':
         #     _, mode = map(lambda a: a.strip(), lines[2].split())
@@ -430,4 +429,3 @@ def parse_notify(payload):
         p = p.split(':')
         data[p[0].strip()] = p[1].strip()
     return notify_type, data
-

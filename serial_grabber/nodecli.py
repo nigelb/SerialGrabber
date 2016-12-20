@@ -88,14 +88,21 @@ class MqttClient(object):
         else:
             payload['tx_id'] = "(%s)"%payload['tx_id']
         if 'response' in payload:
-            msg = "Got response to %(response)s%(tx_id)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
+            if 'nodeIdentifier' in payload:
+                msg = "Got response to %(response)s%(tx_id)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
+            else:
+                msg = "Got response to %(response)s%(tx_id)s with timestamp %(timestamp)s\n"
+
         else:
             msg = "Got notification of %(notify)s from %(nodeIdentifier)s with timestamp %(timestamp)s\n"
 
         msg = msg % payload
 
-        for part in payload['body']:
-            msg += '\t%s=%s\n' % (part, str(payload['body'][part]))
+        if isinstance(payload['body'], dict):
+            for part in payload['body']:
+                msg += '\t%s=%s\n' % (part, str(payload['body'][part]))
+        else:
+            msg += '\t%s' % str(payload['body'])
 
         self._print(msg)
 
