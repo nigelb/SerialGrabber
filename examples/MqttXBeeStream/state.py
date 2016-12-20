@@ -61,10 +61,14 @@ ph_events = [
 ]
 
 do_events=[
+    {name:"maintenance_request", src:"live", dst: "maintenance_mode_request"},
+    {name:"maintenance_response", src:"maintenance_mode_request", dst: "maintenance_mode"},
 
 ]
 
 ec_events=[
+    {name:"maintenance_request", src:"live", dst: "maintenance_mode_request"},
+    {name:"maintenance_response", src:"maintenance_mode_request", dst: "maintenance_mode"},
 
 ]
 
@@ -83,21 +87,31 @@ if __name__ == "__main__":
 
     }
 
-    graph = pydot.Dot(graph_type='digraph')
-    def lookup(i):
-        if i in map: return map[i]
-        return i
+    def graph(output_fn, graph_map):
+        fsm = Fysom({
+            "initial": "live",
+            "events": graph_map
+        })
+
+        graph = pydot.Dot(graph_type='digraph')
+        def lookup(i):
+            if i in map: return map[i]
+            return i
 
 
-    for i in fsm._map:
-        el = fsm._map[i]
-        for fm in el:
-            to = el[fm]
-            print fm, to
-            if type(to) == list:
-                for tt in to:
-                    graph.add_edge(pydot.Edge(fm, tt, label=lookup(i)))
-            else:
-                graph.add_edge(pydot.Edge(fm, to, label=lookup(i)))
+        for i in fsm._map:
+            el = fsm._map[i]
+            for fm in el:
+                to = el[fm]
+                print fm, to
+                if type(to) == list:
+                    for tt in to:
+                        graph.add_edge(pydot.Edge(fm, tt, label=lookup(i)))
+                else:
+                    graph.add_edge(pydot.Edge(fm, to, label=lookup(i)))
 
-    graph.write_png('calibrate_ph.png')
+        graph.write_png(output_fn)
+
+    graph('calibrate_ph.png', ph_events)
+    graph('calibrate_do.png', do_events)
+    graph('calibrate_ec.png', ec_events)
