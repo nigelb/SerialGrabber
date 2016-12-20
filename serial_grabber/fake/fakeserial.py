@@ -63,7 +63,7 @@ END
         self._setup()
         # Hack to get around startup threshold
         time.sleep(5)
-        self._state = WakeUpState(self)
+        self._state = AsleepState(self)
         try:
             while True:
                 d = ' '
@@ -126,15 +126,18 @@ class State(object):
         raise NotImplemented()
 
 
-class WakeUpState(State):
+class AsleepState(State):
+    def init(self):
+        self._next = time.time() + 60
+
     def run(self):
         """
         Send a hello then transition to another state.
         """
-        logger.info('Sending HELLO with identifier %s' % self._node._identifier)
-        self._node.send('NOTIFY',
-                        'HELLO: identifier: %s, version: 0.99' %
-                        self._node._identifier)
+        if self._next > time.time():
+            return
+
+        logger.info('Waking up')
         return LiveState
 
 
@@ -143,13 +146,20 @@ class LiveState(State):
     In Live state we send data periodically
     """
     def init(self):
-        self._next = time.time()
+        self._next_data = time.time()
+        self._next_sleep = time.time() + 60
+        logger.info('Sending HELLO with identifier %s' % self._node._identifier)
+        self._node.send('NOTIFY',
+                        'HELLO: identifier: %s, version: 0.99' %
+                        self._node._identifier)
 
     def request(self, cmd, nxt):
         logger.info('got %s %s' % (cmd, str(nxt)))
 
     def run(self):
-        if self._next < time.time():
+        if self._next_sleep < time.time():
+            return AsleepState
+        elif self._next_data < time.time():
             data = """BATTERY: V_100:0, Solar_uA:14929,32
 BOARD_TEMP: 28.36ef0a080000ca,3143,34
 HEAD_TEMP: 28.a84102050000f5,2956,33
@@ -163,10 +173,11 @@ PH: 7095,8
 EC: 94729, TDS: 51154, PSS: 0,29
 DO: 597, %S: 0,14"""
             self._node.send('DATA', data)
-            self._next = time.time() + 60
+            self._next_data = time.time() + 10
         else:
             self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
                             self._node._identifier)
+
 
 
 class MaintenanceState(State):
