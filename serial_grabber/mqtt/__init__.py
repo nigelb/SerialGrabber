@@ -206,7 +206,7 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         return self.queue_to_node(node_identifier, payload)
 
     @auto_disconnect
-    def send_data(self, stream_id, timestamp, data):
+    def send_data(self, stream_id, timestamp, data ):
         """
         Format and send a data payload for the given data.
         """
@@ -231,17 +231,18 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
     @auto_disconnect
-    def send_response(self, stream_id, timestamp, response_type, payload):
-        payload = {
+    def send_response(self, stream_id, timestamp, response_type, payload, tx_id=-1):
+        response = {
             "response": response_type,
             "timestamp": timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             "platformIdentifier": self._platform_identifier,
+            "tx_id": tx_id,
             "body": payload
         }
         if stream_id is not None:
-            payload["nodeIdentifier"] = self._node_identifiers[stream_id]
-        self._state_machine.handle_response(payload)
-        return self._mqtt.publish(self._master_topic, json.dumps(payload))
+            response["nodeIdentifier"] = self._node_identifiers[stream_id]
+        self._state_machine.handle_response(response)
+        return self._mqtt.publish(self._master_topic, json.dumps(response))
 
     def send_to_node(self, node_identifier, payload, response_id):
         """
@@ -365,13 +366,14 @@ class MqttProcessor(Processor):
         """
 
         lines = entry['data']['payload'].split('\n')
+        message_type, tx_id = parse_message_type(lines[1])
         stream_id = entry['data']['stream_id']
         ts = datetime.datetime.utcfromtimestamp(entry['data']['time']/1000.0)
         if self._commander is None:
             self._commander = PipeProxy(self.paramaters['mqtt_pipe'][1])
 
         node_identifier = self._commander.get_node_identifier(stream_id)
-        if lines[1] == 'NOTIFY':
+        if message_type == 'NOTIFY':
             notify_type, data = parse_notify(lines[2])
             if notify_type == 'HELLO':
                 # Update the current identifier
@@ -381,14 +383,14 @@ class MqttProcessor(Processor):
                 entry['data']['stream_id'], ts, notify_type.lower(), data)
             return rc == mqtt.MQTT_ERR_SUCCESS
 
-        elif lines[1] == 'RESPONSE':
+        elif message_type == 'RESPONSE':
             response_type, data = parse_notify(lines[2])
             rc, mid = self._commander.send_response(
-                entry['data']['stream_id'], ts, response_type.lower(), data)
+                entry['data']['stream_id'], ts, response_type.lower(), data, tx_id)
 
             return rc == mqtt.MQTT_ERR_SUCCESS
 
-        elif self._send_data and lines[1] == 'DATA':
+        elif self._send_data and message_type == 'DATA':
             # send data
             stream_id = entry['data']['stream_id']
             data = entry['data']['payload']
@@ -398,7 +400,7 @@ class MqttProcessor(Processor):
             except Exception as e:
                 print e
 
-        elif self._send_data and lines[1] == 'RETRIEVE':
+        elif self._send_data and message_type == 'RETRIEVE':
             notify_type, data = parse_notify(lines[2])
             # Request next queued message for node
             if notify_type == "MESSAGE":
@@ -429,3 +431,12 @@ def parse_notify(payload):
         p = p.split(':')
         data[p[0].strip()] = p[1].strip()
     return notify_type, data
+
+def parse_message_type(line):
+    msg = ""
+    val = -1
+    vals = line.split(" ")
+    msg = vals[0]
+    if len(vals) == 2:
+        val = vals[1]
+    return msg, val
