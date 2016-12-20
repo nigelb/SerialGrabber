@@ -92,7 +92,7 @@ class SerialCommandStream:
         self.pos = 0
 
 
-    def write(self, data, response_id='\x01'):
+    def write(self, data, stream_id='default', response_id='\x01'):
         # print data, self.stream
         self.stream.write(data.encode("ascii"))
 
