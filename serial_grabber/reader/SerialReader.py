@@ -19,7 +19,9 @@
 
 import logging
 import serial, os, os.path, time
-from multiprocessing import Pipe
+from multiprocessing import Pipe, Lock
+
+import struct
 
 from serial_grabber.pipe_proxy import expose_object
 from serial_grabber import poster_exceptions
@@ -85,7 +87,18 @@ class SerialReader(Reader, MultiProcessParameterFactory):
 class SerialCommandStream:
     def __init__(self, stream):
         self.stream = stream
+        self.lock = Lock()
+        self.ids = range(10, 256)
+        self.pos = 0
+
 
     def write(self, data, stream_id="default"):
         # print data, self.stream
         self.stream.write(data.encode("ascii"))
+
+    def get_next_idenifier(self):
+        self.lock.acquire()
+        ps = self.pos
+        self.pos = (self.pos + 1) % len(self.ids)
+        self.lock.release()
+        return struct.pack("B", self.ids[ps])
