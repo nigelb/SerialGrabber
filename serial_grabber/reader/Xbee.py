@@ -161,7 +161,7 @@ class MessageVerifier:
 
 class ResponseHandler:
     def handle_response_frame(self, frame):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
@@ -252,6 +252,9 @@ def populate_parameters(self, paramaters):
         paramaters.command_type = XBeeStream
 
 class XBeeStream:
+
+    auto_ack = False
+
     def __init__(self, reader):
         self.reader = reader
         self.lock = Lock()

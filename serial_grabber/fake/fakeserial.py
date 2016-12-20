@@ -116,14 +116,14 @@ class State(object):
         Send an event to the state machine.
         :returns:State or None:perform a state transition
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def run(self):
         """
         The method that will be run periodically
         :returns:State or None:perform a state transition
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class AsleepState(State):
