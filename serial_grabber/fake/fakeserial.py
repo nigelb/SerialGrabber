@@ -4,9 +4,6 @@ import time
 from serial_grabber.extractors import TransactionExtractor
 import logging
 
-MODE_LIVE = 'live'
-MODE_MAINTENANCE = 'maintenance'
-
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +66,6 @@ END
         self._state = WakeUpState(self)
         try:
             while True:
-
                 d = ' '
                 while len(d) > 0:
                     d = self._con.read()
@@ -153,9 +149,8 @@ class LiveState(State):
         logger.info('got %s %s' % (cmd, str(nxt)))
 
     def run(self):
-        if self._next > time.time():
-            return
-        data = """BATTERY: V_100:0, Solar_uA:14929,32
+        if self._next < time.time():
+            data = """BATTERY: V_100:0, Solar_uA:14929,32
 BOARD_TEMP: 28.36ef0a080000ca,3143,34
 HEAD_TEMP: 28.a84102050000f5,2956,33
 INERTIAL: AX:-1263,AY:8582,AZ:-569,GZ:146,GY:358,GZ:682,55
@@ -167,8 +162,11 @@ GPS: FIX NOT_FOUND,18
 PH: 7095,8
 EC: 94729, TDS: 51154, PSS: 0,29
 DO: 597, %S: 0,14"""
-        self._node.send('DATA', data)
-        self._next = time.time() + 60
+            self._node.send('DATA', data)
+            self._next = time.time() + 60
+        else:
+            self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
+                            self._node._identifier)
 
 
 class MaintenanceState(State):
