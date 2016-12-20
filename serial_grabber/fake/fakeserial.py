@@ -31,7 +31,7 @@ class FakeSerial(object):
         lines = payload.split('\n')
         line = lines[1]
         parts = line.split(' ')
-        self._transition(self._state.event(parts[0], parts[1:]))
+        self._transition(self._state.request(parts[0], parts[1:]))
 
     def send(self, message_type, data, retry=5):
         """
