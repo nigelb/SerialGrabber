@@ -128,7 +128,7 @@ class State(object):
 
 class AsleepState(State):
     def init(self):
-        self._next = time.time() + 60
+        self._next = time.time() + 10
 
     def run(self):
         """
@@ -177,7 +177,6 @@ DO: 597, %S: 0,14"""
         else:
             self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
                             self._node._identifier)
-
 
 
 class MaintenanceState(State):

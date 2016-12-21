@@ -282,11 +282,9 @@ END""" % payload
             with open(os.path.join(SerialGrabber_Paths.node_map_dir, node_identifier), 'wb') as np:
                 np.write(stream_id)
 
-
     def asemble_message(self, node_identifier, payload):
         if payload['request'] ==  'mode':
             return 'MODE {tx_id}\nMODE {mode}' .format(**payload)
-
 
     def send_next_queued_message(self, node_identifier):
         """
@@ -301,17 +299,20 @@ END""" % payload
             message = self.asemble_message(node_identifier, entry['payload'])
             id = self._command_stream.get_next_idenifier()
             self.send_to_node(node_identifier, message, id)
-            self.response_lock.acquire()
-            if id in self.responses:
+
+            cache_file = entries[order[0]]
+            if self._command_stream.auto_ack:
+                self._message_cache.decache(node_identifier, cache_file,
+                                            type="messages")
+            else:
+                self.response_lock.acquire()
+                if id in self.responses:
+                    self.response_lock.release()
+                    raise Exception("Response ID already in use: %i" % id)
+                self.responses[id] = [node_identifier, cache_file, time.time()]
                 self.response_lock.release()
-                raise Exception("Response ID already in use: %i" % id)
-            self.responses[id] = [node_identifier, entries[order[0]], time.time()]
-            self.response_lock.release()
         else:
             self.send_to_node(node_identifier, "QUEUE %s\nLENGTH 0" % int(time.time()*1000), '\x01')
-
-
-
 
     def populate_parameters(self, paramaters):
         paramaters["mqtt_connected"] = self.connected
@@ -321,7 +322,6 @@ END""" % payload
         p = Pipe()
         self.response_pipe = p[0]
         paramaters.send_response_observers.append(p[1])
-
 
     def queue_to_node(self, node_identifier, payload):
         try:
@@ -348,6 +348,7 @@ class MqttProcessor(Processor):
     should be dealt with by another processor
     """
     logger = logging.getLogger('MqttProcessor')
+    auto_ack = True
 
     def __init__(self, mqtt_commander, send_data):
         self._commander = None
