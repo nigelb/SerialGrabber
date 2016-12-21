@@ -256,23 +256,32 @@ class PH_Calibration(Calibration):
         mode_response = self.wait_for_response(tx_id)
         print "Node has entered calibrate mode: ", mode_response
         tx_id = int(time.time()*1000)
-        cmd = {'request': 'calibrate', 'sensor': 'ph', 'tx_id': tx_id, 'points': len(self.calibrate)}
+        cmd = {
+            'request': 'calibrate',
+            'tx_id': tx_id,
+            'body': {
+                'sensor': 'ph',
+                'points': len(self.calibrate)
+            }
+        }
         self.client._send_to_node("Enter calibrate mode", self.node_identifier, cmd)
         ph_calibrate_response = self.wait_for_response(tx_id)
-        print "Node has entered {points}s point PH calibration mode: ".format(**cmd)
+        print "Node has entered {body[points]}s point PH calibration mode: ".format(**cmd)
         count = 1
         for idx in range(len(self.calibrate)):
             slot, fluid_value, temp_compensation = calibrate_item = self.calibrate[idx]
             tx_id = int(time.time()*1000)
             cmd = {
                 'request': 'calibrate',
-                'sensor': 'ph',
                 'tx_id': tx_id,
-                'points': len(self.calibrate),
-                'phase': idx,
-                'slot': slot,
-                'fluid_value': fluid_value,
-                'temperature_compensation': temp_compensation
+                'body': {
+                    'sensor': 'ph',
+                    'points': len(self.calibrate),
+                    'phase': idx,
+                    'slot': slot,
+                    'fluid_value': fluid_value,
+                    'temperature_compensation': temp_compensation
+                }
             }
             self.client._send_to_node("Node has entered PH phase {slot}s".format(slot=slot), self.node_identifier, cmd)
             phase_response = self.wait_for_response(tx_id)
@@ -284,12 +293,14 @@ class PH_Calibration(Calibration):
             tx_id = int(time.time()*1000)
             cmd = {
                 'request': 'calibrate',
-                'sensor': 'ph',
                 'tx_id': tx_id,
-                'points': len(self.calibrate),
-                'phase': idx,
-                'slot': slot,
-                'command': 'accept'
+                'body': {
+                    'sensor': 'ph',
+                    'points': len(self.calibrate),
+                    'phase': idx,
+                    'slot': slot,
+                    'command': 'accept'
+                }
             }
             self.client._send_to_node("Send accept command for slot {slot}s".format(slot=slot), self.node_identifier, cmd)
             accept_response = self.wait_for_response(tx_id)

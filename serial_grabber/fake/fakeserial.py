@@ -126,6 +126,29 @@ class State(object):
         """
         raise NotImplementedError()
 
+    def send_mode_response(self, mode):
+        """
+        Sends a mode response, using the tx_id if it was set on the state data
+        """
+        tx_id = ''
+        if 'tx_id' in self._data:
+            tx_id = self._data['tx_id']
+
+        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode)
+
+    def send_cmd_response(self, cmd, tx_id=None):
+        """
+        Acknowledge the request message
+        """
+        if tx_id is None and 'tx_id' in self._data:
+            tx_id = self._data['tx_id']
+
+        self._node.send('RESPONSE ' + tx_id, "%s:" % (cmd.upper(),))
+
+    def request_next_message(self):
+        self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
+                        self._node._identifier)
+
 
 class AsleepState(State):
     def init(self):
@@ -147,24 +170,21 @@ class LiveState(State):
     In Live state we send data periodically
     """
     def init(self):
-        tx_id = None
-        if 'tx_id' in self._data:
-            tx_id = self._data['tx_id']
-
         self._next_data = time.time()
         self._next_sleep = time.time() + 60
-        logger.info('Sending HELLO with identifier %s' % self._node._identifier)
-        if tx_id is None:
+        if 'tx_id' not in self._data:
+            logger.info('Sending HELLO with identifier %s' %
+                        self._node._identifier)
             self._node.send('NOTIFY',
                             'HELLO: identifier: %s, version: 0.99' %
                             self._node._identifier)
         else:
-            self._node.send('RESPONSE ' + tx_id, "MODE: mode: live")
+            self.send_mode_response('live')
 
     def request(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
         if cmd == 'MODE':
-            _, target = args.split(' ')
+            target = args
             if target == 'maintenance':
                 return MaintenanceState, {'tx_id': tx_id}
 
@@ -187,31 +207,75 @@ DO: 597, %S: 0,14"""
             self._node.send('DATA', data)
             self._next_data = time.time() + 10
         else:
-            self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
-                            self._node._identifier)
+            self.request_next_message()
 
 
 class MaintenanceState(State):
     def init(self):
-        tx_id = ''
-        if 'tx_id' in self._data:
-            tx_id = self._data['tx_id']
-
         self._timeout = time.time() + 60
-        self._node.send('RESPONSE ' + tx_id, "MODE: mode: maintenance")
+        self.send_mode_response('maintenance')
 
     def request(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
         if cmd == 'MODE':
-            _, target = args.split(' ')
+            target = args
             if target == 'live':
                 return LiveState, {'tx_id': tx_id}
             elif target == 'calibrate':
                 return CalibrateState, {'tx_id': tx_id}
 
     def run(self):
-        self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
-                        self._node._identifier)
+        self.request_next_message()
+
+        if self._timeout > time.time():
+            return
+        return LiveState
+
+
+class CalibrateState(State):
+    def init(self):
+        self._timeout = time.time() + 60
+        self.send_mode_response('calibrate')
+
+    def request(self, cmd, tx_id, args):
+        logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        if cmd == 'MODE':
+            target = args
+            if target == 'live':
+                return LiveState, {'tx_id': tx_id}
+            elif target == 'maintenance':
+                return MaintenanceState, {'tx_id': tx_id}
+        elif cmd == 'CALIBRATE':
+            args = args.split(',')
+            data = dict([p.split(':') for p in args])
+            if data['sensor'] == 'ph':
+                return CalibratePh, {'tx_id': tx_id, 'params': data}
+
+    def run(self):
+        self.request_next_message()
+
+        if self._timeout > time.time():
+            return
+        return LiveState
+
+
+class CalibratePh(State):
+    """
+    pH calibration state, which will handle 1, 2 and 3 point calibrations.
+    """
+    def init(self):
+        self._timeout = time.time() + 60
+        self.send_cmd_response('calibrate')
+
+    def request(self, cmd, tx_id, args):
+        logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        if cmd == 'CALIBRATE':
+            args = args.split(',')
+            data = dict([p.split(':') for p in args])
+
+    def run(self):
+        self.request_next_message()
+
         if self._timeout > time.time():
             return
         return LiveState

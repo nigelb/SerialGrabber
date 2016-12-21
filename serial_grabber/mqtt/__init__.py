@@ -48,6 +48,7 @@ def auto_disconnect(func):
         return (rc, mid)
     return func_wrapper
 
+
 class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
 
     logger = logging.getLogger("MqttCommander")
@@ -64,7 +65,6 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         self._message_cache = message_cache
         if message_cache is None:
             self._message_cache = SerialGrabber_Storage.message_cache
-
 
         self._mqtt_host = host
         self._mqtt_port = port
@@ -202,7 +202,16 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
             return
         _, node_identifier = topic.split('/')
 
-        # return self.send_to_node(node_identifier, 'MODE %s' % payload['mode'])
+        return self.queue_to_node(node_identifier, payload)
+
+    def _cmd_calibrate(self, topic, payload, direct):
+        """
+        A calibrate command.
+        """
+        if not direct:
+            self.logger.warn("A non-direct mode change was issued, ignoring")
+            return
+        _, node_identifier = topic.split('/')
         return self.queue_to_node(node_identifier, payload)
 
     @auto_disconnect
@@ -283,8 +292,13 @@ END""" % payload
                 np.write(stream_id)
 
     def asemble_message(self, node_identifier, payload):
-        if payload['request'] ==  'mode':
-            return 'MODE {tx_id}\nMODE {mode}' .format(**payload)
+        if payload['request'] == 'mode':
+            return 'MODE {tx_id}\n{mode}' .format(**payload)
+        elif payload['request'] == 'calibrate':
+            ret = 'CALIBRATE {tx_id}\n'.format(**payload)
+            params = [k + ':' + str(payload['body'][k]) for k in payload['body']]
+            ret += ','.join(params)
+            return ret
 
     def send_next_queued_message(self, node_identifier):
         """
@@ -326,7 +340,6 @@ END""" % payload
     def queue_to_node(self, node_identifier, payload):
         try:
             payload = self._message_cache.make_payload(payload, node_identifier)
-            print payload
             self._message_cache.cache(node_identifier, payload)
         except Exception as e:
             self.logger.error(e)
@@ -343,9 +356,9 @@ END""" % payload
 
 class MqttProcessor(Processor):
     """
-    This processor intercepts response messages and passes them to the MQTT
-    Commander to send on the message bus. Other messages are ignored, and
-    should be dealt with by another processor
+    This processor intercepts response messages from the node and passes them
+    to the MQTT Commander to send on the message bus. Other messages are
+    ignored, and should be dealt with by another processor
     """
     logger = logging.getLogger('MqttProcessor')
     auto_ack = True
@@ -428,10 +441,14 @@ def parse_notify(payload):
     ix = payload.find(':')
     notify_type = payload[:ix]
     data = {}
-    for p in payload[ix + 1:].split(','):
-        p = p.split(':')
-        data[p[0].strip()] = p[1].strip()
+
+    args = payload[ix + 1:].strip()
+    if len(args) > 0:
+        for p in args.split(','):
+            p = p.split(':')
+            data[p[0].strip()] = p[1].strip()
     return notify_type, data
+
 
 def parse_message_type(line):
     msg = ""
