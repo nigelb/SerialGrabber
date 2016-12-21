@@ -3,6 +3,7 @@
 import time
 from serial_grabber.extractors import TransactionExtractor
 import logging
+import random
 
 
 logger = logging.getLogger(__name__)
@@ -136,14 +137,16 @@ class State(object):
 
         self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode)
 
-    def send_cmd_response(self, cmd, tx_id=None):
+    def send_cmd_response(self, cmd, params={}, tx_id=None):
         """
         Acknowledge the request message
         """
         if tx_id is None and 'tx_id' in self._data:
             tx_id = self._data['tx_id']
 
-        self._node.send('RESPONSE ' + tx_id, "%s:" % (cmd.upper(),))
+        params = ','.join(['%s:%s' % (k, params[k]) for k in params])
+
+        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params))
 
     def request_next_message(self):
         self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
@@ -264,6 +267,7 @@ class CalibratePh(State):
     pH calibration state, which will handle 1, 2 and 3 point calibrations.
     """
     def init(self):
+        self._calibrate_tx_id = None
         self._timeout = time.time() + 60
         self.send_cmd_response('calibrate')
 
@@ -272,10 +276,33 @@ class CalibratePh(State):
         if cmd == 'CALIBRATE':
             args = args.split(',')
             data = dict([p.split(':') for p in args])
+            if 'command' in data and data['command'] == 'accept':
+                self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                                     'phase': self._phase,
+                                                     'slot': self._slot,
+                                                     'command': 'accept'},
+                                        tx_id=tx_id)
+                # Completed so return to calibrate state
+                return CalibrateState
+            else:
+                # This will start the calibrations
+                self._calibrate_tx_id = tx_id
+                self._sensor = 'ph'
+                self._phase = data['phase']
+                self._slot = data['slot']
+                self._value = float(data['fluid_value'])
 
     def run(self):
         self.request_next_message()
+        if self._calibrate_tx_id is not None:
+            self._send_reading()
+        elif self._timeout < time.time():
+            return LiveState
 
-        if self._timeout > time.time():
-            return
-        return LiveState
+    def _send_reading(self):
+        v = self._value * (random.randrange(90, 110) / 100.0)
+        self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                             'phase': self._phase,
+                                             'slot': self._slot,
+                                             'value': v},
+                               tx_id=self._calibrate_tx_id)
