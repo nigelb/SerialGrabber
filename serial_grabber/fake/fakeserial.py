@@ -29,9 +29,10 @@ class FakeSerial(object):
 
     def _handle_payload(self, stream_id, payload):
         lines = payload.split('\n')
-        line = lines[1]
-        parts = line.split(' ')
-        self._transition(self._state.request(parts[0], parts[1:]))
+        msg = lines[1]
+        cmd = lines[2]
+        parts = msg.split(' ')
+        self._transition(self._state.request(parts[0], parts[1], cmd))
 
     def send(self, message_type, data, retry=5):
         """
@@ -111,7 +112,7 @@ class State(object):
         Anything that needs to be done on entry to this state
         """
 
-    def request(self, cmd, *args, **kwargs):
+    def request(self, cmd, tx_id, *args, **kwargs):
         """
         Send an event to the state machine.
         :returns:State or None:perform a state transition
@@ -146,15 +147,26 @@ class LiveState(State):
     In Live state we send data periodically
     """
     def init(self):
+        tx_id = None
+        if 'tx_id' in self._data:
+            tx_id = self._data['tx_id']
+
         self._next_data = time.time()
         self._next_sleep = time.time() + 60
         logger.info('Sending HELLO with identifier %s' % self._node._identifier)
-        self._node.send('NOTIFY',
-                        'HELLO: identifier: %s, version: 0.99' %
-                        self._node._identifier)
+        if tx_id is None:
+            self._node.send('NOTIFY',
+                            'HELLO: identifier: %s, version: 0.99' %
+                            self._node._identifier)
+        else:
+            self._node.send('RESPONSE ' + tx_id, "MODE: mode: live")
 
-    def request(self, cmd, nxt):
-        logger.info('got %s %s' % (cmd, str(nxt)))
+    def request(self, cmd, tx_id, args):
+        logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        if cmd == 'MODE':
+            _, target = args.split(' ')
+            if target == 'maintenance':
+                return MaintenanceState, {'tx_id': tx_id}
 
     def run(self):
         if self._next_sleep < time.time():
@@ -181,10 +193,25 @@ DO: 597, %S: 0,14"""
 
 class MaintenanceState(State):
     def init(self):
+        tx_id = ''
+        if 'tx_id' in self._data:
+            tx_id = self._data['tx_id']
+
         self._timeout = time.time() + 60
-        self._node.send('RESPONSE', "MODE: mode: maintenance")
+        self._node.send('RESPONSE ' + tx_id, "MODE: mode: maintenance")
+
+    def request(self, cmd, tx_id, args):
+        logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        if cmd == 'MODE':
+            _, target = args.split(' ')
+            if target == 'live':
+                return LiveState, {'tx_id': tx_id}
+            elif target == 'calibrate':
+                return CalibrateState, {'tx_id': tx_id}
 
     def run(self):
+        self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
+                        self._node._identifier)
         if self._timeout > time.time():
             return
         return LiveState
