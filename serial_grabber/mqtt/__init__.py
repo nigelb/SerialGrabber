@@ -86,7 +86,9 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         self.node_state_lock = Lock()
 
     def load_node_map(self):
-        if hasattr(SerialGrabber_Paths, 'node_map_dir') and os.path.exists(SerialGrabber_Paths.node_map_dir):
+        if hasattr(SerialGrabber_Paths, 'node_map_dir'):
+            if not os.path.exists(SerialGrabber_Paths.node_map_dir):
+                os.makedirs(SerialGrabber_Paths.node_map_dir)
             nodes = os.listdir(SerialGrabber_Paths.node_map_dir)
             nodes.sort()
             for node in nodes:
@@ -386,8 +388,9 @@ class MqttProcessor(Processor):
         ts = datetime.datetime.utcfromtimestamp(entry['data']['time']/1000.0)
         if self._commander is None:
             self._commander = PipeProxy(self.paramaters['mqtt_pipe'][1])
+        if message_type != 'NOTIFY':
+            node_identifier = self._commander.get_node_identifier(stream_id)
 
-        node_identifier = self._commander.get_node_identifier(stream_id)
         if message_type == 'NOTIFY':
             notify_type, data = parse_notify(lines[2])
             if notify_type == 'HELLO':
