@@ -18,6 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #Constants
+from util import config_helper
+
 data = "data"
 url_parameters = "url_parameters"
 timep = "time"
@@ -27,3 +29,8 @@ stream_id = "stream_id"
 binary = "binary"
 current_matcher="current_matcher"
 multiple_uploads="multiple_uploads"
+
+run_types=config_helper({
+    "thread": "thread",
+    "miltiprocessing":"miltiprocessing"
+})

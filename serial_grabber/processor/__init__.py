@@ -43,9 +43,10 @@ class ProcessorManager:
         for termination
         """
         try:
-            register_worker_signal_handler(self.logger)
             self.logger.info("Processor Thread Started: %s"%os.getpid())
-            self.isRunning, self.counter, self.parameters = args
+            self.isRunning, self.counter, self.parameters, register_signal = args
+            if register_signal:
+                register_worker_signal_handler(self.logger)
             self._processor.set_paramaters(self.parameters)
             self.run()
         except BaseException, e:

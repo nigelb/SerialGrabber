@@ -53,9 +53,10 @@ class Reader:
 
     def __call__(self, *args, **kwargs):
         try:
-            register_worker_signal_handler(self.logger)
             self.logger.info("Reader Thread Started: %s"%os.getpid())
-            self.isRunning, self.counter, self.parameters = args
+            self.isRunning, self.counter, self.parameters, register_signal = args
+            if register_signal:
+                register_worker_signal_handler(self.logger)
             self.stream = None
             self.run()
         except BaseException, e:

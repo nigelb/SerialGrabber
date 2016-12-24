@@ -47,12 +47,15 @@ if 'api_responses' in ZigBee.__dict__:
     ZigBee.api_responses[b'\xa5'] = {'name': 'join_notification_status', 'structure': [{'name': 'data', 'len': None}]}
 
 
+def default_packet_filter(packet):
+    return True
+
 class DigiRadioReader(SerialReader):
     logger = logging.getLogger('DigiRadioReader')
 
     def __init__(self, serial_connection,
                  radio_class=ZigBee,
-                 packet_filter=lambda a: True, **kwargs):
+                 packet_filter=default_packet_filter, **kwargs):
         SerialReader.__init__(self, None, 0, serial_connection)
         self.radio_class = radio_class
         self.radio_args = kwargs
@@ -186,7 +189,7 @@ class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
                  serial_connection,
                  message_verifier=MessageVerifier(),
                  radio_class=ZigBee,
-                 packet_filter=lambda a: True,
+                 packet_filter=default_packet_filter,
                  binary=True, **kwargs):
         DigiRadioReader.__init__(self, serial_connection, radio_class,
                                  packet_filter, **kwargs)

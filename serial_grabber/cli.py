@@ -22,11 +22,12 @@ import time
 from SerialGrabber_Storage import storage_cache
 from ctypes import c_int
 from multiprocessing import Process, Queue, Value
+
 from serial_grabber.commander import MultiProcessParameterFactory
 from serial_grabber.util import config_helper
 
 
-from serial_grabber.watchdog import running, counter, Watchdog
+from serial_grabber.watchdog import running, counter, Watchdog, run_types
 
 from serial_grabber.processor import ProcessorManager
 
@@ -71,14 +72,20 @@ def start(logger, reader, processor, command):
         if issubclass(processor.__class__, MultiProcessParameterFactory):
             processor.populate_parameters(params)
 
-        watchdog = Watchdog(isRunning)
+        import SerialGrabber_Settings
+        if 'threading_model' in SerialGrabber_Settings.__dict__:
+            multi_type = SerialGrabber_Settings.threading_model
+        else:
+            multi_type = run_types.thread
+        watchdog = Watchdog(isRunning, multi_type)
+        register_signal = multi_type == run_types.miltiprocessing
 
         if reader:
-            watchdog.start_thread(reader, (isRunning, c, params), "Runner")
+            watchdog.start_thread(reader, (isRunning, c, params, register_signal), "Runner")
         if processor:
-            watchdog.start_thread(ProcessorManager(processor), (isRunning, c, params), "Processor")
+            watchdog.start_thread(ProcessorManager(processor), (isRunning, c, params, register_signal), "Processor")
         if command and reader:
-            watchdog.start_thread(command, (isRunning, c, params), "Commander")
+            watchdog.start_thread(command, (isRunning, c, params, register_signal), "Commander")
         register_handler(isRunning, watchdog, reader, processor, command)
         while isRunning.value == 1:
             time.sleep(1)

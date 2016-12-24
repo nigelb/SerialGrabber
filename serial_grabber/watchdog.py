@@ -20,12 +20,14 @@
 import logging
 import time
 from ctypes import c_int
+from threading import Thread
 
 import SerialGrabber_Settings
 
 from multiprocessing import Process, Queue, Value
 
-from serial_grabber.util import register_worker_signal_handler
+from constants import run_types
+from serial_grabber.util import register_worker_signal_handler, config_helper
 
 
 class running:
@@ -58,7 +60,8 @@ class counter:
 class Watchdog:
     logger = logging.getLogger("Watchdog")
 
-    def __init__(self, isRunning):
+    def __init__(self, isRunning, t_type):
+        self.t_type = t_type
         self.thread_args = {}
         self.threads = {}
         self.isRunning = isRunning
@@ -67,7 +70,11 @@ class Watchdog:
 
     def start_thread(self, func, args, name):
         self.thread_args[func] = args
-        thread = Process(target=func, args=args, name=name)
+        if self.t_type == run_types.thread:
+            thread = Thread(target=func, args=args, name=name)
+        elif self.t_type == run_types.miltiprocessing:
+            thread = Process(target=func, args=args, name=name)
+
         thread.start()
         time.sleep(1)
         self.threads[func] = thread

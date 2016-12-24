@@ -108,9 +108,10 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         for termination, and the command stream
         """
         try:
-            register_worker_signal_handler(self.logger)
             self.logger.info("Commander Thread Started.")
-            self.isRunning, self.counter, self.parameters = args
+            self.isRunning, self.counter, self.parameters, register_signal = args
+            if register_signal:
+                register_worker_signal_handler(self.logger)
             self.load_node_map()
             self.run()
         except BaseException, e:
