@@ -26,6 +26,7 @@ import logging, os, sys
 def main():
     argParse = ArgumentParser(description="Serial Grabber will read the configured serial port and process the data received.")
     argParse.add_argument("--config-dir",metavar="<config_dir>", dest="config_dir", default="/etc/SerialGrabber", action="store", help="The location of the config directory, default: /etc/SerialGrabber")
+    argParse.add_argument("-v", "--verbosity", default=0, action="count", help="increase output verbosity")
     args = argParse.parse_args()
 
     args.config_dir = os.path.abspath(args.config_dir)
@@ -56,7 +57,16 @@ def main():
     log_file =  os.path.join(SerialGrabber_Paths.data_logger_dir, "datalogger.log")
 
 #    logging.basicConfig(format=FORMAT,level=logging.INFO, filename=log_file)
-    logging.basicConfig(format=FORMAT,level=logging.INFO)
+    levels = {
+        0: logging.ERROR,
+        1: logging.WARNING,
+        2: logging.INFO,
+        3: logging.DEBUG,
+        4: logging.NOTSET
+    }
+    if args.verbosity > 4:
+        args.verbosity = 4
+    logging.basicConfig(format=FORMAT,level=levels[args.verbosity])
 
 
 
