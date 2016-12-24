@@ -19,6 +19,7 @@
 import serial
 
 from MqttXBee import XBeeMessageVerifier, XBeeStateMachine
+from constants import run_types
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer, SerialPort
@@ -65,3 +66,5 @@ reader = StreamRadioReader(create_stream, stream,
 logging_processor = IgnoreResultProcessor(LoggingProcessor())
 
 processor = CompositeProcessor([commander.processor, logging_processor])
+
+threading_model = run_types.miltiprocessing

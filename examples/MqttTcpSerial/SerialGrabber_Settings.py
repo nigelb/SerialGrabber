@@ -17,6 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from Verifier import MessageVerifier
+from constants import run_types
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer
@@ -54,3 +55,5 @@ commander = MqttCommander(mqtt_host, mqtt_port, mqtt_auth, send_data=True)
 logging_processor = IgnoreResultProcessor(LoggingProcessor())
 
 processor = CompositeProcessor([commander.processor, logging_processor])
+
+threading_model = run_types.miltiprocessing
