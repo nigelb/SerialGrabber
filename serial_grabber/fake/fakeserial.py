@@ -157,6 +157,9 @@ class AsleepState(State):
     def init(self):
         self._next = time.time() + 10
 
+    def request(self, cmd, tx_id, *args, **kwargs):
+        logger.warn("Received a message while asleep %s" % cmd)
+
     def run(self):
         """
         Send a hello then transition to another state.
