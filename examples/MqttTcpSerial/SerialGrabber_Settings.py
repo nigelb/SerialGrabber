@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 from Verifier import MessageVerifier
-from constants import run_types
+from serial_grabber.constants import run_types
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer
