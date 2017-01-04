@@ -23,7 +23,7 @@ This will create a default configuration in /etc/SerialGrabber:
 Commandline:
 
 	#> serial_grabber --help
-	usage: serial_grabber [-h] [--config-dir <config_dir>]
+	usage: serial_grabber [-h] [--config-dir <config_dir>] [-v]
 
 	Serial Grabber will read the configured serial port and process the data
 	received.
@@ -33,9 +33,16 @@ Commandline:
 	  --config-dir <config_dir>
 	                        The location of the config directory, default:
 	                        /etc/SerialGrabber
+          -v, --verbosity       increase output verbosity
 	
 	
 	#> serial_grabber --config-dir /etc/SerialGrabber
+
+
+Out of the box SerialGrabber is quiet. To increase verbosity add additional `-v` arguments:
+
+
+	#> serial_grabber --config-dir /etc/SerialGrabber -vvv
 
 
 Serial Port Forwarding
