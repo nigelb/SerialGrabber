@@ -379,7 +379,7 @@ class MqttProcessor(Processor):
 
     def process(self, entry):
         """
-        Process the entry and check if it is a response
+        Process the entry from the node and check if it is a response
         """
 
         lines = entry['data']['payload'].split('\n')
