@@ -9,6 +9,14 @@ import random
 logger = logging.getLogger(__name__)
 
 
+def parse_payload(stream_id, payload):
+    lines = payload.split('\n')
+    msg = lines[1]
+    cmd = lines[2]
+    parts = msg.split(' ')
+    return (parts[0], parts[1], cmd)
+
+
 class FakeSerial(object):
     """
     Fake serially connected buoy.
@@ -24,16 +32,9 @@ class FakeSerial(object):
 
     def _setup(self):
         self._con.connect()
-        self._extractor = TransactionExtractor(0, 'BEGIN', 'END',
-                                               self._handle_payload)
-        self._state = None
+        self._extractor = TransactionExtractor(0, 'BEGIN', 'END')
 
-    def _handle_payload(self, stream_id, payload):
-        lines = payload.split('\n')
-        msg = lines[1]
-        cmd = lines[2]
-        parts = msg.split(' ')
-        self._transition(self._state.request(parts[0], parts[1], cmd))
+        self._state = None
 
     def send(self, message_type, data, retry=5):
         """
@@ -68,18 +69,27 @@ END
         self._state = AsleepState(self)
         try:
             while True:
-                d = ' '
-                while len(d) > 0:
-                    d = self._con.read()
-                    if len(d) > 0:
-                        logger.debug("Recieved Data: %s" % d)
-                        self._extractor.write(d)
-
                 self._transition(self._state.run())
                 time.sleep(0.5)
         except KeyboardInterrupt:
             pass
         self._con.close()
+
+    def read_payload(self):
+        """
+        Reads the connection for a complete payload
+        """
+        while True:
+            d = ' '
+            while len(d) > 0:
+                d = self._con.read()
+                if len(d) > 0:
+                    logger.debug("Recieved Data: %s" % d)
+                    output = self._extractor.write(d)
+                    if output is not None:
+                        return parse_payload(output[0], output[1])
+
+            time.sleep(0.5)
 
     def read_ack(self):
         start = time.time()
@@ -113,16 +123,20 @@ class State(object):
         Anything that needs to be done on entry to this state
         """
 
-    def request(self, cmd, tx_id, *args, **kwargs):
+    def process_message(self, cmd, tx_id, *args, **kwargs):
         """
-        Send an event to the state machine.
+        Process a message received from the serial grabber and optionally
+        return a state transition.
+
         :returns:State or None:perform a state transition
         """
         raise NotImplementedError()
 
     def run(self):
         """
-        The method that will be run periodically
+        The method that will be run periodically and is where the state's
+        main loop logic is.
+
         :returns:State or None:perform a state transition
         """
         raise NotImplementedError()
@@ -148,16 +162,20 @@ class State(object):
 
         self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params))
 
-    def request_next_message(self):
+    def process_next_message(self):
         self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
                         self._node._identifier)
+        return self.process_message(*self._node.read_payload())
 
 
 class AsleepState(State):
+    """
+    In the asleep state the node does nothing except wait to wake up.
+    """
     def init(self):
         self._next = time.time() + 10
 
-    def request(self, cmd, tx_id, *args, **kwargs):
+    def process_message(self, cmd, tx_id, *args, **kwargs):
         logger.warn("Received a message while asleep %s" % cmd)
 
     def run(self):
@@ -187,7 +205,7 @@ class LiveState(State):
         else:
             self.send_mode_response('live')
 
-    def request(self, cmd, tx_id, args):
+    def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
         if cmd == 'MODE':
             target = args
@@ -213,7 +231,9 @@ DO: 597, %S: 0,14"""
             self._node.send('DATA', data)
             self._next_data = time.time() + 10
         else:
-            self.request_next_message()
+            transition = self.process_next_message()
+            if transition is not None:
+                return transition
 
 
 class MaintenanceState(State):
@@ -221,7 +241,7 @@ class MaintenanceState(State):
         self._timeout = time.time() + 60
         self.send_mode_response('maintenance')
 
-    def request(self, cmd, tx_id, args):
+    def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
         if cmd == 'MODE':
             target = args
@@ -231,7 +251,9 @@ class MaintenanceState(State):
                 return CalibrateState, {'tx_id': tx_id}
 
     def run(self):
-        self.request_next_message()
+        transition = self.process_next_message()
+        if transition is not None:
+            return transition
 
         if self._timeout > time.time():
             return
@@ -243,8 +265,10 @@ class CalibrateState(State):
         self._timeout = time.time() + 60
         self.send_mode_response('calibrate')
 
-    def request(self, cmd, tx_id, args):
+    def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        self._timeout = time.time() + 60
+
         if cmd == 'MODE':
             target = args
             if target == 'live':
@@ -258,7 +282,9 @@ class CalibrateState(State):
                 return CalibratePh, {'tx_id': tx_id, 'params': data}
 
     def run(self):
-        self.request_next_message()
+        transition = self.process_next_message()
+        if transition is not None:
+            return transition
 
         if self._timeout > time.time():
             return
@@ -274,8 +300,9 @@ class CalibratePh(State):
         self._timeout = time.time() + 60
         self.send_cmd_response('calibrate')
 
-    def request(self, cmd, tx_id, args):
+    def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        self._timeout = time.time() + 60
         if cmd == 'CALIBRATE':
             args = args.split(',')
             data = dict([p.split(':') for p in args])
@@ -284,7 +311,7 @@ class CalibratePh(State):
                                                      'phase': self._phase,
                                                      'slot': self._slot,
                                                      'command': 'accept'},
-                                        tx_id=tx_id)
+                                       tx_id=tx_id)
                 # Completed so return to calibrate state
                 return CalibrateState
             else:
@@ -296,11 +323,15 @@ class CalibratePh(State):
                 self._value = float(data['fluid_value'])
 
     def run(self):
-        self.request_next_message()
+        if self._timeout < time.time():
+            return LiveState
+
         if self._calibrate_tx_id is not None:
             self._send_reading()
-        elif self._timeout < time.time():
-            return LiveState
+
+        transition = self.process_next_message()
+        if transition is not None:
+            return transition
 
     def _send_reading(self):
         v = self._value * (random.randrange(90, 110) / 100.0)
