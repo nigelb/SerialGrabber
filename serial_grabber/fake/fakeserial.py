@@ -312,13 +312,14 @@ class CalibratePh(State):
                                                      'slot': self._slot,
                                                      'command': 'accept'},
                                        tx_id=tx_id)
-                # Completed so return to calibrate state
-                return CalibrateState
+                if (int(data['phase']) + 1) == int(data['points']):
+                    # Completed so return to calibrate state
+                    return CalibrateState
             else:
                 # This will start the calibrations
                 self._calibrate_tx_id = tx_id
                 self._sensor = 'ph'
-                self._phase = data['phase']
+                self._phase = int(data['phase'])
                 self._slot = data['slot']
                 self._value = float(data['fluid_value'])
 
