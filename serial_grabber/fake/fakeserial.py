@@ -315,6 +315,8 @@ class CalibratePh(State):
                 if (int(data['phase']) + 1) == int(data['points']):
                     # Completed so return to calibrate state
                     return CalibrateState
+                else:
+                    self._calibrate_tx_id = None
             else:
                 # This will start the calibrations
                 self._calibrate_tx_id = tx_id
