@@ -225,6 +225,7 @@ class Calibration:
             self.message_lock.acquire()
             if tx_id in self.messages:
                 result = self.messages[tx_id]
+                del self.messages[tx_id]
                 found = True
             self.message_lock.release()
             time.sleep(0.01)
