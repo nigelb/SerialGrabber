@@ -367,7 +367,7 @@ class CalibrateEC(State):
                                                      'slot': self._slot,
                                                      'command': 'accept'},
                                        tx_id=tx_id)
-                if (int(data['phase']) + 1) == int(data['points']):
+                if (int(data['phase'])) == int(data['points']):
                     # Completed so return to calibrate state
                     return CalibrateState
                 else:

@@ -204,22 +204,24 @@ class MqttClient(object):
         self.listen()
 
 
-    def ec_2_point_calibration(self, node_identifier, mid, t_mid, second_point, second_point_ec, second_point_temp):
+    def ec_2_point_calibration(self, node_identifier, k_value, t_dry, high, t_high, low, t_low):
         calibrate = [
-            ["mid", mid, t_mid],
-            [second_point, second_point_ec, second_point_temp],
+            ["dry", 0, t_dry],
+            ["high", high, t_high],
+            ["low", low, t_low]
         ]
-        return self.run_ec_calibration(node_identifier, 2, calibrate)
+        return self.run_ec_calibration(node_identifier, 2, k_value, calibrate)
 
-    def ec_1_point_calibration(self, node_identifier, mid, t_mid):
+    def ec_1_point_calibration(self, node_identifier, k_value, t_dry, first_point, first_point_ec, first_point_temp):
         calibrate = [
-            ["mid", mid, t_mid],
+            ["dry", 0, t_dry],
+            [first_point, first_point_ec, first_point_temp],
         ]
-        return self.run_ec_calibration(node_identifier, 1, calibrate)
+        return self.run_ec_calibration(node_identifier, 1, k_value, calibrate)
 
-    def run_ec_calibration(self, node_identifier, number_of_points, calibrate):
+    def run_ec_calibration(self, node_identifier, number_of_points, k_value, calibrate):
         self.single = False
-        ec_cal = EC_Calibration(node_identifier, number_of_points, calibrate)
+        ec_cal = EC_Calibration(node_identifier, number_of_points, k_value, calibrate)
         calibration_thread = threading.Thread(
             target=ec_cal,
             args=(self._stopping, self),
@@ -301,7 +303,7 @@ class PH_Calibration(Calibration):
         }
         self.client._send_to_node("Enter calibrate mode", self.node_identifier, cmd)
         ph_calibrate_response = self.wait_for_response(tx_id)
-        print "Node has entered {body[points]}s point PH calibration mode: ".format(**cmd)
+        print "Node has entered {body[points]} point PH calibration mode: ".format(**cmd)
         count = 1
         for idx in range(len(self.calibrate)):
             slot, fluid_value, temp_compensation = calibrate_item = self.calibrate[idx]
@@ -318,7 +320,7 @@ class PH_Calibration(Calibration):
                     'temperature_compensation': temp_compensation
                 }
             }
-            self.client._send_to_node("Node has entered PH phase {slot}s".format(slot=slot), self.node_identifier, cmd)
+            self.client._send_to_node("Node has entered PH phase {slot}".format(slot=slot), self.node_identifier, cmd)
             phase_response = self.wait_for_response(tx_id)
             phase_data_response = self.wait_for_response(tx_id)
             phase_data_response = self.wait_for_response(tx_id)
@@ -337,16 +339,17 @@ class PH_Calibration(Calibration):
                     'command': 'accept'
                 }
             }
-            self.client._send_to_node("Send accept command for slot {slot}s".format(slot=slot), self.node_identifier, cmd)
+            self.client._send_to_node("Send accept command for slot {slot}".format(slot=slot), self.node_identifier, cmd)
             accept_response = self.wait_for_response(tx_id)
         tx_id = ''
         calibration_complete_response = self.wait_for_response(tx_id)
 
 
 class EC_Calibration(Calibration):
-    def __init__(self, node_identifier, number_of_points, calibrate):
+    def __init__(self, node_identifier, number_of_points, k_value, calibrate):
         Calibration.__init__(self, node_identifier)
         self.number_of_points = number_of_points
+        self.k_value = k_value
         self.calibrate = calibrate
 
     def run(self):
@@ -362,12 +365,13 @@ class EC_Calibration(Calibration):
             'tx_id': tx_id,
             'body': {
                 'sensor': 'ec',
-                'points': len(self.calibrate)
+                'points': self.number_of_points,
+                'k-value': self.k_value
             }
         }
         self.client._send_to_node("Enter calibrate mode", self.node_identifier, cmd)
         ph_calibrate_response = self.wait_for_response(tx_id)
-        print "Node has entered {body[points]}s point EC calibration mode: ".format(**cmd)
+        print "Node has entered {body[points]} point EC calibration mode: ".format(**cmd)
         count = 1
         for idx in range(len(self.calibrate)):
             slot, fluid_value, temp_compensation = calibrate_item = self.calibrate[idx]
@@ -377,14 +381,17 @@ class EC_Calibration(Calibration):
                 'tx_id': tx_id,
                 'body': {
                     'sensor': 'ec',
-                    'points': len(self.calibrate),
+                    'points': self.number_of_points,
                     'phase': idx,
                     'slot': slot,
                     'fluid_value': fluid_value,
                     'temperature_compensation': temp_compensation
                 }
             }
-            self.client._send_to_node("Node has entered EC phase {slot}s".format(slot=slot), self.node_identifier, cmd)
+            # if fluid_value is not None:
+            #     cmd['body']['fluid_value'] = fluid_value
+
+            self.client._send_to_node("Node has entered EC phase {slot}".format(slot=slot), self.node_identifier, cmd)
             phase_response = self.wait_for_response(tx_id)
             phase_data_response = self.wait_for_response(tx_id)
             phase_data_response = self.wait_for_response(tx_id)
@@ -397,13 +404,13 @@ class EC_Calibration(Calibration):
                 'tx_id': tx_id,
                 'body': {
                     'sensor': 'ec',
-                    'points': len(self.calibrate),
+                    'points': self.number_of_points,
                     'phase': idx,
                     'slot': slot,
                     'command': 'accept'
                 }
             }
-            self.client._send_to_node("Send accept command for slot {slot}s".format(slot=slot), self.node_identifier, cmd)
+            self.client._send_to_node("Send accept command for slot {slot}".format(slot=slot), self.node_identifier, cmd)
             accept_response = self.wait_for_response(tx_id)
         tx_id = ''
         calibration_complete_response = self.wait_for_response(tx_id)
@@ -463,26 +470,30 @@ def main():
 
 
     EC = sensor.add_parser("EC", help="Calibrate a Electrical Conductivity Sensor (Salinity).")
+    EC.add_argument("--k-value", dest="k_value", default=1.0, type=float, help="The probe k-value which could be 0.1, 1 or 10")
     ec_points = EC.add_subparsers(dest="points", help="The number of points of calibration to do")
 
     EC_1 = ec_points.add_parser("1", help="Do a 1 point EC calibration.")
-    EC_1.add_argument("--mid-ec", dest="mid", default=7.0, type=float, help="The EC of the middle calibration solution: 7.0")
-    EC_1.add_argument("--mid-temp", dest="t_mid", default=25.0, type=float, help="The temperature compensation for the middle calibration point: 25.0")
+    EC_1_First_Point = EC_1.add_subparsers(dest="first_point", help="Enter whether the first point will be high or low.")
+
+    EC_1_HIGH = EC_1_First_Point.add_parser("high", help="Enter whether the first point will be higher than 7.0")
+    EC_1_HIGH.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
+    EC_1_HIGH.add_argument("--high-ec", dest="high", default=10.0, type=float, help="The EC of the high calibration solution: 10.0")
+    EC_1_HIGH.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
+
+    EC_1_LOW = EC_1_First_Point.add_parser("low", help="Enter whether the first point will be lower than 7.0")
+    EC_1_LOW.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
+    EC_1_LOW.add_argument("--low-ec", dest="low", default=4.0, type=float, help="The EC of the low calibration solution: 4.0")
+    EC_1_LOW.add_argument("--low-temp", dest="t_low", default=25.0, type=float, help="The temperature compensation for the low calibration point: 25.0")
+
 
     EC_2 = ec_points.add_parser("2", help="Do a 2 point EC calibration.")
-    EC_2_Second_Point = EC_2.add_subparsers(dest="second_point", help="Enter whether the second point will be high or low.")
+    EC_2.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
+    EC_2.add_argument("--low-ec", dest="low", default=4.0, type=float, help="The EC of the low calibration solution: 4.0")
+    EC_2.add_argument("--low-temp", dest="t_low", default=25.0, type=float, help="The temperature compensation for the low calibration point: 25.0")
+    EC_2.add_argument("--high-ec", dest="high", default=10.0, type=float, help="The EC of the high calibration solution: 10.0")
+    EC_2.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
 
-    EC_2_HIGH = EC_2_Second_Point.add_parser("high", help="Enter whether the second point will be higher than 7.0")
-    EC_2_HIGH.add_argument("--mid-ec", dest="mid", default=7.0, type=float, help="The EC of the middle calibration solution: 7.0")
-    EC_2_HIGH.add_argument("--mid-temp", dest="t_mid", default=25.0, type=float, help="The temperature compensation for the middle calibration point: 25.0")
-    EC_2_HIGH.add_argument("--high-ec", dest="high", default=10.0, type=float, help="The EC of the high calibration solution: 10.0")
-    EC_2_HIGH.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
-
-    EC_2_LOW = EC_2_Second_Point.add_parser("low", help="Enter whether the second point will be lower than 7.0")
-    EC_2_LOW.add_argument("--mid-ec", dest="mid", default=7.0, type=float, help="The EC of the middle calibration solution: 7.0")
-    EC_2_LOW.add_argument("--mid-temp", dest="t_mid", default=25.0, type=float, help="The temperature compensation for the middle calibration point: 25.0")
-    EC_2_LOW.add_argument("--low-ec", dest="low", default=4.0, type=float, help="The EC of the low calibration solution: 4.0")
-    EC_2_LOW.add_argument("--low-temp", dest="t_low", default=25.0, type=float, help="The temperature compensation for the low calibration point: 25.0")
 
 
     args = parser.parse_args()
@@ -508,9 +519,12 @@ def main():
                 con.ph_3_point_calibration(args.node_identifier, args.mid, args.t_mid, args.high, args.t_high, args.low, args.t_low)
         if args.sensor == 'EC':
             if args.points == '1':
-                con.ec_1_point_calibration(args.node_identifier, args.mid, args.t_mid)
+                if args.first_point == 'low':
+                    con.ec_1_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.first_point, args.low, args.t_low)
+                elif args.first_point == 'high':
+                    con.ec_1_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.first_point, args.high, args.t_high)
             elif args.points == '2':
-                con.ec_2_point_calibration(args.node_identifier, args.mid, args.t_mid, args.second_point, args.low, args.t_low)
+                con.ec_2_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.high, args.t_high, args.low, args.t_low)
         if args.sensor == 'DO':
             pass
 
