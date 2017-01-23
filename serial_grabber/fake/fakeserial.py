@@ -378,7 +378,10 @@ class CalibrateEC(State):
                 self._sensor = 'ec'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
-                self._value = float(data['fluid_value'])
+                if self._slot == 'dry':
+                    self._value = 1
+                else:
+                    self._value = float(data['fluid_value'])
 
     def run(self):
         if self._timeout < time.time():

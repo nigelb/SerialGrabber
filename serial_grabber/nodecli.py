@@ -206,7 +206,7 @@ class MqttClient(object):
 
     def ec_2_point_calibration(self, node_identifier, k_value, t_dry, high, t_high, low, t_low):
         calibrate = [
-            ["dry", 0, t_dry],
+            ["dry", None, t_dry],
             ["high", high, t_high],
             ["low", low, t_low]
         ]
@@ -214,7 +214,7 @@ class MqttClient(object):
 
     def ec_1_point_calibration(self, node_identifier, k_value, t_dry, first_point, first_point_ec, first_point_temp):
         calibrate = [
-            ["dry", 0, t_dry],
+            ["dry", None, t_dry],
             [first_point, first_point_ec, first_point_temp],
         ]
         return self.run_ec_calibration(node_identifier, 1, k_value, calibrate)
@@ -384,12 +384,11 @@ class EC_Calibration(Calibration):
                     'points': self.number_of_points,
                     'phase': idx,
                     'slot': slot,
-                    'fluid_value': fluid_value,
                     'temperature_compensation': temp_compensation
                 }
             }
-            # if fluid_value is not None:
-            #     cmd['body']['fluid_value'] = fluid_value
+            if fluid_value is not None:
+                cmd['body']['fluid_value'] = fluid_value
 
             self.client._send_to_node("Node has entered EC phase {slot}".format(slot=slot), self.node_identifier, cmd)
             phase_response = self.wait_for_response(tx_id)
