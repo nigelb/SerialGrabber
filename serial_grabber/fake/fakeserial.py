@@ -298,7 +298,11 @@ class CalibratePh(State):
     pH calibration state, which will handle 1, 2 and 3 point calibrations.
     """
     def init(self):
-        self._calibrate_tx_id = None
+        if 'tx_id' in self._data:
+            self._calibrate_init_tx_id = self._data['tx_id']
+        else:
+            self._calibrate_init_tx_id = None
+        self._calibrate_slot_tx_id = None
         self._timeout = time.time() + 60
         self.send_cmd_response('calibrate')
 
@@ -316,12 +320,16 @@ class CalibratePh(State):
                                        tx_id=tx_id)
                 if (int(data['phase']) + 1) == int(data['points']):
                     # Completed so return to calibrate state
+                    self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                                         'points': data['points'],
+                                                         'calibrate_result': 'succeeded'},
+                                           tx_id=self._calibrate_init_tx_id)
                     return CalibrateState
                 else:
-                    self._calibrate_tx_id = None
+                    self._calibrate_slot_tx_id = None
             else:
                 # This will start the calibrations
-                self._calibrate_tx_id = tx_id
+                self._calibrate_slot_tx_id = tx_id
                 self._sensor = 'ph'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
@@ -331,7 +339,7 @@ class CalibratePh(State):
         if self._timeout < time.time():
             return LiveState
 
-        if self._calibrate_tx_id is not None:
+        if self._calibrate_slot_tx_id is not None:
             self._send_reading()
 
         transition = self.process_next_message()
@@ -344,14 +352,18 @@ class CalibratePh(State):
                                              'phase': self._phase,
                                              'slot': self._slot,
                                              'value': v},
-                               tx_id=self._calibrate_tx_id)
+                               tx_id=self._calibrate_slot_tx_id)
 
 class CalibrateEC(State):
     """
     EC calibration state, which will handle 1 and 2 point calibrations.
     """
     def init(self):
-        self._calibrate_tx_id = None
+        if 'tx_id' in self._data:
+            self._calibrate_init_tx_id = self._data['tx_id']
+        else:
+            self._calibrate_init_tx_id = None
+        self._calibrate_slot_tx_id = None
         self._timeout = time.time() + 60
         self.send_cmd_response('calibrate')
 
@@ -369,12 +381,16 @@ class CalibrateEC(State):
                                        tx_id=tx_id)
                 if (int(data['phase'])) == int(data['points']):
                     # Completed so return to calibrate state
+                    self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                                         'points': data['points'],
+                                                         'calibrate_result': 'succeeded'},
+                                           tx_id=self._calibrate_init_tx_id)
                     return CalibrateState
                 else:
-                    self._calibrate_tx_id = None
+                    self._calibrate_slot_tx_id = None
             else:
                 # This will start the calibrations
-                self._calibrate_tx_id = tx_id
+                self._calibrate_slot_tx_id = tx_id
                 self._sensor = 'ec'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
@@ -387,7 +403,7 @@ class CalibrateEC(State):
         if self._timeout < time.time():
             return LiveState
 
-        if self._calibrate_tx_id is not None:
+        if self._calibrate_slot_tx_id is not None:
             self._send_reading()
 
         transition = self.process_next_message()
@@ -400,4 +416,4 @@ class CalibrateEC(State):
                                              'phase': self._phase,
                                              'slot': self._slot,
                                              'value': v},
-                               tx_id=self._calibrate_tx_id)
+                               tx_id=self._calibrate_slot_tx_id)
