@@ -212,10 +212,10 @@ class MqttClient(object):
         ]
         return self.run_ec_calibration(node_identifier, 2, k_value, calibrate)
 
-    def ec_1_point_calibration(self, node_identifier, k_value, t_dry, first_point, first_point_ec, first_point_temp):
+    def ec_1_point_calibration(self, node_identifier, k_value, t_dry, single, t_single):
         calibrate = [
             ["dry", None, t_dry],
-            [first_point, first_point_ec, first_point_temp],
+            ["single", single, t_single]
         ]
         return self.run_ec_calibration(node_identifier, 1, k_value, calibrate)
 
@@ -433,7 +433,7 @@ def main():
     calibrate.add_argument('node_identifier')
     sensor = calibrate.add_subparsers(dest='sensor',  help="The Sensor type to calibrate: PH, DO, EC")
 
-    DO = sensor.add_parser("DO", help="Calibrate a Disolved Oxygenn Sensor")
+    DO = sensor.add_parser("DO", help="Calibrate a Disolved Oxygen Sensor")
 
     PH = sensor.add_parser("PH", help="Calibrate a PH Sensor")
     ph_points = PH.add_subparsers(dest="points", help="The number of points of calibration to do")
@@ -473,18 +473,9 @@ def main():
     ec_points = EC.add_subparsers(dest="points", help="The number of points of calibration to do")
 
     EC_1 = ec_points.add_parser("1", help="Do a 1 point EC calibration.")
-    EC_1_First_Point = EC_1.add_subparsers(dest="first_point", help="Enter whether the first point will be high or low.")
-
-    EC_1_HIGH = EC_1_First_Point.add_parser("high", help="Enter whether the first point will be higher than 7.0")
-    EC_1_HIGH.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
-    EC_1_HIGH.add_argument("--high-ec", dest="high", default=10.0, type=float, help="The EC of the high calibration solution: 10.0")
-    EC_1_HIGH.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
-
-    EC_1_LOW = EC_1_First_Point.add_parser("low", help="Enter whether the first point will be lower than 7.0")
-    EC_1_LOW.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
-    EC_1_LOW.add_argument("--low-ec", dest="low", default=4.0, type=float, help="The EC of the low calibration solution: 4.0")
-    EC_1_LOW.add_argument("--low-temp", dest="t_low", default=25.0, type=float, help="The temperature compensation for the low calibration point: 25.0")
-
+    EC_1.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
+    EC_1.add_argument("--single-ec", dest="single", default=10.0, type=float, help="The EC of the single calibration solution: 10.0")
+    EC_1.add_argument("--single-temp", dest="t_single", default=25.0, type=float, help="The temperature compensation for the single calibration point: 25.0")
 
     EC_2 = ec_points.add_parser("2", help="Do a 2 point EC calibration.")
     EC_2.add_argument("--dry-temp", dest="t_dry", default=25.0, type=float, help="The temperature compensation for the dry calibration point: 25.0")
@@ -518,10 +509,7 @@ def main():
                 con.ph_3_point_calibration(args.node_identifier, args.mid, args.t_mid, args.high, args.t_high, args.low, args.t_low)
         if args.sensor == 'EC':
             if args.points == '1':
-                if args.first_point == 'low':
-                    con.ec_1_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.first_point, args.low, args.t_low)
-                elif args.first_point == 'high':
-                    con.ec_1_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.first_point, args.high, args.t_high)
+                con.ec_1_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.single, args.t_single)
             elif args.points == '2':
                 con.ec_2_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.high, args.t_high, args.low, args.t_low)
         if args.sensor == 'DO':
