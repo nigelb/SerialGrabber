@@ -232,6 +232,31 @@ class MqttClient(object):
         self.listen()
 
 
+    def do_2_point_calibration(self, node_identifier, t_air, p_air, s_air, t_zero, p_zero, s_zero):
+        calibrate = [
+            ["air", t_air, p_air, s_air],
+            ["zero_do", t_zero, p_zero, s_zero]
+        ]
+        return self.run_do_calibration(node_identifier, 2, calibrate)
+
+    def do_1_point_calibration(self, node_identifier, t_air, p_air, s_air):
+        calibrate = [
+            ["air", t_air, p_air, s_air]
+        ]
+        return self.run_do_calibration(node_identifier, 1, calibrate)
+
+    def run_do_calibration(self, node_identifier, number_of_points, calibrate):
+        self.single = False
+        do_cal = DO_Calibration(node_identifier, number_of_points, calibrate)
+        calibration_thread = threading.Thread(
+            target=do_cal,
+            args=(self._stopping, self),
+            name="DO Calibration")
+        calibration_thread.daemon = True
+        calibration_thread.start()
+        self._con.on_message = do_cal.on_message
+        self.listen()
+
 class Calibration:
     def __init__(self, node_identifier):
         self.node_identifier = node_identifier
@@ -414,6 +439,72 @@ class EC_Calibration(Calibration):
         tx_id = ''
         calibration_complete_response = self.wait_for_response(tx_id)
 
+class DO_Calibration(Calibration):
+    def __init__(self, node_identifier, number_of_points, calibrate):
+        Calibration.__init__(self, node_identifier)
+        self.number_of_points = number_of_points
+        self.calibrate = calibrate
+
+    def run(self):
+        tx_id = self.client.cmd_mode(self.node_identifier, "maintenance")
+        mode_response = self.wait_for_response(tx_id)
+        print "Node has entered maintenance mode: ", mode_response
+        tx_id = self.client.cmd_mode(self.node_identifier, "calibrate")
+        mode_response = self.wait_for_response(tx_id)
+        print "Node has entered calibrate mode: ", mode_response
+        tx_id = int(time.time()*1000)
+        cmd = {
+            'request': 'calibrate',
+            'tx_id': tx_id,
+            'body': {
+                'sensor': 'do',
+                'points': self.number_of_points
+            }
+        }
+        self.client._send_to_node("Enter calibrate mode", self.node_identifier, cmd)
+        ph_calibrate_response = self.wait_for_response(tx_id)
+        print "Node has entered {body[points]} point DO calibration mode: ".format(**cmd)
+        count = 1
+        for idx in range(len(self.calibrate)):
+            slot, temp_compensation, pressure, salinity = calibrate_item = self.calibrate[idx]
+            tx_id = int(time.time()*1000)
+            cmd = {
+                'request': 'calibrate',
+                'tx_id': tx_id,
+                'body': {
+                    'sensor': 'do',
+                    'points': self.number_of_points,
+                    'phase': idx,
+                    'slot': slot,
+                    'temperature_compensation': temp_compensation,
+                    'pressure': pressure,
+                    'salinity': salinity
+                }
+            }
+
+            self.client._send_to_node("Node has entered DO phase {slot}".format(slot=slot), self.node_identifier, cmd)
+            phase_response = self.wait_for_response(tx_id)
+            phase_data_response = self.wait_for_response(tx_id)
+            phase_data_response = self.wait_for_response(tx_id)
+            phase_data_response = self.wait_for_response(tx_id)
+            phase_data_response = self.wait_for_response(tx_id)
+            phase_data_response = self.wait_for_response(tx_id)
+            tx_id = int(time.time()*1000)
+            cmd = {
+                'request': 'calibrate',
+                'tx_id': tx_id,
+                'body': {
+                    'sensor': 'do',
+                    'points': self.number_of_points,
+                    'phase': idx,
+                    'slot': slot,
+                    'command': 'accept'
+                }
+            }
+            self.client._send_to_node("Send accept command for slot {slot}".format(slot=slot), self.node_identifier, cmd)
+            accept_response = self.wait_for_response(tx_id)
+        tx_id = ''
+        calibration_complete_response = self.wait_for_response(tx_id)
 
 
 def main():
@@ -432,8 +523,6 @@ def main():
     calibrate = subparsers.add_parser("calibrate", help="Simulate a calibration run")
     calibrate.add_argument('node_identifier')
     sensor = calibrate.add_subparsers(dest='sensor',  help="The Sensor type to calibrate: PH, DO, EC")
-
-    DO = sensor.add_parser("DO", help="Calibrate a Disolved Oxygen Sensor")
 
     PH = sensor.add_parser("PH", help="Calibrate a PH Sensor")
     ph_points = PH.add_subparsers(dest="points", help="The number of points of calibration to do")
@@ -484,6 +573,22 @@ def main():
     EC_2.add_argument("--high-ec", dest="high", default=10.0, type=float, help="The EC of the high calibration solution: 10.0")
     EC_2.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
 
+    DO = sensor.add_parser("DO", help="Calibrate a Disolved Oxygen Sensor")
+    do_points = DO.add_subparsers(dest="points", help="The number of points of calibration to do")
+
+    DO_1 = do_points.add_parser("1", help="Do a 1 point DO calibration.")
+    DO_1.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
+    DO_1.add_argument("--air-pressure", dest="p_air", default=1000.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
+    DO_1.add_argument("--air-salinity", dest="s_air", default=7.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+
+    DO_2 = do_points.add_parser("2", help="Do a 2 point DO calibration.")
+    DO_2.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
+    DO_2.add_argument("--air-pressure", dest="p_air", default=1000.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
+    DO_2.add_argument("--air-salinity", dest="s_air", default=7.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+    DO_2.add_argument("--zero-temp", dest="t_zero", default=25.0, type=float, help="The temperature compensation for the zero-based DO calibration point: 25.0")
+    DO_2.add_argument("--zero-pressure", dest="p_zero", default=1000.0, type=float, help="The pressure compensation for the zero-based DO calibration point: 10.0")
+    DO_2.add_argument("--zero-salinity", dest="s_zero", default=7.0, type=float, help="The salinity compensation for the zero-based DO calibration point: 7.0")
+
 
 
     args = parser.parse_args()
@@ -513,7 +618,10 @@ def main():
             elif args.points == '2':
                 con.ec_2_point_calibration(args.node_identifier, args.k_value, args.t_dry, args.high, args.t_high, args.low, args.t_low)
         if args.sensor == 'DO':
-            pass
+            if args.points == '1':
+                con.do_1_point_calibration(args.node_identifier, args.t_air, args.p_air, args.s_air)
+            elif args.points == '2':
+                con.do_2_point_calibration(args.node_identifier, args.t_air, args.p_air, args.s_air, args.t_zero, args.p_zero, args.s_zero)
 
     return 0
 
