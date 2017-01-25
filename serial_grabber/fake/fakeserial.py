@@ -462,7 +462,10 @@ class CalibrateDO(State):
                 self._sensor = 'do'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
-                self._value = float(data['salinity'])
+                if self._slot == 'air':
+                    self._value = float(8.0)
+                else:
+                    self._value = float(0.0)
 
     def run(self):
         if self._timeout < time.time():
@@ -476,7 +479,7 @@ class CalibrateDO(State):
             return transition
 
     def _send_reading(self):
-        v = self._value * (random.randrange(90, 110) / 100.0)
+        v = self._value + (float(random.randrange(-300, 300)) / 100)
         self.send_cmd_response('calibrate', {'sensor': self._sensor,
                                              'phase': self._phase,
                                              'slot': self._slot,

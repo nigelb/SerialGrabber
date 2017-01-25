@@ -579,15 +579,15 @@ def main():
     DO_1 = do_points.add_parser("1", help="Do a 1 point DO calibration.")
     DO_1.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
     DO_1.add_argument("--air-pressure", dest="p_air", default=1000.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
-    DO_1.add_argument("--air-salinity", dest="s_air", default=7.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+    DO_1.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
 
     DO_2 = do_points.add_parser("2", help="Do a 2 point DO calibration.")
     DO_2.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
     DO_2.add_argument("--air-pressure", dest="p_air", default=1000.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
-    DO_2.add_argument("--air-salinity", dest="s_air", default=7.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+    DO_2.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
     DO_2.add_argument("--zero-temp", dest="t_zero", default=25.0, type=float, help="The temperature compensation for the zero-based DO calibration point: 25.0")
     DO_2.add_argument("--zero-pressure", dest="p_zero", default=1000.0, type=float, help="The pressure compensation for the zero-based DO calibration point: 10.0")
-    DO_2.add_argument("--zero-salinity", dest="s_zero", default=7.0, type=float, help="The salinity compensation for the zero-based DO calibration point: 7.0")
+    DO_2.add_argument("--zero-salinity", dest="s_zero", default=0.0, type=float, help="The salinity compensation for the zero-based DO calibration point: 7.0")
 
 
 
