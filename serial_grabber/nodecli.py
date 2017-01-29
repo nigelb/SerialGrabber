@@ -558,7 +558,7 @@ def main():
 
 
     EC = sensor.add_parser("EC", help="Calibrate a Electrical Conductivity Sensor (Salinity).")
-    EC.add_argument("--k-value", dest="k_value", default=1.0, type=float, help="The probe k-value which could be 0.1, 1 or 10")
+    EC.add_argument("--k-value", dest="k_value", default=1.0, type=float, help="The probe k-value which could be 0.1, 1 or 10: 1.0")
     ec_points = EC.add_subparsers(dest="points", help="The number of points of calibration to do")
 
     EC_1 = ec_points.add_parser("1", help="Do a 1 point EC calibration.")
@@ -578,16 +578,16 @@ def main():
 
     DO_1 = do_points.add_parser("1", help="Do a 1 point DO calibration.")
     DO_1.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
-    DO_1.add_argument("--air-pressure", dest="p_air", default=0.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
-    DO_1.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+    DO_1.add_argument("--air-pressure", dest="p_air", default=101.32, type=float, help="The pressure compensation for the air-based DO calibration point: 101.32")
+    DO_1.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 0.0")
 
     DO_2 = do_points.add_parser("2", help="Do a 2 point DO calibration.")
     DO_2.add_argument("--air-temp", dest="t_air", default=25.0, type=float, help="The temperature compensation for the air-based DO calibration point: 25.0")
-    DO_2.add_argument("--air-pressure", dest="p_air", default=0.0, type=float, help="The pressure compensation for the air-based DO calibration point: 10.0")
-    DO_2.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 7.0")
+    DO_2.add_argument("--air-pressure", dest="p_air", default=101.32, type=float, help="The pressure compensation for the air-based DO calibration point: 101.32")
+    DO_2.add_argument("--air-salinity", dest="s_air", default=0.0, type=float, help="The salinity compensation for the air-based DO calibration point: 0.0")
     DO_2.add_argument("--zero-temp", dest="t_zero", default=25.0, type=float, help="The temperature compensation for the zero-based DO calibration point: 25.0")
-    DO_2.add_argument("--zero-pressure", dest="p_zero", default=0.0, type=float, help="The pressure compensation for the zero-based DO calibration point: 10.0")
-    DO_2.add_argument("--zero-salinity", dest="s_zero", default=0.0, type=float, help="The salinity compensation for the zero-based DO calibration point: 7.0")
+    DO_2.add_argument("--zero-pressure", dest="p_zero", default=101.32, type=float, help="The pressure compensation for the zero-based DO calibration point: 101.32")
+    DO_2.add_argument("--zero-salinity", dest="s_zero", default=0.0, type=float, help="The salinity compensation for the zero-based DO calibration point: 0.0")
 
 
 
