@@ -1,9 +1,11 @@
-# Fake Serially connected buoy
+"""
+Fake Serially connected buoy
+"""
 
 import time
-from serial_grabber.extractors import TransactionExtractor
 import logging
 import random
+from serial_grabber.extractors import TransactionExtractor
 
 
 logger = logging.getLogger(__name__)
@@ -27,8 +29,10 @@ class FakeSerial(object):
     def __init__(self, con, ack="OK", ack_timeout=5):
         self._con = con
         self._identifier = 'default_buoy'
-        self._node_timeout = 60 * 1 # one minute for now
-        self._node_live_sleep_interval = 60 * 1 # one minute for now
+        # timeout period in seconds before node switches back to live mode
+        self._node_timeout = 60 * 1
+        # number of seconds node will sleep in live mode before waking up and checking for messages
+        self._node_live_sleep_interval = 60 * 1
         self._ack_timeout = ack_timeout
         self._ack = ack
 
@@ -91,7 +95,7 @@ END
             while len(d) > 0:
                 d = self._con.read()
                 if len(d) > 0:
-                    logger.debug("Recieved Data: %s" % d)
+                    logger.debug("Received Data: %s" % d)
                     output = self._extractor.write(d)
                     if output is not None:
                         return parse_payload(output[0], output[1])
@@ -251,7 +255,7 @@ DO: 597, %S: 0,14"""
 
 class MaintenanceState(State):
     def init(self):
-        self._timeout = time.time() + self._node._node_timeout;
+        self._timeout = time.time() + self._node._node_timeout
         self.send_mode_response('maintenance')
 
     def process_message(self, cmd, tx_id, args):
@@ -275,12 +279,13 @@ class MaintenanceState(State):
 
 class CalibrateState(State):
     def init(self):
-        self._timeout = time.time() + 60
+        self._timeout = time.time() + self._node._node_timeout
         self.send_mode_response('calibrate')
 
     def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
-        self._timeout = time.time() + 60
+        if cmd != 'QUEUE':
+            self._timeout = time.time() + self._node._node_timeout
 
         if cmd == 'MODE':
             target = args
@@ -318,12 +323,13 @@ class CalibratePh(State):
         else:
             self._calibrate_init_tx_id = None
         self._calibrate_slot_tx_id = None
-        self._timeout = time.time() + 60
+        self._timeout = time.time() + self._node._node_timeout
         self.send_cmd_response('calibrate')
 
     def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
-        self._timeout = time.time() + 60
+        if cmd != 'QUEUE':
+            self._timeout = time.time() + self._node._node_timeout
         if cmd == 'CALIBRATE':
             args = args.split(',')
             data = dict([p.split(':') for p in args])
@@ -379,12 +385,13 @@ class CalibrateEC(State):
         else:
             self._calibrate_init_tx_id = None
         self._calibrate_slot_tx_id = None
-        self._timeout = time.time() + 60
+        self._timeout = time.time() + self._node._node_timeout
         self.send_cmd_response('calibrate')
 
     def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
-        self._timeout = time.time() + 60
+        if cmd != 'QUEUE':
+            self._timeout = time.time() + self._node._node_timeout
         if cmd == 'CALIBRATE':
             args = args.split(',')
             data = dict([p.split(':') for p in args])
@@ -445,12 +452,13 @@ class CalibrateDO(State):
         else:
             self._calibrate_init_tx_id = None
         self._calibrate_slot_tx_id = None
-        self._timeout = time.time() + 60
+        self._timeout = time.time() + self._node._node_timeout
         self.send_cmd_response('calibrate')
 
     def process_message(self, cmd, tx_id, args):
         logger.info('got %s %s %s' % (cmd, str(tx_id), args))
-        self._timeout = time.time() + 60
+        if cmd != 'QUEUE':
+            self._timeout = time.time() + self._node._node_timeout
         if cmd == 'CALIBRATE':
             args = args.split(',')
             data = dict([p.split(':') for p in args])
