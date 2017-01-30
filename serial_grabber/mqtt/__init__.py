@@ -21,6 +21,7 @@ import time
 import logging
 import datetime
 import json
+from datetime import timedelta
 from ctypes import c_int
 from multiprocessing import Value, Pipe, Queue, Lock
 
@@ -243,12 +244,13 @@ class MqttCommander(Commander, MultiProcessParameterFactory, ResponseHandler):
         return self._mqtt.publish(self._master_topic, json.dumps(payload))
 
     @auto_disconnect
-    def send_response(self, stream_id, timestamp, response_type, payload, tx_id=-1):
+    def send_response(self, stream_id, timestamp, response_type, payload, tx_id=-1, timeout=0):
         response = {
             "response": response_type,
             "timestamp": timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             "platformIdentifier": self._platform_identifier,
             "tx_id": tx_id,
+            "timeout": (timestamp + timedelta(seconds=timeout)).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             "body": payload
         }
         if stream_id is not None:
@@ -402,9 +404,10 @@ class MqttProcessor(Processor):
             return rc == mqtt.MQTT_ERR_SUCCESS
 
         elif message_type == 'RESPONSE':
-            response_type, data = parse_notify(lines[2])
+            timeout = parse_timeout(lines[2])
+            response_type, data = parse_notify(lines[3])
             rc, mid = self._commander.send_response(
-                entry['data']['stream_id'], ts, response_type.lower(), data, tx_id)
+                entry['data']['stream_id'], ts, response_type.lower(), data, tx_id, timeout)
 
             return rc == mqtt.MQTT_ERR_SUCCESS
 
@@ -462,3 +465,12 @@ def parse_message_type(line):
     if len(vals) == 2:
         val = vals[1]
     return msg, val
+
+def parse_timeout(payload):
+    """
+    Parse a timeout line into an integer containing the number of seconds until timeout
+    """
+    ix = payload.find(':')
+    timeout = int(payload[ix + 1:].strip())
+    return timeout
+

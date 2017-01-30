@@ -27,6 +27,8 @@ class FakeSerial(object):
     def __init__(self, con, ack="OK", ack_timeout=5):
         self._con = con
         self._identifier = 'default_buoy'
+        self._node_timeout = 60 * 1 # one minute for now
+        self._node_live_sleep_interval = 60 * 1 # one minute for now
         self._ack_timeout = ack_timeout
         self._ack = ack
 
@@ -36,12 +38,17 @@ class FakeSerial(object):
 
         self._state = None
 
-    def send(self, message_type, data, retry=5):
+    def send(self, message_type, data, timeout=None, retry=5):
         """
         Sends the payload wrapped in the appropriate headers
         """
-        payload = """%s
+        if timeout is None:
+            payload = """%s
 %s""" % (message_type, data)
+        else:
+            payload = """%s
+TIMEOUT: %s
+%s""" % (message_type, timeout, data)
         payload_wrapper = """BEGIN
 %s
 %s
@@ -149,7 +156,13 @@ class State(object):
         if 'tx_id' in self._data:
             tx_id = self._data['tx_id']
 
-        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode)
+        if mode=='live':
+            timeout_value = self._node._node_live_sleep_interval
+        else:
+            timeout_value = self._node._node_timeout
+
+        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, timeout_value)
+
 
     def send_cmd_response(self, cmd, params={}, tx_id=None):
         """
@@ -160,7 +173,7 @@ class State(object):
 
         params = ','.join(['%s:%s' % (k, params[k]) for k in params])
 
-        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params))
+        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), self._node._node_timeout)
 
     def process_next_message(self):
         self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
@@ -195,7 +208,7 @@ class LiveState(State):
     """
     def init(self):
         self._next_data = time.time()
-        self._next_sleep = time.time() + 60
+        self._next_sleep = time.time() + self._node._node_live_sleep_interval
         if 'tx_id' not in self._data:
             logger.info('Sending HELLO with identifier %s' %
                         self._node._identifier)
@@ -238,7 +251,7 @@ DO: 597, %S: 0,14"""
 
 class MaintenanceState(State):
     def init(self):
-        self._timeout = time.time() + 60
+        self._timeout = time.time() + self._node._node_timeout;
         self.send_mode_response('maintenance')
 
     def process_message(self, cmd, tx_id, args):
