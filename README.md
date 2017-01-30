@@ -7,7 +7,7 @@ SerialGrabber has the following dependencies:
 
  * pyserial
 
-Instillation:
+Installation:
 	
 	#> python setup.py install
 
