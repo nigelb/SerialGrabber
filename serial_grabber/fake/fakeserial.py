@@ -161,11 +161,12 @@ class State(object):
             tx_id = self._data['tx_id']
 
         if mode=='live':
-            timeout_value = self._node._node_live_sleep_interval
+            # for live mode, show time when we will next wake up and check for messages
+            timeout = self._node._node_live_sleep_interval
         else:
-            timeout_value = self._node._node_timeout
+            timeout = int(self._timeout - time.time())
 
-        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, timeout_value)
+        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, timeout)
 
 
     def send_cmd_response(self, cmd, params={}, tx_id=None):
@@ -177,7 +178,8 @@ class State(object):
 
         params = ','.join(['%s:%s' % (k, params[k]) for k in params])
 
-        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), self._node._node_timeout)
+        timeout = int(self._timeout - time.time())
+        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), timeout)
 
     def process_next_message(self):
         self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
