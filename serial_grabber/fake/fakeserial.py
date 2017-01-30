@@ -253,6 +253,19 @@ DO: 597, %S: 0,14"""
                 return transition
 
 
+class TimeoutState(State):
+    """
+    In Timeout state we send a message and then switch to live state
+    """
+    def init(self):
+        logger.warn('Timed out %s' %
+                        self._node._identifier)
+        self.send_mode_response('live')
+
+    def run(self):
+        return LiveState
+
+
 class MaintenanceState(State):
     def init(self):
         self._timeout = time.time() + self._node._node_timeout
@@ -274,7 +287,7 @@ class MaintenanceState(State):
 
         if self._timeout > time.time():
             return
-        return LiveState
+        return TimeoutState
 
 
 class CalibrateState(State):
@@ -310,7 +323,7 @@ class CalibrateState(State):
 
         if self._timeout > time.time():
             return
-        return LiveState
+        return TimeoutState
 
 
 class CalibratePh(State):
@@ -358,7 +371,7 @@ class CalibratePh(State):
 
     def run(self):
         if self._timeout < time.time():
-            return LiveState
+            return TimeoutState
 
         if self._calibrate_slot_tx_id is not None:
             self._send_reading()
@@ -423,7 +436,7 @@ class CalibrateEC(State):
 
     def run(self):
         if self._timeout < time.time():
-            return LiveState
+            return TimeoutState
 
         if self._calibrate_slot_tx_id is not None:
             self._send_reading()
@@ -490,7 +503,7 @@ class CalibrateDO(State):
 
     def run(self):
         if self._timeout < time.time():
-            return LiveState
+            return TimeoutState
 
         if self._calibrate_slot_tx_id is not None:
             self._send_reading()
