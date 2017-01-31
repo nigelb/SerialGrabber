@@ -326,6 +326,8 @@ class Request:
                 del self.messages[wait_tx_id]
                 found = True
             if 0 in self.messages:
+                result = self.messages[0]
+                del self.messages[0]
                 print "Node has timed out"
                 found = True
             self.message_lock.release()
