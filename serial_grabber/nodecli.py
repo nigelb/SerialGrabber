@@ -164,11 +164,49 @@ class MqttClient(object):
         """
         Issues the mode change command to a node
         """
-        tx_id = int(time.time()*1000)
-        cmd = {'request': 'mode', 'mode': mode, 'tx_id': tx_id}
+        tx_id = self.get_next_tx_id()
         self._send_to_node("Send mode change to %s" % node_identifier,
-                           node_identifier, cmd)
+                           node_identifier, self.build_mode_request(mode, tx_id))
         return tx_id
+
+    def cmd_request(self, node_identifier, request):
+        """
+        Issues the request to a node
+        """
+        self._send_to_node("Send request to %s" % node_identifier,
+                           node_identifier, request)
+
+    def get_next_tx_id(self):
+        """
+        Gets a new transaction id
+        """
+        return int(time.time()*1000)
+
+    def build_mode_request(self, mode, tx_id):
+        """
+        Builds a mode request string
+        """
+        request = {'request': 'mode', 'mode': mode, 'tx_id': tx_id}
+        return request
+
+    def send_request_and_await_response(self, node_identifier, request, tx_id):
+        """
+        Sends the passed in request to the node and waits for a response with a matching traansaction id
+        :param node_identifier:
+        :param request:
+        :param tx_id:
+        :return:
+        """
+        self.single = False
+        request = Request(node_identifier, request, tx_id)
+        request_thread = threading.Thread(
+            target=request,
+            args=(self._stopping, self),
+            name="Request")
+        request_thread.daemon = True
+        request_thread.start()
+        self._con.on_message = request.on_message
+        self.listen()
 
     def ph_3_point_calibration(self, node_identifier, mid, t_mid, high, t_high, low, t_low):
         calibrate = [
@@ -256,6 +294,67 @@ class MqttClient(object):
         calibration_thread.start()
         self._con.on_message = do_cal.on_message
         self.listen()
+
+
+class Request:
+    def __init__(self, node_identifier, request, tx_id):
+        self.node_identifier = node_identifier
+        self.message_lock = threading.Lock()
+        self.messages = {}
+        self.request = request
+        self.tx_id = tx_id
+
+    def __call__(self, *args, **kwargs):
+        self._stopping, self.client = args
+        time.sleep(1)
+        print "Starting Request Thread"
+        self.run()
+        print "Request complete"
+        self._stopping.set()
+
+    def wait_for_response(self, tx_id):
+        found = False
+        result = None
+        if tx_id == '':
+            wait_tx_id = 0
+        else:
+            wait_tx_id = tx_id
+        while not found:
+            self.message_lock.acquire()
+            if wait_tx_id in self.messages:
+                result = self.messages[wait_tx_id]
+                del self.messages[wait_tx_id]
+                found = True
+            if 0 in self.messages:
+                print "Node has timed out"
+                found = True
+            self.message_lock.release()
+            time.sleep(0.01)
+        return result
+
+    def on_message(self, client, userdata, msg):
+        payload = json.loads(msg.payload)
+        if payload["nodeIdentifier"] == self.node_identifier:
+            if 'notify' in payload:
+                print "Node is pinging from Live mode. Your request has probably been ignored."
+            if 'response' in payload:
+                self.message_lock.acquire()
+                if 'tx_id' in payload:
+                    if payload['tx_id'] == '':
+                        tx_id = 0
+                    else:
+                        tx_id = int(payload['tx_id'])
+                else:
+                    tx_id = 0
+                self.messages[tx_id] = payload
+                self.message_lock.release()
+
+    def run(self):
+        self.client.cmd_request(self.node_identifier, self.request)
+        print "Waiting for response with tx_id:", self.tx_id, "..."
+        response = self.wait_for_response(self.tx_id)
+        print "Node responded with: ", response
+
 
 class Calibration:
     def __init__(self, node_identifier):
@@ -600,7 +699,9 @@ def main():
     elif args.action == 'ping':
         con.cmd_ping()
     elif args.action == 'mode':
-        con.cmd_mode(args.node_identifier, args.mode)
+        tx_id = con.get_next_tx_id()
+        request = con.build_mode_request(args.mode, tx_id)
+        con.send_request_and_await_response(args.node_identifier, request, tx_id)
     elif args.action == 'calibrate':
         if args.sensor == 'PH':
             if args.points == '1':
