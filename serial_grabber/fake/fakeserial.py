@@ -181,10 +181,21 @@ class State(object):
         timeout = int(self._timeout - time.time())
         self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), timeout)
 
+    def send_invalid_message_response(self, params={}, tx_id=None):
+        """
+        Acknowledge the request message, even if it is invalid
+        """
+        cmd = 'invalid'
+        self.send_cmd_response(cmd, params, tx_id)
+
     def process_next_message(self):
         self._node.send('RETRIEVE', 'MESSAGE: identifier:%s' %
                         self._node._identifier)
-        return self.process_message(*self._node.read_payload())
+        (cmd, tx_id, args) = self._node.read_payload()
+        transition = self.process_message(cmd, tx_id, args)
+        if transition is None and cmd != 'QUEUE':
+            self.send_invalid_message_response(tx_id = tx_id)
+        return transition
 
 
 class AsleepState(State):
