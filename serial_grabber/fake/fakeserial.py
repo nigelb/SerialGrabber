@@ -114,7 +114,7 @@ END
         """
         Maybe transition
         """
-        if transition is not None:
+        if transition is not None and transition is not PseudoState:
             logger.info("Transitioning to %s" % str(transition))
             if isinstance(transition, type):
                 self._state = transition(self)
@@ -127,6 +127,7 @@ class State(object):
     def __init__(self, node, data={}):
         self._node = node
         self._data = data
+        self._timeout = 0
         self.init()
 
     def init(self):
@@ -152,6 +153,13 @@ class State(object):
         """
         raise NotImplementedError()
 
+    def get_timeout(self):
+        """
+        Get the number of secodns remianing until the statte times out.
+        Override for states that use a different value (eg. LiveState)
+        """
+        return int(self._timeout - time.time())
+
     def send_mode_response(self, mode):
         """
         Sends a mode response, using the tx_id if it was set on the state data
@@ -160,14 +168,7 @@ class State(object):
         if 'tx_id' in self._data:
             tx_id = self._data['tx_id']
 
-        if mode=='live':
-            # for live mode, show time when we will next wake up and check for messages
-            timeout = self._node._node_live_sleep_interval
-        else:
-            timeout = int(self._timeout - time.time())
-
-        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, timeout)
-
+        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, self.get_timeout())
 
     def send_cmd_response(self, cmd, params={}, tx_id=None):
         """
@@ -178,8 +179,7 @@ class State(object):
 
         params = ','.join(['%s:%s' % (k, params[k]) for k in params])
 
-        timeout = int(self._timeout - time.time())
-        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), timeout)
+        self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), self.get_timeout())
 
     def send_invalid_message_response(self, params={}, tx_id=None):
         """
@@ -265,6 +265,12 @@ DO: 597, %S: 0,14"""
             if transition is not None:
                 return transition
 
+    def get_timeout(self):
+        """
+        When we are in LiveState, return the amount of time remianing until we wake up
+        """
+        return int(self._next_sleep - time.time())
+
 
 class TimeoutState(State):
     """
@@ -278,6 +284,15 @@ class TimeoutState(State):
     def run(self):
         return LiveState
 
+class PseudoState(State):
+    """
+    A Pseudo state is used when we are remaining in the same state as before, but internally the state has
+    changed due to the incoming request. ie. This request was valid. Requeuied because the full FSM has not been
+    completely implemented.
+    """
+    def run(self):
+        logger.warn('Cannot transition to PseudoState')
+        raise NotImplementedError()
 
 class MaintenanceState(State):
     def init(self):
@@ -374,6 +389,7 @@ class CalibratePh(State):
                     return CalibrateState
                 else:
                     self._calibrate_slot_tx_id = None
+                    return PseudoState
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
@@ -381,6 +397,7 @@ class CalibratePh(State):
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
                 self._value = float(data['fluid_value'])
+                return PseudoState
 
     def run(self):
         if self._timeout < time.time():
@@ -436,6 +453,7 @@ class CalibrateEC(State):
                     return CalibrateState
                 else:
                     self._calibrate_slot_tx_id = None
+                    return PseudoState
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
@@ -446,6 +464,7 @@ class CalibrateEC(State):
                     self._value = 1
                 else:
                     self._value = float(data['fluid_value'])
+                return PseudoState
 
     def run(self):
         if self._timeout < time.time():
@@ -503,6 +522,7 @@ class CalibrateDO(State):
                     return CalibrateState
                 else:
                     self._calibrate_slot_tx_id = None
+                    return PseudoState
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
@@ -513,6 +533,7 @@ class CalibrateDO(State):
                     self._value = float(8.0)
                 else:
                     self._value = float(0.0)
+                return PseudoState
 
     def run(self):
         if self._timeout < time.time():
