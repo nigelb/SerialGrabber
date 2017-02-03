@@ -180,7 +180,7 @@ class State(object):
         params = ','.join(['%s:%s' % (k, params[k]) for k in params])
 
         if tx_id is None:
-            tx_id = '0'
+            tx_id = ''
 
         self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), self.get_timeout())
 
