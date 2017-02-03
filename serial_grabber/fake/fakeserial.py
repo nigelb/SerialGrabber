@@ -155,7 +155,7 @@ class State(object):
 
     def get_timeout(self):
         """
-        Get the number of secodns remianing until the statte times out.
+        Get the number of seconds remaining until the state times out.
         Override for states that use a different value (eg. LiveState)
         """
         return int(self._timeout - time.time())
@@ -179,6 +179,9 @@ class State(object):
 
         params = ','.join(['%s:%s' % (k, params[k]) for k in params])
 
+        if tx_id is None:
+            tx_id = '0'
+
         self._node.send('RESPONSE ' + tx_id, "%s: %s" % (cmd.upper(), params), self.get_timeout())
 
     def send_invalid_message_response(self, params={}, tx_id=None):
@@ -186,6 +189,13 @@ class State(object):
         Acknowledge the request message, even if it is invalid
         """
         cmd = 'invalid'
+        self.send_cmd_response(cmd, params, tx_id)
+
+    def send_timeout_message_response(self, params={}, tx_id=None):
+        """
+        Send a timeout message
+        """
+        cmd = 'timeout'
         self.send_cmd_response(cmd, params, tx_id)
 
     def process_next_message(self):
@@ -267,7 +277,7 @@ DO: 597, %S: 0,14"""
 
     def get_timeout(self):
         """
-        When we are in LiveState, return the amount of time remianing until we wake up
+        When we are in LiveState, return the amount of time remaining until we wake up
         """
         return int(self._next_sleep - time.time())
 
@@ -279,10 +289,17 @@ class TimeoutState(State):
     def init(self):
         logger.warn('Timed out %s' %
                         self._node._identifier)
+        self.send_timeout_message_response();
         self.send_mode_response('live')
 
     def run(self):
         return LiveState
+
+    def get_timeout(self):
+        """
+        We are already in TimeoutState, so return 0
+        """
+        return 0
 
 class PseudoState(State):
     """
