@@ -360,6 +360,8 @@ class CalibrateState(State):
                 return CalibrateEC, {'tx_id': tx_id, 'params': data}
             if data['sensor'] == 'do':
                 return CalibrateDO, {'tx_id': tx_id, 'params': data}
+            if data['sensor'] == 'tu':
+                return CalibrateTU, {'tx_id': tx_id, 'params': data}
 
     def run(self):
         transition = self.process_next_message()
@@ -565,6 +567,71 @@ class CalibrateDO(State):
 
     def _send_reading(self):
         v = self._value + (float(random.randrange(-300, 300)) / 100)
+        self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                             'phase': self._phase,
+                                             'slot': self._slot,
+                                             'value': v},
+                               tx_id=self._calibrate_slot_tx_id)
+
+
+class CalibrateTU(State):
+    """
+    TU calibration state, which will handle 2 point calibrations.
+    """
+    def init(self):
+        if 'tx_id' in self._data:
+            self._calibrate_init_tx_id = self._data['tx_id']
+        else:
+            self._calibrate_init_tx_id = None
+        self._calibrate_slot_tx_id = None
+        self._timeout = time.time() + self._node._node_timeout
+        self.send_cmd_response('calibrate')
+
+    def process_message(self, cmd, tx_id, args):
+        logger.info('got %s %s %s' % (cmd, str(tx_id), args))
+        if cmd != 'QUEUE':
+            self._timeout = time.time() + self._node._node_timeout
+        if cmd == 'CALIBRATE':
+            args = args.split(',')
+            data = dict([p.split(':') for p in args])
+            if 'command' in data and data['command'] == 'accept':
+                self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                                     'phase': self._phase,
+                                                     'slot': self._slot,
+                                                     'command': 'accept'},
+                                       tx_id=tx_id)
+                if (int(data['phase']) + 1) == int(data['points']):
+                    # Completed so return to calibrate state
+                    self.send_cmd_response('calibrate', {'sensor': self._sensor,
+                                                         'points': data['points'],
+                                                         'calibrate_result': 'succeeded'},
+                                           tx_id=self._calibrate_init_tx_id)
+                    return CalibrateState
+                else:
+                    self._calibrate_slot_tx_id = None
+                    return PseudoState
+            else:
+                # This will start the calibrations
+                self._calibrate_slot_tx_id = tx_id
+                self._sensor = 'do'
+                self._phase = int(data['phase'])
+                self._slot = data['slot']
+                self._value = float(data['turbidity'])
+                return PseudoState
+
+    def run(self):
+        if self._timeout < time.time():
+            return TimeoutState
+
+        if self._calibrate_slot_tx_id is not None:
+            self._send_reading()
+
+        transition = self.process_next_message()
+        if transition is not None:
+            return transition
+
+    def _send_reading(self):
+        v = self._value * (random.randrange(90, 110) / 100.0)
         self.send_cmd_response('calibrate', {'sensor': self._sensor,
                                              'phase': self._phase,
                                              'slot': self._slot,
