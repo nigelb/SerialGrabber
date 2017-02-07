@@ -787,7 +787,7 @@ def main():
     TU_2.add_argument("--low-temp", dest="t_low", default=25.0, type=float, help="The temperature compensation for the low calibration point: 25.0")
     TU_2.add_argument("--low-ntu", dest="ntu_low", default=120.0, type=float, help="The turbidity of the low calibration solution: 120.0")
     TU_2.add_argument("--high-temp", dest="t_high", default=25.0, type=float, help="The temperature compensation for the high calibration point: 25.0")
-    TU_2.add_argument("--high-ntu", dest="ntu_high", default=120.0, type=float, help="The turbidity of the high calibration solution: 1800.0")
+    TU_2.add_argument("--high-ntu", dest="ntu_high", default=1800.0, type=float, help="The turbidity of the high calibration solution: 1800.0")
 
 
     args = parser.parse_args()
