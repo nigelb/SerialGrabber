@@ -435,7 +435,7 @@ class MqttProcessor(Processor):
 
         else:
             self.logger.info("Got unrecognised message: %s" % lines[1])
-            return False
+            return True
 
 
 def parse_notify(payload):

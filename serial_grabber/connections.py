@@ -102,8 +102,10 @@ class SerialPort(SerialConnection):
             time.sleep(2)
             raise ConnectionException("Port: " + self.port + " does not exists.", e)
 
+        #Todo: This stty system call can probably be removed.
         # These are not the droids you are looking for....
-        os.system("/bin/stty -F %s %s" % (self.port, self.baud))
+        if os.path.exists("/bin/stty"):
+            os.system("/bin/stty -F %s %s" % (self.port, self.baud))
 
     def is_connected(self):
         return self.con is not None and self.con.isOpen()

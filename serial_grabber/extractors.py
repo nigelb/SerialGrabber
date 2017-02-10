@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import logging
 
 
 class TransactionExtractor:
@@ -29,6 +30,8 @@ class TransactionExtractor:
     :param callback: The function called with the contents of the transaction
     :type callback: fn(stream_id, emit) or None
     """
+    logger = logging.getLogger("TransactionExtractor")
+
     def __init__(self, stream_id, start_boundary, stop_boundary, callback=None):
         self.stream_id = stream_id
         self.start_boundary = start_boundary
