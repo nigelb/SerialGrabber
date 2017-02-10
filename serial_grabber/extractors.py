@@ -52,7 +52,10 @@ class TransactionExtractor:
             if end > 0:
                 emit = self.buffer[:end + len(self.stop_boundary)]
                 self.buffer = self.buffer[end + len(self.stop_boundary):]
-                self.callback(self.stream_id, emit)
+                if self.callback is not None:
+                    self.callback(self.stream_id, emit)
+                else:
+                    return self.stream_id, emit
             else:
                 break
 

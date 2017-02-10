@@ -19,7 +19,7 @@
 import serial
 
 from MqttXBee import XBeeMessageVerifier, XBeeStateMachine
-from constants import run_types
+from serial_grabber.constants import run_types
 from serial_grabber.extractors import TransactionExtractor
 from serial_grabber.reader.SerialReader import SerialReader
 from serial_grabber.connections import TcpServer, SerialPort
