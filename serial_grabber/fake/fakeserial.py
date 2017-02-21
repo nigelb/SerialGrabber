@@ -431,11 +431,11 @@ class CalibratePh(State):
 
     def _send_reading(self):
         v = self._value * (random.randrange(90, 110) / 100.0)
-        self.send_cmd_response('calibrate', {'sensor': self._sensor,
-                                             'phase': self._phase,
-                                             'slot': self._slot,
-                                             'value': v},
-                               tx_id=self._calibrate_slot_tx_id)
+        response = {'sensor': self._sensor,
+                    'phase': self._phase,
+                    'slot': self._slot}
+        response[self._sensor] = v
+        self.send_cmd_response('calibrate', response, tx_id=self._calibrate_slot_tx_id)
 
 class CalibrateEC(State):
     """
@@ -498,11 +498,11 @@ class CalibrateEC(State):
 
     def _send_reading(self):
         v = self._value * (random.randrange(90, 110) / 100.0)
-        self.send_cmd_response('calibrate', {'sensor': self._sensor,
-                                             'phase': self._phase,
-                                             'slot': self._slot,
-                                             'value': v},
-                               tx_id=self._calibrate_slot_tx_id)
+        response = {'sensor': self._sensor,
+                    'phase': self._phase,
+                    'slot': self._slot}
+        response[self._sensor] = v
+        self.send_cmd_response('calibrate', response, tx_id=self._calibrate_slot_tx_id)
 
 
 
@@ -567,11 +567,11 @@ class CalibrateDO(State):
 
     def _send_reading(self):
         v = self._value + (float(random.randrange(-300, 300)) / 100)
-        self.send_cmd_response('calibrate', {'sensor': self._sensor,
-                                             'phase': self._phase,
-                                             'slot': self._slot,
-                                             'value': v},
-                               tx_id=self._calibrate_slot_tx_id)
+        response = {'sensor': self._sensor,
+                    'phase': self._phase,
+                    'slot': self._slot}
+        response[self._sensor] = v
+        self.send_cmd_response('calibrate', response, tx_id=self._calibrate_slot_tx_id)
 
 
 class CalibrateTU(State):
@@ -632,8 +632,8 @@ class CalibrateTU(State):
 
     def _send_reading(self):
         v = self._value * (random.randrange(90, 110) / 100.0)
-        self.send_cmd_response('calibrate', {'sensor': self._sensor,
-                                             'phase': self._phase,
-                                             'slot': self._slot,
-                                             'value': v},
-                               tx_id=self._calibrate_slot_tx_id)
+        response = {'sensor': self._sensor,
+                    'phase': self._phase,
+                    'slot': self._slot}
+        response[self._sensor] = v
+        self.send_cmd_response('calibrate', response, tx_id=self._calibrate_slot_tx_id)
