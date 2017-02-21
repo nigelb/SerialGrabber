@@ -168,7 +168,7 @@ class State(object):
         if 'tx_id' in self._data:
             tx_id = self._data['tx_id']
 
-        self._node.send('RESPONSE ' + tx_id, "MODE: mode: " + mode, self.get_timeout())
+        self._node.send('RESPONSE ' + tx_id, "MODE: MODE: " + mode, self.get_timeout())
 
     def send_cmd_response(self, cmd, params={}, tx_id=None):
         """
