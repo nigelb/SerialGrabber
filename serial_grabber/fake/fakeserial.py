@@ -412,7 +412,7 @@ class CalibratePh(State):
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
-                self._sensor = 'ph'
+                self._sensor = 'PH'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
                 self._value = float(data['fluid_value'])
@@ -476,7 +476,7 @@ class CalibrateEC(State):
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
-                self._sensor = 'ec'
+                self._sensor = 'EC'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
                 if self._slot == 'dry':
@@ -545,7 +545,7 @@ class CalibrateDO(State):
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
-                self._sensor = 'do'
+                self._sensor = 'DO'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
                 if self._slot == 'air':
@@ -613,7 +613,7 @@ class CalibrateTU(State):
             else:
                 # This will start the calibrations
                 self._calibrate_slot_tx_id = tx_id
-                self._sensor = 'do'
+                self._sensor = 'TU'
                 self._phase = int(data['phase'])
                 self._slot = data['slot']
                 self._value = float(data['turbidity'])
