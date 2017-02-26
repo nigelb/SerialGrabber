@@ -34,6 +34,7 @@ class FileAppenderProcessor(Processor):
             with open(self.output_file, "a+b") as out_f:
                 # print cache_entry.data
                 out_f.write(process_entry.data.payload)
+                out_f.write("\n")
             return True
         except:
             import traceback
