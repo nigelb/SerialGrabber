@@ -67,6 +67,12 @@ class LineTransactionExtractor:
 
     def write(self, data):
         self.buffer += data
-        if data == '\n':
-            self.callback(None, self.buffer)
-            self.buffer = ""
+
+        for sep in ["\r\n", "\r", "\n"]:
+            pos = self.buffer.find(sep)
+            if pos >= 0:
+                split_pos = pos + len(sep)
+                line = self.buffer[:split_pos]
+                self.buffer = self.buffer[split_pos:]
+                self.callback(None, line.strip())
+                break
