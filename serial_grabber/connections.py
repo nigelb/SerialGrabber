@@ -217,8 +217,12 @@ class TcpServer(TcpConnection):
             try:
                 clientsocket, address = self.sock.accept()
                 self.logger.info("Connection from %s" % str(address))
-                self.con = clientsocket
-                self.con.setblocking(False)
+                if self.con is None:
+                    self.con = clientsocket
+                    self.con.setblocking(False)
+                else:
+                    self.logger.error("Already have a TCP connection. Dropping: %s:%s"%address)
+                    clientsocket.close()
             except socket.timeout:
                 self.con = None
 
