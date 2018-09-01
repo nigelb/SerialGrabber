@@ -58,15 +58,17 @@ class SerialReader(Reader, MultiProcessParameterFactory):
                 pass
         if not self.serial_connection.is_connected():
             raise poster_exceptions.ConnectionException(
-                "Could not connect to port: %s" % self.port)
+                "Could not connect to port: %s" % self.serial_connection.port)
 
     def setup(self):
         if self.serial_connection.is_connected():
             self.serial_connection.close()
+            self.stream = None
         self.try_connect()
 
     def close(self):
         self.serial_connection.close()
+        self.serial_connection.shutdown()
         self.stream = None
 
     def read_data(self):
