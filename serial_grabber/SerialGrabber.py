@@ -51,15 +51,20 @@ def main():
 
     #Setup up the logging
     FORMAT = '%(asctime)-15s %(levelname)-7s %(name)s %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
-    log_file =  os.path.join(SerialGrabber_Paths.data_logger_dir, "datalogger.log")
+    if 'log_format' in SerialGrabber_Paths.__dict__:
+        FORMAT = SerialGrabber_Paths.log_format
 
-#    logging.basicConfig(format=FORMAT,level=logging.INFO, filename=log_file)
-    logging.basicConfig(format=FORMAT,level=logging.INFO)
+    if 'log_file' in SerialGrabber_Paths.__dict__:
+        # log_file =  os.path.join(SerialGrabber_Paths.data_logger_dir, "datalogger.log")
 
-#    hdlr = logging.StreamHandler(sys.stderr)
-#    hdlr.setFormatter(logging.Formatter(FORMAT))
-#    hdlr.setLevel(logging.NOTSET)
-#    logging.root.addHandler(hdlr)
+        log_file = SerialGrabber_Paths.log_file
+        logging.basicConfig(format=FORMAT,level=logging.INFO, filename=log_file)
+        hdlr = logging.StreamHandler(sys.stderr)
+        hdlr.setFormatter(logging.Formatter(FORMAT))
+        hdlr.setLevel(logging.NOTSET)
+        logging.root.addHandler(hdlr)
+    else:
+        logging.basicConfig(format=FORMAT,level=logging.INFO)
 
     logger = logging.getLogger("Main")
     commander = None
