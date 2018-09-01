@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+import threading
 
 import serial
 import os
@@ -74,6 +75,11 @@ class SerialConnection:
         """
         raise NotImplementedError("inWaiting is required")
 
+    def shutdown(self):
+        """
+        This method is called when we are shutting down. It should clean up things like internal threads.
+        """
+        raise NotImplementedError("shutdown is required")
 
 class SerialPort(SerialConnection):
     def __init__(self, port, baud, timeout=60, parity=serial.PARITY_NONE,
@@ -151,6 +157,7 @@ class TcpConnection(SerialConnection):
     def close(self):
         self.logger.info("Closing connection")
         if self.con is not None:
+            self.con.shutdown(2)
             self.con.close()
             self.con = None
 
@@ -160,8 +167,15 @@ class TcpConnection(SerialConnection):
         a non None value
         """
         try:
-            c = self.con.recv(size)
-            return c
+            ready_to_read, ready_to_write, in_error = \
+                select.select([self.con,], [self.con,], [self.con], 5)
+            if self.con in ready_to_read:
+                c = self.con.recv(size)
+                if len(c) == 0:
+                    self.close()
+                return c
+            else:
+                return ''
         except socket.error as e:
             if e.errno in SOCKET_ERRORS:
                 return ''
@@ -179,24 +193,71 @@ class TcpConnection(SerialConnection):
 
 
 class TcpServer(TcpConnection):
-    def connect(self):
+
+    def __init__(self, hostname, port):
+        TcpConnection.__init__(self, hostname, port)
+        self.running = True
+        def curry():
+            self.tcp_listen()
+        self.tcp_thread = threading.Thread(target=curry)
+        self.tcp_thread.setDaemon(True)
+        self.tcp_thread.setName("TCPServer Listener")
+
+
+    def tcp_listen(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(30)
+        # self.sock.settimeout(2)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.hostname, self.port))
         self.logger.info("Waiting for connection on %s:%d" %
                          (self.hostname, self.port))
         self.sock.listen(0)
-        clientsocket, address = self.sock.accept()
-        self.logger.info("Connection from %s" % str(address))
-        self.con = clientsocket
-        self.con.setblocking(False)
+        # self.port = "tcp:%s:%s"%(self.hostname, self.lport)
+        while self.running:
+            try:
+                clientsocket, address = self.sock.accept()
+                self.logger.info("Connection from %s" % str(address))
+                self.con = clientsocket
+                self.con.setblocking(False)
+            except socket.timeout:
+                self.con = None
+
+    def read(self, size=1024):
+        """
+        Read from the TCP connection, but but make sure to always return
+        a non None value
+        """
+        if self.con is None: return ''
+        try:
+            ready_to_read, ready_to_write, in_error = \
+                select.select([self.con,], [self.con,], [self.con], 5)
+            if self.con in ready_to_read:
+                c = self.con.recv(size)
+                if len(c) == 0:
+                    self.close()
+                return c
+            else:
+                return ''
+        except socket.error as e:
+            if e.errno in SOCKET_ERRORS:
+                return ''
+            raise e
+
+    def connect(self):
+        if not self.tcp_thread.is_alive():
+            self.tcp_thread.start()
+
+    def is_connected(self):
+        return self.tcp_thread.is_alive()
+
+    def shutdown(self):
+        self.running = False
 
 
 class TcpClient(TcpConnection):
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(30)
+        # self.sock.settimeout(30)
         self.sock.connect((self.hostname, self.port))
         self.sock.setblocking(False)
         self.con = self.sock
