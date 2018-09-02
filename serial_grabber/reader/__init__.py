@@ -96,3 +96,14 @@ class Reader:
         self.counter.read()
         self.counter.update()
 
+
+class MessageVerifier:
+    """
+    Each transaction extracted by the Transaction extractor is passed to verify_message which validates the message and
+    returns a response to be sent back.
+    """
+    def __init__(self, ack=None):
+        self.ack = ack
+
+    def verify_message(self, transaction):
+        return True, self.ack

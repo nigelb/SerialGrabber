@@ -1,6 +1,6 @@
 import logging
 
-from serial_grabber.reader.Xbee import MessageVerifier
+from serial_grabber.reader import MessageVerifier
 
 
 class XBeeMessageVerifier(MessageVerifier):

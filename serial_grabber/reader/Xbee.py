@@ -26,6 +26,7 @@ from SerialGrabber_Storage import storage_archive
 import time
 
 from serial_grabber.commander import MultiProcessParameterFactory
+from serial_grabber.reader import MessageVerifier
 from serial_grabber.reader.SerialReader import SerialReader
 from serial import SerialException
 from xbee import ZigBee
@@ -139,18 +140,6 @@ class PacketRadioReader(DigiRadioReader):
             else:
                 self.logger.info("Packet dropped by packet filter.")
 
-
-class MessageVerifier:
-    """
-    A is passed to a StreamRadioReader. Each transaction extracted by the Transaction extractor is
-    passed to verify_message which validates the message and returns a response to be sent back
-    over the radio.
-    """
-    def __init__(self, ack=None):
-        self.ack = ack
-
-    def verify_message(self, transaction):
-        return True, self.ack
 
 
 class StreamRadioReader(DigiRadioReader, MultiProcessParameterFactory):
