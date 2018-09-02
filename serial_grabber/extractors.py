@@ -58,7 +58,8 @@ class LineTransactionExtractor:
     """
 
     """
-    def __init__(self, callback=None):
+    def __init__(self, stream_id=None, callback=None):
+        self.stream_id = stream_id
         self.buffer = ""
         self.callback = callback
 
@@ -74,5 +75,5 @@ class LineTransactionExtractor:
                 split_pos = pos + len(sep)
                 line = self.buffer[:split_pos]
                 self.buffer = self.buffer[split_pos:]
-                self.callback(None, line.strip())
+                self.callback(self.stream_id, line.strip())
                 break
