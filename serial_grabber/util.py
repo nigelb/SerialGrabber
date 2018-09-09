@@ -18,6 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import datetime, time
 
+import tzlocal as tzlocal
+
 
 class config_helper:
     def __init__(self, config):
@@ -77,16 +79,18 @@ def locate_resource(name):
     return None
 
 
-def get_millis(dt=None):
+def get_millis(dt=None, tz=tzlocal.get_localzone()):
     if dt is None:
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.now(tz=tz)
     return int((time.mktime(dt.timetuple()) * 1000) + (dt.microsecond / 1000))
 
+def get_datetime_millis(ts, tz=tzlocal.get_localzone()):
+    return datetime.datetime.fromtimestamp(float(ts)/1000, tz=tz)
 
 week_period = 1000 * 60 * 60 * 24 * 7
 
-def to_date_format(ts_millis):
-    dt = datetime.datetime.fromtimestamp(ts_millis/1000)
+def to_date_format(ts_millis, tz=tzlocal.get_localzone()):
+    dt = datetime.datetime.fromtimestamp(ts_millis/1000, tz=tz)
     return dt.strftime("%Y_%m_%d-%H_%M_%S")
 
 
