@@ -199,6 +199,9 @@ class TransformProcessor(Processor):
             return self.processor.process(transformed_entry)
         return True
 
+    def can_process(self):
+        return self.processor.can_process()
+
 
 class RollingFilenameProcessor(RollingFilename, Processor):
     """
