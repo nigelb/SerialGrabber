@@ -21,6 +21,15 @@ import logging
 from serial_grabber.processor import ExternalFilenameProcessor
 import os.path
 
+from serial_grabber.transform import IdentityTransform, Transform
+
+
+class CSVTransform(Transform):
+    """
+    Return the row that is to be given to a CSVFileProcessor instead of a modified process_entry
+    """
+    def transform(self, process_entry):
+        raise Exception('Method "transform" not implemented.')
 
 class CSVFileProcessor(ExternalFilenameProcessor):
     """
@@ -32,11 +41,12 @@ class CSVFileProcessor(ExternalFilenameProcessor):
     """
     logger = logging.getLogger("CSVFileProcessor")
 
-    def __init__(self, filename=None, permission=0644, headers=None):
+    def __init__(self, filename=None, permission=0644, headers=None, transform=IdentityTransform()):
         self.field_names = headers
         if filename:
             self.setOutputFileName(filename)
         self.permission = permission
+        self.transform = transform
 
     def setOutputFileName(self, filename):
         ExternalFilenameProcessor.setOutputFileName(self, filename)
@@ -47,9 +57,9 @@ class CSVFileProcessor(ExternalFilenameProcessor):
 
 
     def process(self, process_entry):
+        data = self.transform.transform(process_entry)
         if not self.field_names:
-            print process_entry.data.payload
-            self.field_names = process_entry.data.payload.config_delegate.keys()
+            self.field_names = data.keys()
             self.field_names.sort()
         header = True
         if os.path.exists(self.filename):
@@ -58,7 +68,7 @@ class CSVFileProcessor(ExternalFilenameProcessor):
             existing = DictWriter(csv_file, self.field_names)
             if header:
                 existing.writeheader()
-            existing.writerow(process_entry.data.payload.config_delegate)
+            existing.writerow(data)
         if header:
             os.chmod(self.filename, self.permission)
         return True
