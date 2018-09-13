@@ -87,21 +87,23 @@ def get_millis(dt=None, tz=tzlocal.get_localzone()):
 def get_datetime_millis(ts, tz=tzlocal.get_localzone()):
     return datetime.datetime.fromtimestamp(float(ts)/1000, tz=tz)
 
-week_period = 1000 * 60 * 60 * 24 * 7
+day_period = 1000 * 60 * 60 * 24
+week_period = day_period * 7
+
 
 def to_date_format(ts_millis, tz=tzlocal.get_localzone()):
     dt = datetime.datetime.fromtimestamp(ts_millis/1000, tz=tz)
     return dt.strftime("%Y_%m_%d-%H_%M_%S")
 
 
-def PreviousWeekStartBoundary():
-    _dt = datetime.datetime.now()
+def PreviousWeekStartBoundary(tz=tzlocal.get_localzone()):
+    _dt = datetime.datetime.now(tz=tz)
     _dt = _dt + datetime.timedelta(days=(-1 * (_dt.weekday() + 1 )))
     return get_millis(dt=_dt.replace(hour=0, minute=0, second=0, microsecond=0))
 
 
-def PreviousMidnightBoundary():
-    dt = datetime.datetime.now()
+def PreviousMidnightBoundary(tz=tzlocal.get_localzone()):
+    dt = datetime.datetime.now(tz=tz)
     return get_millis(dt=dt.replace(hour=0, minute=0, second=0, microsecond=0))
 
 
