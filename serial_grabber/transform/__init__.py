@@ -25,6 +25,12 @@ class Transform:
     def transform(self, process_entry):
         raise Exception('Method "transform" not implemented.')
 
+class IdentityTransform(Transform):
+
+    def transform(self, process_entry):
+        return process_entry
+
+
 class BlockAveragingTransform(Transform):
     import logging
     logger = logging.getLogger("AveragingTransform")
