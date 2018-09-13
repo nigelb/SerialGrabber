@@ -215,10 +215,12 @@ class RollingFilenameProcessor(RollingFilename, Processor):
     :param string file_extension: The file extension to give the output file.
     :param output_processor: The processor to process the chunk.
     :type output_processor: serial_grabber.processor.ExternalFilenameProcessor
+    :param ts_transform: The Timestamp Transform to pass to the RollingFilename
+    :type: ts_transform: lambda ts_millis
     """
 
-    def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor):
-        RollingFilename.__init__(self, boundary, period_ms, file_extension)
+    def __init__(self, boundary, period_ms, output_dir, file_extension, output_processor, ts_transform=lambda ts_millis: ts_millis):
+        RollingFilename.__init__(self, boundary, period_ms, file_extension, ts_transform=ts_transform)
         self.output_dir = output_dir
         self.output_processor = output_processor
         if not os.path.exists(self.output_dir):
